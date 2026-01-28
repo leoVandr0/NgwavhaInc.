@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo Starting SkillForge Services
+echo Starting Ngwavha Services
 echo ========================================
 echo.
 echo This will start:

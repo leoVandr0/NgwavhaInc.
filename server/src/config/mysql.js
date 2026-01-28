@@ -5,7 +5,7 @@ dotenv.config();
 
 // MySQL connection configuration
 const sequelize = new Sequelize(
-    process.env.MYSQL_DATABASE || 'skillforge',
+    process.env.MYSQL_DATABASE || 'ngwavha',
     process.env.MYSQL_USER || 'root',
     process.env.MYSQL_PASSWORD || '',
     {

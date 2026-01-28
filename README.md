@@ -135,7 +135,7 @@ A fully functional Udemy-like platform with advanced features including ML-power
 4. **Set up databases**
    ```sql
    -- MySQL
-   CREATE DATABASE skillforge;
+   CREATE DATABASE ngwavha;
    
    -- MongoDB will auto-create on first connection
    ```
@@ -342,7 +342,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**SkillForge Team**
+**Ngwavha Team**
 
 - GitHub: [@ngwavha](https://github.com/ngwavha)
 - Email: support@ngwavha.com

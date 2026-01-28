@@ -30,7 +30,7 @@ Before starting, make sure you have:
 
 3. **Create MySQL database:**
    ```sql
-   CREATE DATABASE skillforge;
+   CREATE DATABASE ngwavha;
    ```
 
 4. **Start the application:**
@@ -60,9 +60,9 @@ Before starting, make sure you have:
    MYSQL_HOST=localhost
    MYSQL_USER=root
    MYSQL_PASSWORD=your_password
-   MYSQL_DATABASE=skillforge
+   MYSQL_DATABASE=ngwavha
    
-   MONGODB_URI=mongodb://localhost:27017/skillforge_content
+   MONGODB_URI=mongodb://localhost:27017/ngwavha_content
    ```
 
 4. **Start services:**

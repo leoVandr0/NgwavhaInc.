@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo SkillForge - Local Setup Script
+echo Ngwavha - Local Setup Script
 echo ========================================
 echo.
 
@@ -124,7 +124,7 @@ echo NEXT STEPS:
 echo.
 echo 1. Make sure MySQL and MongoDB are running
 echo 2. Edit server\.env with your database credentials
-echo 3. Create MySQL database: CREATE DATABASE skillforge;
+echo 3. Create MySQL database: CREATE DATABASE ngwavha;
 echo 4. Run: npm run dev (to start all services)
 echo.
 echo For detailed instructions, see: docs\SETUP.md

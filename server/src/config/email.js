@@ -22,8 +22,8 @@ const smtpTransporter = nodemailer.createTransport({
 
 export const sendEmail = async ({ to, subject, html, text }) => {
     const from = {
-        email: process.env.EMAIL_FROM || 'noreply@skillforge.com',
-        name: process.env.EMAIL_FROM_NAME || 'SkillForge',
+        email: process.env.EMAIL_FROM || 'noreply@ngwavha.com',
+        name: process.env.EMAIL_FROM_NAME || 'Ngwavha',
     };
 
     try {
@@ -58,16 +58,16 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 
 export const emailTemplates = {
     welcome: (name) => ({
-        subject: 'Welcome to SkillForge! 🎓',
+        subject: 'Welcome to Ngwavha! 🎓',
         html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 40px; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0ea5e9; margin: 0;">SkillForge</h1>
+          <h1 style="color: #0ea5e9; margin: 0;">Ngwavha</h1>
           <p style="color: #64748b; font-size: 14px;">Learn. Grow. Succeed.</p>
         </div>
         <h2 style="color: #f1f5f9;">Welcome, ${name}! 🎉</h2>
         <p style="line-height: 1.6; color: #cbd5e1;">
-          Thank you for joining SkillForge! You're now part of a community of learners 
+          Thank you for joining Ngwavha! You're now part of a community of learners 
           dedicated to growing their skills and achieving their goals.
         </p>
         <div style="background: linear-gradient(135deg, #0ea5e9, #06b6d4); padding: 20px; border-radius: 10px; margin: 30px 0; text-align: center;">
@@ -76,18 +76,18 @@ export const emailTemplates = {
           </a>
         </div>
         <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 40px;">
-          © 2024 SkillForge. All rights reserved.
+          © 2024 Ngwavha. All rights reserved.
         </p>
       </div>
     `,
     }),
 
     passwordReset: (name, resetUrl) => ({
-        subject: 'Reset Your Password - SkillForge',
+        subject: 'Reset Your Password - Ngwavha',
         html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 40px; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0ea5e9; margin: 0;">SkillForge</h1>
+          <h1 style="color: #0ea5e9; margin: 0;">Ngwavha</h1>
         </div>
         <h2 style="color: #f1f5f9;">Password Reset Request</h2>
         <p style="line-height: 1.6; color: #cbd5e1;">
@@ -110,7 +110,7 @@ export const emailTemplates = {
         html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 40px; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0ea5e9; margin: 0;">SkillForge</h1>
+          <h1 style="color: #0ea5e9; margin: 0;">Ngwavha</h1>
         </div>
         <h2 style="color: #f1f5f9;">Enrollment Confirmed! 🎉</h2>
         <p style="line-height: 1.6; color: #cbd5e1;">
@@ -138,7 +138,7 @@ export const emailTemplates = {
         html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 40px; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0ea5e9; margin: 0;">SkillForge</h1>
+          <h1 style="color: #0ea5e9; margin: 0;">Ngwavha</h1>
         </div>
         <div style="text-align: center; margin: 30px 0;">
           <div style="font-size: 64px;">🏆</div>
@@ -164,7 +164,7 @@ export const emailTemplates = {
         html: `
       <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 40px; border-radius: 16px;">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #0ea5e9; margin: 0;">SkillForge</h1>
+          <h1 style="color: #0ea5e9; margin: 0;">Ngwavha</h1>
         </div>
         <h2 style="color: #f1f5f9;">New Content Available! 📚</h2>
         <p style="line-height: 1.6; color: #cbd5e1;">

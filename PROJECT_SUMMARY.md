@@ -1,8 +1,8 @@
-# SkillForge Project Summary
+# Ngwavha Project Summary
 
 ## 🎉 Project Completion Status: 95%
 
-This document provides a comprehensive overview of the SkillForge project - a fully functional Udemy-like Learning Management System.
+This document provides a comprehensive overview of the Ngwavha project - a fully functional Udemy-like Learning Management System.
 
 ---
 
@@ -23,7 +23,7 @@ A production-ready LMS with:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    SKILLFORGE PLATFORM                       │
+│                    NGWAVHA PLATFORM                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
@@ -494,7 +494,7 @@ This platform can be used for:
 
 ## 🎊 Conclusion
 
-**SkillForge** is a professional-grade Learning Management System that demonstrates:
+**Ngwavha** is a professional-grade Learning Management System that demonstrates:
 
 - Modern web development practices
 - Full-stack architecture

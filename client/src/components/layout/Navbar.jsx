@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Menu, X, Search, ShoppingCart, Bell, User } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import Logo from '../Logo';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +21,7 @@ const Navbar = () => {
                     {/* Logo */}
                     <div className="flex items-center">
                         <Link to="/" className="flex-shrink-0">
-                            <span className="text-2xl font-bold text-primary-500">SkillForge</span>
+                            <Logo />
                         </Link>
 
                         {/* Desktop Search */}
