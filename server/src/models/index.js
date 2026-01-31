@@ -4,6 +4,9 @@ import Category from './Category.js';
 import Enrollment from './Enrollment.js';
 import Review from './Review.js';
 import Transaction from './Transaction.js';
+import LiveSession from './LiveSession.js';
+import CartItem from './CartItem.js';
+import WishlistItem from './WishlistItem.js';
 
 // User <-> Course (Instructor relationship)
 User.hasMany(Course, { foreignKey: 'instructorId', as: 'instructedCourses' });
@@ -41,11 +44,38 @@ Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Course.hasMany(Transaction, { foreignKey: 'courseId', as: 'transactions' });
 Transaction.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 
+// User <-> LiveSession
+User.hasMany(LiveSession, { foreignKey: 'instructorId', as: 'hostedSessions' });
+LiveSession.belongsTo(User, { foreignKey: 'instructorId', as: 'instructor' });
+
+// Course <-> LiveSession
+Course.hasMany(LiveSession, { foreignKey: 'courseId', as: 'liveSessions' });
+LiveSession.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
+// User <-> CartItem
+User.hasMany(CartItem, { foreignKey: 'userId', as: 'cartItems' });
+CartItem.belongsTo(User, { foreignKey: 'userId' });
+
+// Course <-> CartItem
+Course.hasMany(CartItem, { foreignKey: 'courseId' });
+CartItem.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
+// User <-> WishlistItem
+User.hasMany(WishlistItem, { foreignKey: 'userId', as: 'wishlistItems' });
+WishlistItem.belongsTo(User, { foreignKey: 'userId' });
+
+// Course <-> WishlistItem
+Course.hasMany(WishlistItem, { foreignKey: 'courseId' });
+WishlistItem.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
 export {
     User,
     Course,
     Category,
     Enrollment,
     Review,
-    Transaction
+    Transaction,
+    LiveSession,
+    CartItem,
+    WishlistItem
 };

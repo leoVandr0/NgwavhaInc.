@@ -45,4 +45,4 @@ export const connectMySQL = async () => {
     }
 };
 
-export default sequelize;
+export default connectMySQL;

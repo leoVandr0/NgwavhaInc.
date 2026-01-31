@@ -1,120 +1,152 @@
+import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { BookOpen, Clock, Award, TrendingUp } from 'lucide-react';
+import { BookOpen, Clock, Award, MoreVertical, PlayCircle } from 'lucide-react';
 import api from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const StudentDashboard = () => {
+    const { currentUser } = useAuth();
+    const [activeTab, setActiveTab] = useState('all');
+
     const { data: enrollments, isLoading } = useQuery('my-courses', async () => {
-        const { data } = await api.get('/enrollments/my-courses');
-        return data;
+        try {
+            const { data } = await api.get('/enrollments/my-courses');
+            return data;
+        } catch (error) {
+            console.error("Failed to fetch enrollments", error);
+            return []; // Return empty array on error to prevent crash
+        }
+    });
+
+    // Filter logic (mock implementation if real filtering isn't available on backend)
+    const filteredEnrollments = enrollments?.filter(enrollment => {
+        if (activeTab === 'all') return true;
+        if (activeTab === 'active') return enrollment.progress < 100;
+        if (activeTab === 'completed') return enrollment.progress === 100;
+        return true;
     });
 
     return (
-        <div className="min-h-screen bg-dark-900 py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2">My Learning</h1>
-                    <p className="text-dark-400">Continue your learning journey</p>
-                </div>
+        <div className="min-h-screen bg-dark-950 text-white font-sans">
+            {/* Udemy-style Header */}
+            <div className="bg-dark-900 border-b border-dark-800 pt-12 pb-4 px-4 sm:px-8">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-4xl font-bold font-serif mb-8 text-white">
+                        My Learning
+                    </h1>
 
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    {[
-                        { icon: BookOpen, label: 'Enrolled Courses', value: enrollments?.length || 0 },
-                        { icon: Clock, label: 'Hours Learned', value: '24' },
-                        { icon: Award, label: 'Certificates', value: enrollments?.filter(e => e.isCompleted).length || 0 },
-                        { icon: TrendingUp, label: 'Avg Progress', value: '65%' },
-                    ].map((stat, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.1 }}
-                            className="card p-6"
+                    {/* Tabs */}
+                    <div className="flex space-x-8 text-sm font-bold text-dark-300">
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'all' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
                         >
-                            <stat.icon className="h-8 w-8 text-primary-500 mb-3" />
-                            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-                            <p className="text-dark-400 text-sm">{stat.label}</p>
-                        </motion.div>
-                    ))}
+                            All Courses
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('active')}
+                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'active' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
+                        >
+                            In Progress
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('completed')}
+                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'completed' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
+                        >
+                            Completed
+                        </button>
+                        <button
+                            className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
+                        >
+                            Wishlist
+                        </button>
+                        <button
+                            className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
+                        >
+                            Archived
+                        </button>
+                    </div>
                 </div>
+            </div>
 
-                {/* Courses */}
-                <div>
-                    <h2 className="text-2xl font-bold text-white mb-6">Your Courses</h2>
-                    {isLoading ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {[...Array(3)].map((_, i) => (
-                                <div key={i} className="card animate-pulse">
-                                    <div className="aspect-video bg-dark-700"></div>
-                                    <div className="p-6 space-y-3">
-                                        <div className="h-4 bg-dark-700 rounded w-3/4"></div>
-                                        <div className="h-3 bg-dark-700 rounded w-1/2"></div>
+            {/* Content Area */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
+                {isLoading ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="animate-pulse">
+                                <div className="aspect-video bg-dark-800 mb-4"></div>
+                                <div className="h-4 bg-dark-800 rounded w-3/4 mb-2"></div>
+                                <div className="h-3 bg-dark-800 rounded w-1/2"></div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredEnrollments?.length > 0 ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {filteredEnrollments.map((enrollment) => (
+                            <Link to={`/learn/${enrollment.course.slug}`} key={enrollment.id} className="group block h-full">
+                                <div className="bg-dark-900 border border-dark-800 hover:border-dark-600 transition-all h-full flex flex-col">
+                                    {/* Thumbnail */}
+                                    <div className="relative aspect-video bg-dark-800 overflow-hidden">
+                                        {enrollment.course.thumbnail ? (
+                                            <img
+                                                src={enrollment.course.thumbnail}
+                                                alt={enrollment.course.title}
+                                                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-dark-800 text-dark-600">
+                                                <BookOpen className="h-12 w-12" />
+                                            </div>
+                                        )}
+                                        {/* Overlay Play Icon on Hover (Udemy style) */}
+                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <PlayCircle className="h-12 w-12 text-white" />
+                                        </div>
+                                    </div>
+
+                                    {/* Card Body */}
+                                    <div className="p-4 flex-1 flex flex-col">
+                                        <h3 className="font-bold text-white mb-1 line-clamp-2 leading-tight group-hover:text-primary-500 transition-colors">
+                                            {enrollment.course.title}
+                                        </h3>
+                                        <p className="text-xs text-dark-400 mb-4 truncate">
+                                            {enrollment.course.instructor?.name || 'Instructor'}
+                                        </p>
+
+                                        {/* Progress Bar */}
+                                        <div className="mt-auto">
+                                            <div className="w-full bg-dark-700 h-1 mb-2">
+                                                <div
+                                                    className="bg-primary-500 h-1"
+                                                    style={{ width: `${enrollment.progress}%` }}
+                                                ></div>
+                                            </div>
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className="text-dark-300">
+                                                    {enrollment.progress === 0 ? 'Start Course' : `${Math.round(enrollment.progress)}% complete`}
+                                                </span>
+                                                {/* Optional star rating could go here */}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    ) : enrollments?.length > 0 ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {enrollments.map((enrollment, index) => (
-                                <motion.div
-                                    key={enrollment.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                >
-                                    <Link to={`/learn/${enrollment.course.slug}`} className="card group block">
-                                        <div className="aspect-video bg-gradient-to-br from-primary-500/20 to-accent-500/20 overflow-hidden">
-                                            {enrollment.course.thumbnail && (
-                                                <img
-                                                    src={enrollment.course.thumbnail}
-                                                    alt={enrollment.course.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="p-6">
-                                            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-primary-400 transition-colors line-clamp-2">
-                                                {enrollment.course.title}
-                                            </h3>
-                                            <p className="text-dark-400 text-sm mb-4">
-                                                By {enrollment.course.instructor?.name}
-                                            </p>
-                                            <div className="mb-2">
-                                                <div className="flex justify-between text-sm text-dark-400 mb-1">
-                                                    <span>Progress</span>
-                                                    <span>{Math.round(enrollment.progress)}%</span>
-                                                </div>
-                                                <div className="w-full bg-dark-700 rounded-full h-2">
-                                                    <div
-                                                        className="bg-gradient-to-r from-primary-500 to-accent-500 h-2 rounded-full transition-all"
-                                                        style={{ width: `${enrollment.progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </div>
-                                            {enrollment.isCompleted && (
-                                                <div className="mt-4 flex items-center gap-2 text-primary-400">
-                                                    <Award className="h-5 w-5" />
-                                                    <span className="text-sm font-semibold">Completed</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="card p-12 text-center">
-                            <BookOpen className="h-16 w-16 text-dark-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-white mb-2">No courses yet</h3>
-                            <p className="text-dark-400 mb-6">Start learning by enrolling in a course</p>
-                            <Link to="/courses" className="btn-primary inline-block">
-                                Browse Courses
                             </Link>
-                        </div>
-                    )}
-                </div>
+                        ))}
+                    </div>
+                ) : (
+                    // Empty State
+                    <div className="text-center py-20 bg-dark-900 border border-dark-800">
+                        <h2 className="text-2xl font-bold text-white mb-4">Let's start learning, {currentUser?.name?.split(' ')[0]}</h2>
+                        <p className="text-dark-400 mb-8 max-w-md mx-auto">
+                            Identify your goals and start learning today. We have thousands of courses for you.
+                        </p>
+                        <Link to="/courses" className="inline-flex items-center justify-center px-6 py-3 text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 transition-colors">
+                            Browse now
+                        </Link>
+                    </div>
+                )}
             </div>
         </div>
     );

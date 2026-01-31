@@ -50,7 +50,7 @@ const Course = sequelize.define('Course', {
     },
     status: {
         type: DataTypes.ENUM('draft', 'published', 'archived'),
-        defaultValue: 'draft'
+        defaultValue: 'published'
     },
     publishedAt: {
         type: DataTypes.DATE,

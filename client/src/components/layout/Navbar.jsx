@@ -1,13 +1,22 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { Menu, X, Search, ShoppingCart, Bell, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Menu, X, Search, ShoppingCart, Bell, User, Heart } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import useCartStore from '../../store/cartStore';
 import Logo from '../Logo';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const { user, logout, isAuthenticated } = useAuthStore();
+    const { cart, wishlist, fetchCart, fetchWishlist } = useCartStore();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchCart();
+            fetchWishlist();
+        }
+    }, [isAuthenticated]);
 
     const handleLogout = () => {
         logout();
@@ -51,14 +60,31 @@ const Navbar = () => {
                                     <Link to="/my-courses" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                         My Learning
                                     </Link>
+
+                                    <Link to="/wishlist" className="text-dark-300 hover:text-white p-2 relative">
+                                        <Heart className="h-6 w-6" />
+                                        {wishlist.length > 0 && (
+                                            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary-600 rounded-full">
+                                                {wishlist.length}
+                                            </span>
+                                        )}
+                                    </Link>
+
+                                    <Link to="/cart" className="text-dark-300 hover:text-white p-2 relative">
+                                        <ShoppingCart className="h-6 w-6" />
+                                        {cart.length > 0 && (
+                                            <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary-600 rounded-full">
+                                                {cart.length}
+                                            </span>
+                                        )}
+                                    </Link>
+
                                     {user?.role === 'instructor' && (
                                         <Link to="/instructor/dashboard" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                             Instructor
                                         </Link>
                                     )}
-                                    <button className="text-dark-300 hover:text-white p-2">
-                                        <ShoppingCart className="h-6 w-6" />
-                                    </button>
+
                                     <button className="text-dark-300 hover:text-white p-2">
                                         <Bell className="h-6 w-6" />
                                     </button>
@@ -117,6 +143,12 @@ const Navbar = () => {
                             <>
                                 <Link to="/my-courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
                                     My Learning
+                                </Link>
+                                <Link to="/cart" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                                    Cart ({cart.length})
+                                </Link>
+                                <Link to="/wishlist" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                                    Wishlist ({wishlist.length})
                                 </Link>
                                 <button onClick={handleLogout} className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">
                                     Sign out

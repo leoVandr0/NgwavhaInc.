@@ -40,8 +40,8 @@
     },
     "scripts": {
         "test": "echo 'Test script'",
-        "dev": "nodemon -r esm server.js",
-        "start": "node -r esm server.js"
+        "dev": "nodemon server.js",
+        "start": "node server.js"
     },
     "type": "module"
 }

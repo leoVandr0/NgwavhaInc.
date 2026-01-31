@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { ArrowRight, Play, Star, Users, Award, TrendingUp, BookOpen, Video, CheckCircle } from 'lucide-react';
+import logo from '../assets/logo.jpg';
 
 const HomePage = () => {
     const categories = [
@@ -38,180 +38,120 @@ const HomePage = () => {
     ];
 
     return (
-        <div className="bg-dark-900">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950">
-                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary-500/10 to-transparent"></div>
+        <div className="bg-dark-950 min-h-screen">
+            {/* Simple Header for Public Page */}
+            <div className="border-b border-dark-900 bg-dark-950 px-8 py-4 flex justify-between items-center">
+                <Link to="/" className="flex items-center gap-3 text-3xl font-bold tracking-tight text-white hover:opacity-90">
+                    <img src={logo} alt="Ngwavha Logo" className="h-10 w-10 rounded-full object-cover" />
+                    <span>Ngwavha</span>
+                </Link>
+                <div className="flex gap-4">
+                    <Link to="/login" className="px-5 py-2 text-white font-bold border border-white hover:bg-dark-900 transition-colors">
+                        Log in
+                    </Link>
+                    <Link to="/register" className="px-5 py-2 bg-primary-500 text-dark-950 font-bold hover:bg-primary-600 transition-colors">
+                        Sign up
+                    </Link>
+                </div>
+            </div>
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+            {/* Hero Section */}
+            <section className="relative overflow-hidden bg-dark-950 py-24 lg:py-32">
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <motion.div
-                            initial={{ opacity: 0, x: -50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6 }}
-                        >
+                        <div>
                             <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
                                 Master New Skills
-                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">
+                                <span className="block text-primary-500">
                                     Forge Your Future
                                 </span>
                             </h1>
-                            <p className="text-xl text-dark-300 mb-8">
+                            <p className="text-xl text-dark-300 mb-8 max-w-lg">
                                 Learn from industry experts and transform your career with our comprehensive online courses.
-                                Join thousands of students already advancing their skills.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <Link
-                                    to="/courses"
-                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-500 rounded-lg hover:from-primary-700 hover:to-primary-600 transition-all shadow-lg shadow-primary-500/50 group"
+                                    to="/courses" // Note: Likely needs a public course listing page, but /courses might be guarded.
+                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 transition-colors"
                                 >
                                     Explore Courses
-                                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                                <Link
-                                    to="/register"
-                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:border-primary-500 transition-all"
-                                >
-                                    Start Learning Free
+                                    <ArrowRight className="ml-2 h-5 w-5" />
                                 </Link>
                             </div>
-                        </motion.div>
+                        </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, x: 50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="relative"
-                        >
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-dark-700 bg-dark-800">
-                                <div className="aspect-video bg-gradient-to-br from-primary-500/20 to-accent-500/20 flex items-center justify-center">
-                                    <button className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                                        <Play className="h-8 w-8 text-primary-600 ml-1" fill="currentColor" />
-                                    </button>
+                        <div className="relative">
+                            <div className="relative rounded-none border-4 border-dark-800 bg-dark-900 shadow-2xl p-2">
+                                <div className="aspect-video bg-dark-800 flex items-center justify-center">
+                                    <Play className="h-16 w-16 text-white opacity-50" />
                                 </div>
                             </div>
-                            <div className="absolute -bottom-6 -left-6 bg-dark-800 border border-dark-700 rounded-xl p-4 shadow-xl">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center">
-                                        <Star className="h-6 w-6 text-white" fill="currentColor" />
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold">4.8/5</p>
-                                        <p className="text-dark-400 text-sm">Average Rating</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* Stats Section */}
-            <section className="bg-dark-800 border-y border-dark-700 py-12">
+            <section className="bg-dark-900 py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                         {stats.map((stat, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
-                                viewport={{ once: true }}
-                                className="text-center"
-                            >
-                                <stat.icon className="h-8 w-8 text-primary-500 mx-auto mb-3" />
+                            <div key={index} className="text-center">
+                                <stat.icon className="h-8 w-8 text-white mx-auto mb-3" />
                                 <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
-                                <p className="text-dark-400">{stat.label}</p>
-                            </motion.div>
+                                <p className="text-dark-400 font-medium">{stat.label}</p>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
             {/* Categories Section */}
-            <section className="py-20">
+            <section className="py-20 bg-dark-950">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-white mb-4">Explore Top Categories</h2>
-                        <p className="text-xl text-dark-400">Find the perfect course for your goals</p>
+                    <div className="mb-12">
+                        <h2 className="text-3xl font-bold text-white mb-2">Top Categories</h2>
+                        <p className="text-lg text-dark-400">Find the perfect course for your goals</p>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
                         {categories.map((category, index) => (
-                            <motion.div
+                            <div
                                 key={index}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.3, delay: index * 0.05 }}
-                                viewport={{ once: true }}
-                                whileHover={{ scale: 1.05 }}
-                                className="card p-6 text-center cursor-pointer group"
+                                className="bg-dark-900 border border-dark-800 p-6 text-center cursor-pointer hover:border-primary-500 transition-colors"
                             >
-                                <div className="text-4xl mb-3">{category.icon}</div>
-                                <h3 className="text-white font-semibold mb-2 group-hover:text-primary-400 transition-colors">
+                                <div className="text-4xl mb-3 grayscale hover:grayscale-0">{category.icon}</div>
+                                <h3 className="text-white font-semibold mb-2">
                                     {category.name}
                                 </h3>
                                 <p className="text-dark-400 text-sm">{category.courses} courses</p>
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
             {/* Features Section */}
-            <section className="py-20 bg-dark-800">
+            <section className="py-20 bg-dark-900">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-white mb-4">Why Choose SkillForge?</h2>
-                        <p className="text-xl text-dark-400">Everything you need to succeed in your learning journey</p>
+                        <h2 className="text-3xl font-bold text-white mb-4">Why Choose Ngwavha?</h2>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {features.map((feature, index) => (
-                            <motion.div
+                            <div
                                 key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
-                                viewport={{ once: true }}
-                                className="card p-8 text-center hover:border-primary-500 transition-all"
+                                className="bg-dark-950 p-8 border border-dark-800 hover:border-white transition-colors"
                             >
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center mx-auto mb-6">
-                                    <feature.icon className="h-8 w-8 text-white" />
+                                <div className="w-12 h-12 bg-primary-500 flex items-center justify-center mb-6 text-dark-950">
+                                    <feature.icon className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                                <p className="text-dark-400">{feature.description}</p>
-                            </motion.div>
+                                <p className="text-dark-400 leading-relaxed">{feature.description}</p>
+                            </div>
                         ))}
                     </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-20">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        viewport={{ once: true }}
-                        className="bg-gradient-to-r from-primary-600 to-accent-600 rounded-2xl p-12 shadow-2xl"
-                    >
-                        <h2 className="text-4xl font-bold text-white mb-4">
-                            Ready to Start Learning?
-                        </h2>
-                        <p className="text-xl text-primary-100 mb-8">
-                            Join thousands of students and start your journey today
-                        </p>
-                        <Link
-                            to="/register"
-                            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-primary-600 bg-white rounded-lg hover:bg-gray-100 transition-all shadow-lg"
-                        >
-                            Get Started Now
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Link>
-                    </motion.div>
                 </div>
             </section>
         </div>

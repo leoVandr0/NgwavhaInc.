@@ -13,20 +13,24 @@ const generateToken = (userId) => {
 };
 
 export const registerUser = async (req, res) => {
+    console.log('Register request body:', req.body);
     try {
-        const { name, email, password } = req.body;
-
+        const { name, email, password, role } = req.body;
         // Check if user exists
-        let user = await User.findOne({ where: { email } });
+        const normalizedEmail = email.trim().toLowerCase();
+        let user = await User.findOne({ where: { email: normalizedEmail } });
         if (user) {
+            console.log('Registration failed: User already exists:', normalizedEmail);
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Create user
+        // Create user (password will be hashed by the beforeCreate hook)
+        console.log('Creating user:', normalizedEmail);
         user = await User.create({
             name,
-            email,
-            password: await bcrypt.hash(password, 10)
+            email: normalizedEmail,
+            password,
+            role: role || 'student'
         });
 
         // Generate token
@@ -35,6 +39,7 @@ export const registerUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
+        console.log('User created successfully:', user.id);
         res.status(201).json({
             ...userData,
             token
@@ -46,18 +51,22 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
+    console.log('Login request body:', req.body);
     try {
         const { email, password } = req.body;
 
         // Check if user exists
-        const user = await User.findOne({ where: { email } });
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await User.findOne({ where: { email: normalizedEmail } });
         if (!user) {
+            console.log('Login failed: User not found:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         // Check password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await user.matchPassword(password);
         if (!isMatch) {
+            console.log('Login failed: Password mismatch for user:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
@@ -67,6 +76,7 @@ export const loginUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
+        console.log('Login successful:', user.id);
         res.json({
             ...userData,
             token
@@ -95,9 +105,9 @@ export const updateUserProfile = async (req, res) => {
         const user = await User.findByPk(req.user.id);
 
         if (name) user.name = name;
-        if (email) user.email = email;
+        if (email) user.email = email.trim().toLowerCase();
         if (password) {
-            user.password = await bcrypt.hash(password, 10);
+            user.password = password; // Hook will handle hashing
         }
 
         await user.save();

@@ -39,3 +39,11 @@ export const protect = async (req, res, next) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const authorize = (...roles) => (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+        return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    next();
+};

@@ -1,13 +1,17 @@
 import { Course, User, Category, Enrollment, Review } from '../models/index.js';
+import fs from 'fs';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import CourseContent from '../models/nosql/CourseContent.js';
 import { Op } from 'sequelize';
+import sequelize from '../config/mysql.js';
 
 // @desc    Get all courses
 // @route   GET /api/courses
 // @access  Public
 export const getCourses = async (req, res) => {
     try {
-        const pageSize = 10;
+        const pageSize = 12;
         const page = Number(req.query.pageNumber) || 1;
 
         const keyword = req.query.keyword
@@ -18,27 +22,245 @@ export const getCourses = async (req, res) => {
             }
             : {};
 
-        const categoryFilter = req.query.category
-            ? { '$category.slug$': req.query.category }
-            : {};
+        // If category is provided as a slug, we need to handle it properly
+        const include = [
+            { model: User, as: 'instructor', attributes: ['name', 'avatar'] },
+            { model: Category, as: 'category', attributes: ['name', 'slug'] }
+        ];
 
-        const count = await Course.count({
-            where: { ...keyword, status: 'published' },
-            include: req.query.category ? [{ model: Category, as: 'category' }] : []
-        });
+        const where = { ...keyword };
+
+        // In dev mode or for user testing, maybe show all courses. 
+        // For production, we'd filter by status: 'published'
+        // where.status = 'published'; 
+
+        if (req.query.category) {
+            where['$category.slug$'] = req.query.category;
+        }
+
+        const count = await Course.count({ where, include });
 
         const courses = await Course.findAll({
-            where: { ...keyword, status: 'published' },
-            include: [
-                { model: User, as: 'instructor', attributes: ['name', 'avatar'] },
-                { model: Category, as: 'category', attributes: ['name', 'slug'] }
-            ],
+            where,
+            include,
             limit: pageSize,
             offset: pageSize * (page - 1),
             order: [['createdAt', 'DESC']],
         });
 
         res.json({ courses, page, pages: Math.ceil(count / pageSize) });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+// @desc    Initialize chunked upload
+// @route   POST /api/courses/:id/sections/:sectionId/lectures/:lectureId/video/chunked/init
+// @access  Private/Instructor
+export const initChunkedUpload = async (req, res) => {
+    try {
+        const { fileName, totalChunks } = req.body;
+
+        if (!fileName || !totalChunks) {
+            return res.status(400).json({ message: 'fileName and totalChunks are required.' });
+        }
+
+        const uploadId = uuidv4();
+        const chunkDir = process.env.UPLOAD_CHUNK_PATH || path.join(process.env.UPLOAD_PATH || 'uploads', 'chunks');
+        fs.mkdirSync(chunkDir, { recursive: true });
+
+        res.json({ uploadId, chunkDir, fileName });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Upload a chunk
+// @route   POST /api/courses/:id/sections/:sectionId/lectures/:lectureId/video/chunked
+// @access  Private/Instructor
+export const uploadChunk = async (req, res) => {
+    try {
+        const { uploadId, chunkIndex } = req.body;
+
+        if (!uploadId || chunkIndex === undefined) {
+            return res.status(400).json({ message: 'uploadId and chunkIndex are required.' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No chunk file uploaded.' });
+        }
+
+        res.json({ message: 'Chunk received', uploadId, chunkIndex: Number(chunkIndex) });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Complete chunked upload
+// @route   POST /api/courses/:id/sections/:sectionId/lectures/:lectureId/video/chunked/complete
+// @access  Private/Instructor
+export const completeChunkedUpload = async (req, res) => {
+    try {
+        const { uploadId, totalChunks, fileName } = req.body;
+
+        if (!uploadId || !totalChunks || !fileName) {
+            return res.status(400).json({ message: 'uploadId, totalChunks, and fileName are required.' });
+        }
+
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+        const section = content.sections.id(req.params.sectionId);
+
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+
+        const lecture = section.lectures.id(req.params.lectureId);
+
+        if (!lecture) {
+            return res.status(404).json({ message: 'Lecture not found' });
+        }
+
+        const uploadPath = process.env.UPLOAD_PATH || 'uploads';
+        const chunkDir = process.env.UPLOAD_CHUNK_PATH || path.join(uploadPath, 'chunks');
+        const extension = path.extname(fileName) || '.mp4';
+        const finalFileName = `video-${uploadId}${extension}`;
+        const finalPath = path.join(uploadPath, finalFileName);
+
+        const writeStream = fs.createWriteStream(finalPath);
+        for (let i = 0; i < Number(totalChunks); i += 1) {
+            const chunkPath = path.join(chunkDir, `${uploadId}-${i}`);
+            if (!fs.existsSync(chunkPath)) {
+                writeStream.end();
+                return res.status(400).json({ message: `Missing chunk ${i}` });
+            }
+            const data = fs.readFileSync(chunkPath);
+            writeStream.write(data);
+        }
+        writeStream.end();
+
+        // Cleanup chunks
+        for (let i = 0; i < Number(totalChunks); i += 1) {
+            const chunkPath = path.join(chunkDir, `${uploadId}-${i}`);
+            if (fs.existsSync(chunkPath)) {
+                fs.unlinkSync(chunkPath);
+            }
+        }
+
+        lecture.videoUrl = `/uploads/${finalFileName}`;
+        lecture.type = 'video';
+        await content.save();
+
+        res.json({ message: 'Upload completed', lecture });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get instructor courses
+// @route   GET /api/courses/my
+// @access  Private/Instructor
+export const getInstructorCourses = async (req, res) => {
+    try {
+        const courses = await Course.findAll({
+            where: { instructorId: req.user.id },
+            attributes: {
+                include: [
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM Enrollment AS enrollment
+                            WHERE
+                                enrollment.course_id = Course.id
+                        )`),
+                        'studentCount'
+                    ]
+                ]
+            },
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json(courses);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get course content for instructor
+// @route   GET /api/courses/:id/content
+// @access  Private/Instructor
+export const getCourseContent = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+
+        if (!content) {
+            return res.status(404).json({ message: 'Course content not found' });
+        }
+
+        res.json(content);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Upload lecture video
+// @route   POST /api/courses/:id/sections/:sectionId/lectures/:lectureId/video
+// @access  Private/Instructor
+export const uploadLectureVideo = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No video file uploaded' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+        const section = content.sections.id(req.params.sectionId);
+
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+
+        const lecture = section.lectures.id(req.params.lectureId);
+
+        if (!lecture) {
+            return res.status(404).json({ message: 'Lecture not found' });
+        }
+
+        lecture.videoUrl = `/uploads/${req.file.filename}`;
+        lecture.type = 'video';
+
+        await content.save();
+
+        res.json({ message: 'Video uploaded', lecture });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -65,9 +287,27 @@ export const getCourseBySlug = async (req, res) => {
         });
 
         if (course) {
-            // Fetch content outline (without video URLs for non-enrolled)
-            const content = await CourseContent.findOne({ courseId: course.id })
-                .select('-sections.lectures.videoUrl -sections.lectures.resources.url');
+            // Fetch content
+            const content = await CourseContent.findOne({ courseId: course.id }).lean();
+
+            if (content) {
+                // For the public landing page, we only allow the first video as a preview
+                let previewFound = false;
+                content.sections = content.sections.map(section => {
+                    section.lectures = section.lectures.map(lecture => {
+                        // Allow the first video lecture to be the preview
+                        if (!previewFound && lecture.videoUrl) {
+                            previewFound = true;
+                            // Keep videoUrl for this one
+                        } else if (!lecture.isFree) {
+                            delete lecture.videoUrl;
+                        }
+                        delete lecture.resources; // Hide resources until enrolled
+                        return lecture;
+                    });
+                    return section;
+                });
+            }
 
             res.json({ ...course.toJSON(), content });
         } else {
@@ -103,7 +343,7 @@ export const createCourse = async (req, res) => {
         await content.save();
 
         // Link MongoDB ID to MySQL Course
-        course.mongoContentId = content._id;
+        course.mongoContentId = content._id.toString();
         await course.save();
 
         res.status(201).json(course);
@@ -162,6 +402,10 @@ export const addSection = async (req, res) => {
 
         const content = await CourseContent.findOne({ courseId: course.id });
 
+        if (!content) {
+            return res.status(404).json({ message: 'Course content not initialized. Please re-create the course.' });
+        }
+
         content.sections.push({
             title: req.body.title,
             lectures: []
@@ -190,21 +434,102 @@ export const addLecture = async (req, res) => {
         }
 
         const content = await CourseContent.findOne({ courseId: course.id });
+        if (!content) {
+            return res.status(404).json({ message: 'Course content not initialized' });
+        }
+
         const section = content.sections.id(req.params.sectionId);
 
         if (!section) {
             return res.status(404).json({ message: 'Section not found' });
         }
 
-        section.lectures.push(req.body);
+        const { title, type, description, videoUrl, videoDuration, content: textContent } = req.body;
+
+        section.lectures.push({
+            title,
+            type: type || 'video',
+            description,
+            videoUrl,
+            videoDuration,
+            content: textContent
+        });
+
         await content.save();
 
         // Update MySQL aggregates
         course.totalLectures = content.totalLectures;
-        course.totalDuration = content.totalDuration; // Assuming pre-save hook handles this
+        course.totalDuration = content.totalDuration;
         await course.save();
 
         res.status(201).json(content);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete section
+// @route   DELETE /api/courses/:id/sections/:sectionId
+// @access  Private/Instructor
+export const deleteSection = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+        content.sections = content.sections.filter(s => s._id.toString() !== req.params.sectionId);
+
+        await content.save();
+
+        // Update MySQL aggregates
+        course.totalLectures = content.totalLectures;
+        course.totalDuration = content.totalDuration;
+        await course.save();
+
+        res.json(content);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete lecture
+// @route   DELETE /api/courses/:id/sections/:sectionId/lectures/:lectureId
+// @access  Private/Instructor
+export const deleteLecture = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+        const section = content.sections.id(req.params.sectionId);
+
+        if (!section) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+
+        section.lectures = section.lectures.filter(l => l._id.toString() !== req.params.lectureId);
+        await content.save();
+
+        // Update MySQL aggregates
+        course.totalLectures = content.totalLectures;
+        course.totalDuration = content.totalDuration;
+        await course.save();
+
+        res.json(content);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

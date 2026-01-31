@@ -1,5 +1,6 @@
-import { Enrollment, Course, User } from '../models/index.js';
+import { Enrollment, Course, User, Category, Review } from '../models/index.js';
 import CourseContent from '../models/nosql/CourseContent.js';
+import sequelize from '../config/mysql.js';
 
 // @desc    Get logged in user's enrollments
 // @route   GET /api/enrollments/my-courses
@@ -86,6 +87,82 @@ export const updateProgress = async (req, res) => {
         }
 
         res.json(enrollment);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get course content for an enrolled user
+// @route   GET /api/enrollments/courses/:slug/content
+// @access  Private
+export const getEnrolledCourseContent = async (req, res) => {
+    try {
+        const course = await Course.findOne({
+            where: { slug: req.params.slug },
+            include: [{ model: User, as: 'instructor', attributes: ['name', 'avatar'] }]
+        });
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        const enrollment = await Enrollment.findOne({
+            where: {
+                userId: req.user.id,
+                courseId: course.id
+            }
+        });
+
+        if (!enrollment) {
+            return res.status(403).json({ message: 'You are not enrolled in this course' });
+        }
+
+        const content = await CourseContent.findOne({ courseId: course.id });
+
+        res.json({
+            course,
+            content,
+            enrollment
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Enroll in a course
+// @route   POST /api/enrollments/enroll/:courseId
+// @access  Private
+export const enrollInCourse = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.courseId);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        const existingEnrollment = await Enrollment.findOne({
+            where: {
+                userId: req.user.id,
+                courseId: course.id
+            }
+        });
+
+        if (existingEnrollment) {
+            return res.status(400).json({ message: 'Already enrolled' });
+        }
+
+        const enrollment = await Enrollment.create({
+            userId: req.user.id,
+            courseId: course.id,
+            pricePaid: course.price || 0,
+            progress: 0,
+            completedLectures: []
+        });
+
+        // Update enrollment count in MySQL
+        course.enrollmentsCount += 1;
+        await course.save();
+
+        res.status(201).json(enrollment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

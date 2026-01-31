@@ -1,41 +1,139 @@
-import { Routes, Route } from 'react-router-dom'
-import Navbar from './components/layout/Navbar'
-import Footer from './components/layout/Footer'
-import HomePage from './pages/HomePage'
-import LoginPage from './pages/auth/LoginPage'
-import RegisterPage from './pages/auth/RegisterPage'
-import CourseListPage from './pages/courses/CourseListPage'
-import CourseDetailsPage from './pages/courses/CourseDetailsPage'
-import StudentDashboard from './pages/student/StudentDashboard'
-import InstructorDashboard from './pages/instructor/InstructorDashboard'
-import ProtectedRoute from './components/auth/ProtectedRoute'
+﻿import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider, theme, App as AntApp } from 'antd';
+import StudentLayout from './layouts/StudentLayout';
+import TeacherLayout from './layouts/TeacherLayout';
+import Login from './pages/auth/LoginPage';
+import Register from './pages/auth/RegisterPage';
+import HomePage from './pages/HomePage';
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentProfile from './pages/student/StudentProfile';
+import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import CreateCourse from './pages/teacher/CreateCourse';
+import TeacherCoursesPage from './pages/teacher/TeacherCoursesPage';
+import TeacherLiveSessions from './pages/teacher/TeacherLiveSessions';
+import StudentLiveSessions from './pages/common/StudentLiveSessions';
+import LiveRoom from './pages/common/LiveRoom';
+import CourseListPage from './pages/courses/CourseListPage';
+import CourseDetailsPage from './pages/courses/CourseDetailsPage';
+import LearningPage from './pages/courses/LearningPage';
+import CartPage from './pages/student/CartPage';
+import WishlistPage from './pages/student/WishlistPage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
+// Protected Route component
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
+    return <Navigate to="/unauthorized" />;
+  }
+
+  return children;
+};
 
 function App() {
-    return (
-        <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow">
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/courses" element={<CourseListPage />} />
-                    <Route path="/course/:slug" element={<CourseDetailsPage />} />
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#FFA500', // Orange primary
+          colorBgBase: '#1a1a1a',  // Dark base
+          colorTextBase: '#ffffff', // White text
+        },
+        algorithm: theme.darkAlgorithm, // Enable Ant Design Dark Mode
+      }}
+    >
+      <AuthProvider>
+        <AntApp>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/courses" element={<CourseListPage />} />
+            <Route path="/course/:slug" element={<CourseDetailsPage />} />
 
-                    {/* Student Routes */}
-                    <Route element={<ProtectedRoute role="student" />}>
-                        <Route path="/my-courses" element={<StudentDashboard />} />
-                    </Route>
+            <Route
+              path="/learn/:slug"
+              element={
+                <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                  <LearningPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <CartPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <WishlistPage />
+                </ProtectedRoute>
+              }
+            />
 
-                    {/* Instructor Routes */}
-                    <Route element={<ProtectedRoute role="instructor" />}>
-                        <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
-                    </Route>
-                </Routes>
-            </main>
-            <Footer />
-        </div>
-    )
+            {/* Student Routes */}
+            <Route
+              path="/student"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<StudentDashboard />} />
+              <Route path="courses" element={<div>My Courses</div>} />
+              <Route path="live" element={<StudentLiveSessions />} />
+              <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
+              <Route path="schedule" element={<div>My Schedule</div>} />
+              <Route path="profile" element={<StudentProfile />} />
+              {/* Redirect /student to /student/dashboard */}
+              <Route index element={<Navigate to="dashboard" replace />} />
+            </Route>
+
+            {/* Teacher Routes */}
+            <Route
+              path="/teacher"
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'instructor']}>
+                  <TeacherLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="dashboard" element={<TeacherDashboard />} />
+              <Route path="create-course" element={<CreateCourse />} />
+              <Route path="courses" element={<TeacherCoursesPage />} />
+              <Route path="live" element={<TeacherLiveSessions />} />
+              <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
+              <Route path="students" element={<div>Students List</div>} />
+              <Route path="assignments" element={<div>Assignments</div>} />
+              <Route path="profile" element={<div>Teacher Profile</div>} />
+              {/* Redirect /teacher to /teacher/dashboard */}
+              <Route index element={<Navigate to="dashboard" replace />} />
+            </Route>
+
+            {/* Catch all - Redirect to Home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AntApp>
+      </AuthProvider>
+    </ConfigProvider>
+  );
 }
 
-export default App
+export default App;

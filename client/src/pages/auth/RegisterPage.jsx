@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, Loader } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Mail, Lock, User, Briefcase } from 'lucide-react';
+import { App } from 'antd';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
-import useAuthStore from '../../store/authStore';
+import logo from '../../assets/logo.jpg';
 
 const RegisterPage = () => {
     const [formData, setFormData] = useState({
@@ -14,10 +14,10 @@ const RegisterPage = () => {
         confirmPassword: '',
         role: 'student'
     });
-    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuthStore();
+    const { login } = useAuth();
+    const { message } = App.useApp();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,55 +27,64 @@ const RegisterPage = () => {
         e.preventDefault();
 
         if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
+            message.error('Passwords do not match');
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            message.error('Password must be at least 6 characters');
             return;
         }
 
         setLoading(true);
 
         try {
-            const { data } = await api.post('/auth/register', {
+            // Register the user
+            await api.post('/auth/register', {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
                 role: formData.role
             });
-            login(data, data.token);
-            toast.success('Account created successfully!');
-            navigate('/');
+
+            // Then log them in
+            const userData = await login(formData.email, formData.password);
+            message.success('Account created successfully! Welcome to Ngwavha.');
+
+            // Navigate based on user role
+            if (userData.role === 'teacher' || userData.role === 'instructor') {
+                navigate('/teacher/dashboard');
+            } else {
+                navigate('/student/dashboard');
+            }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Registration failed');
+            console.error('Registration error:', error);
+            message.error(error.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dark-950 via-dark-900 to-dark-950 py-12 px-4 sm:px-6 lg:px-8">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-md w-full"
-            >
-                <div className="bg-dark-800 border border-dark-700 rounded-2xl shadow-2xl p-8">
-                    <div className="text-center mb-8">
-                        <Link to="/" className="text-3xl font-bold text-primary-500">
-                            SkillForge
-                        </Link>
-                        <h2 className="mt-6 text-2xl font-bold text-white">
-                            Create your account
-                        </h2>
-                        <p className="mt-2 text-sm text-dark-400">
-                            Start your learning journey today
-                        </p>
-                    </div>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-dark-950 px-4 sm:px-6 lg:px-8 py-12">
+            <div className="w-full max-w-md">
+                <div className="text-center mb-10">
+                    <Link to="/" className="flex items-center justify-center gap-3 text-4xl font-bold tracking-tight text-white hover:opacity-90 transition-opacity">
+                        <img src={logo} alt="Ngwavha Logo" className="h-12 w-12 rounded-full object-cover" />
+                        <span>Ngwavha</span>
+                    </Link>
+                </div>
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="bg-dark-900 rounded-none border-t-4 border-primary-500 shadow-2xl p-8 w-full">
+                    <h2 className="text-xl font-bold text-white mb-2">
+                        Sign up and start learning
+                    </h2>
+                    <p className="text-dark-400 text-sm mb-6">
+                        Join thousands of learners from around the world.
+                    </p>
+
+                    <form className="space-y-4" onSubmit={handleSubmit}>
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-dark-300 mb-2">
-                                Full name
-                            </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <User className="h-5 w-5 text-dark-400" />
@@ -87,16 +96,13 @@ const RegisterPage = () => {
                                     required
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="input-field pl-10"
-                                    placeholder="John Doe"
+                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    placeholder="Full Name"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-dark-300 mb-2">
-                                Email address
-                            </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Mail className="h-5 w-5 text-dark-400" />
@@ -108,32 +114,31 @@ const RegisterPage = () => {
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="input-field pl-10"
-                                    placeholder="you@example.com"
+                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    placeholder="Email"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-dark-300 mb-2">
-                                I want to
-                            </label>
-                            <select
-                                id="role"
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                className="input-field"
-                            >
-                                <option value="student">Learn (Student)</option>
-                                <option value="instructor">Teach (Instructor)</option>
-                            </select>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Briefcase className="h-5 w-5 text-dark-400" />
+                                </div>
+                                <select
+                                    id="role"
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleChange}
+                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium appearance-none"
+                                >
+                                    <option value="student">I want to Learn (Student)</option>
+                                    <option value="instructor">I want to Teach (Instructor)</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-dark-300 mb-2">
-                                Password
-                            </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Lock className="h-5 w-5 text-dark-400" />
@@ -141,31 +146,17 @@ const RegisterPage = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type={showPassword ? 'text' : 'password'}
+                                    type="password"
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="input-field pl-10 pr-10"
-                                    placeholder="••••••••"
+                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    placeholder="Password"
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5 text-dark-400 hover:text-dark-300" />
-                                    ) : (
-                                        <Eye className="h-5 w-5 text-dark-400 hover:text-dark-300" />
-                                    )}
-                                </button>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-dark-300 mb-2">
-                                Confirm password
-                            </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Lock className="h-5 w-5 text-dark-400" />
@@ -177,49 +168,41 @@ const RegisterPage = () => {
                                     required
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="input-field pl-10"
-                                    placeholder="••••••••"
+                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    placeholder="Confirm Password"
                                 />
                             </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader className="animate-spin -ml-1 mr-3 h-5 w-5" />
-                                    Creating account...
-                                </>
-                            ) : (
-                                'Create account'
-                            )}
-                        </button>
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex justify-center py-3 px-4 border border-transparent text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 disabled:opacity-50 transition-colors"
+                            >
+                                {loading ? 'Creating account...' : 'Sign Up'}
+                            </button>
+                        </div>
                     </form>
 
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-dark-700"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-dark-800 text-dark-400">Already have an account?</span>
-                            </div>
-                        </div>
+                    <div className="mt-6 text-center text-sm">
+                        <p className="text-dark-300">
+                            By signing up, you agree to our{' '}
+                            <Link to="/terms" className="underline hover:text-white">Terms of Use</Link> and{' '}
+                            <Link to="/privacy" className="underline hover:text-white">Privacy Policy</Link>.
+                        </p>
+                    </div>
 
-                        <div className="mt-6 text-center">
-                            <Link
-                                to="/login"
-                                className="font-medium text-primary-500 hover:text-primary-400"
-                            >
-                                Sign in instead
+                    <div className="mt-6 border-t border-dark-700 pt-6 text-center">
+                        <p className="text-sm text-dark-300">
+                            Already have an account?{' '}
+                            <Link to="/login" className="font-bold text-primary-500 hover:text-primary-400 hover:underline">
+                                Log In
                             </Link>
-                        </div>
+                        </p>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         </div>
     );
 };
