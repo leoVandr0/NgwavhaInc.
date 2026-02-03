@@ -39,22 +39,6 @@ const HomePage = () => {
 
     return (
         <div className="bg-dark-950 min-h-screen">
-            {/* Simple Header for Public Page */}
-            <div className="border-b border-dark-900 bg-dark-950 px-8 py-4 flex justify-between items-center">
-                <Link to="/" className="flex items-center gap-3 text-3xl font-bold tracking-tight text-white hover:opacity-90">
-                    <img src={logo} alt="Ngwavha Logo" className="h-10 w-10 rounded-full object-cover" />
-                    <span>Ngwavha</span>
-                </Link>
-                <div className="flex gap-4">
-                    <Link to="/login" className="px-5 py-2 text-white font-bold border border-white hover:bg-dark-900 transition-colors">
-                        Log in
-                    </Link>
-                    <Link to="/register" className="px-5 py-2 bg-primary-500 text-dark-950 font-bold hover:bg-primary-600 transition-colors">
-                        Sign up
-                    </Link>
-                </div>
-            </div>
-
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-dark-950 py-24 lg:py-32">
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

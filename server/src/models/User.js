@@ -22,7 +22,16 @@ const User = sequelize.define('User', {
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true // Allow null for OAuth users
+    },
+    googleId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true
+    },
+    isGoogleUser: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     role: {
         type: DataTypes.ENUM('student', 'instructor', 'admin'),
@@ -74,6 +83,18 @@ const User = sequelize.define('User', {
     },
     stripeAccountId: {
         type: DataTypes.STRING,
+        allowNull: true
+    },
+    skills: {
+        type: DataTypes.TEXT, // Comma separated or JSON
+        allowNull: true
+    },
+    certifications: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    experience: {
+        type: DataTypes.TEXT,
         allowNull: true
     }
 }, {

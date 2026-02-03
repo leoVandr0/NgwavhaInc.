@@ -32,11 +32,9 @@ export const connectMySQL = async () => {
         await sequelize.authenticate();
         console.log('🗄️  MySQL connection established successfully.');
 
-        // Sync all models (in development)
-        if (process.env.NODE_ENV === 'development') {
-            await sequelize.sync({ alter: true });
-            console.log('📦 MySQL models synchronized.');
-        }
+        // Sync all models (to ensure new columns like skills/certifications are added)
+        await sequelize.sync({ alter: true });
+        console.log('📦 MySQL models synchronized.');
 
         return sequelize;
     } catch (error) {
@@ -45,4 +43,4 @@ export const connectMySQL = async () => {
     }
 };
 
-export default connectMySQL;
+export default sequelize;

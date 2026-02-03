@@ -3,6 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import passport from 'passport';
+import session from 'express-session';
+import MySQLStore from 'express-mysql-session';
 import { fileURLToPath } from 'url';
 import { connectMySQL } from './src/config/mysql.js';
 import connectMongoDB from './src/config/mongodb.js';
@@ -20,6 +23,7 @@ import courseRoutes from './src/routes/course.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
 import liveSessionRoutes from './src/routes/liveSession.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
+import configurePassport from './src/config/passport.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +31,31 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Session configuration
+const sessionStore = new (MySQLStore(session))({
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
+});
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'ngwavha-secret',
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+// Initialize Passport
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Database connections
 connectMySQL().then(() => {

@@ -99,16 +99,56 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+export const uploadAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        const avatarUrl = `/uploads/${req.file.filename}`;
+        const user = await User.findByPk(req.user.id);
+        user.avatar = avatarUrl;
+        await user.save();
+
+        res.json({ url: avatarUrl });
+    } catch (error) {
+        console.error('Upload avatar error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 export const updateUserProfile = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const {
+            name,
+            email,
+            password,
+            bio,
+            headline,
+            website,
+            twitter,
+            linkedin,
+            youtube,
+            skills,
+            certifications,
+            experience,
+            avatar
+        } = req.body;
         const user = await User.findByPk(req.user.id);
 
         if (name) user.name = name;
         if (email) user.email = email.trim().toLowerCase();
-        if (password) {
-            user.password = password; // Hook will handle hashing
-        }
+        if (password) user.password = password;
+        if (bio !== undefined) user.bio = bio;
+        if (headline !== undefined) user.headline = headline;
+        if (website !== undefined) user.website = website;
+        if (twitter !== undefined) user.twitter = twitter;
+        if (linkedin !== undefined) user.linkedin = linkedin;
+        if (youtube !== undefined) user.youtube = youtube;
+        if (skills !== undefined) user.skills = skills;
+        if (certifications !== undefined) user.certifications = certifications;
+        if (experience !== undefined) user.experience = experience;
+        if (avatar !== undefined) user.avatar = avatar;
 
         await user.save();
 
@@ -119,5 +159,23 @@ export const updateUserProfile = async (req, res) => {
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+export const googleAuthCallback = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+        }
+
+        // Generate token
+        const token = generateToken(req.user.id);
+
+        // Redirect to frontend with token
+        // In production, you might want to use a more secure way to pass the token
+        res.redirect(`${process.env.CLIENT_URL}/oauth/callback?token=${token}`);
+    } catch (error) {
+        console.error('Google Auth Callback Error:', error);
+        res.redirect(`${process.env.CLIENT_URL}/login?error=server_error`);
     }
 };

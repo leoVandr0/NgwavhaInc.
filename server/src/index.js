@@ -1,7 +1,7 @@
 ﻿import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './config/mysql.js';
+import { connectMySQL as connectDB } from './config/mysql.js';
 import connectMongoDB from './config/mongodb.js';
 import authRoutes from './routes/auth.routes.js';
 import courseRoutes from './routes/course.routes.js';
@@ -12,6 +12,7 @@ import cartRoutes from './routes/cart.routes.js';
 import wishlistRoutes from './routes/wishlist.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
+import './models/index.js'; // Ensure models are registered
 
 dotenv.config();
 

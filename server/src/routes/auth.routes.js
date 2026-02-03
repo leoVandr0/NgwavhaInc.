@@ -4,15 +4,28 @@ import {
     registerUser,
     getUserProfile,
     updateUserProfile,
+    uploadAvatar,
+    googleAuthCallback,
 } from '../controllers/auth.controller.js';
+import passport from 'passport';
 import { protect } from '../middleware/auth.middleware.js';
+import { upload } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.route('/profile')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);
+
+// Google OAuth routes
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/google/callback',
+    passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed` }),
+    googleAuthCallback
+);
 
 export default router;

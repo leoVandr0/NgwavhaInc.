@@ -1,64 +1,133 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
+import {
+    Facebook,
+    Twitter,
+    Linkedin,
+    Youtube,
+    Instagram,
+    Mail,
+    Phone,
+    MapPin,
+    ChevronRight,
+    Github
+} from 'lucide-react';
+import logo from '../../assets/logo.jpg';
 
 const Footer = () => {
+    const currentYear = new Date().getFullYear();
+
     return (
-        <footer className="bg-dark-950 border-t border-dark-800 pt-12 pb-8">
+        <footer className="bg-dark-950 border-t border-dark-900 pt-16 pb-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                    <div className="col-span-1 md:col-span-1">
-                        <Link to="/" className="text-2xl font-bold text-primary-500 mb-4 block">
-                            SkillForge
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                    {/* Brand Section */}
+                    <div className="space-y-6">
+                        <Link to="/" className="flex items-center gap-3 text-3xl font-bold tracking-tighter text-white group">
+                            <img src={logo} alt="Ngwavha Logo" className="h-10 w-10 rounded-full object-cover transition-transform group-hover:scale-110" />
+                            <span className="bg-gradient-to-r from-white to-dark-400 bg-clip-text text-transparent">Ngwavha</span>
                         </Link>
-                        <p className="text-dark-400 text-sm mb-4">
-                            Empowering learners worldwide to master new skills and achieve their goals through expert-led courses.
+                        <p className="text-dark-400 leading-relaxed text-sm">
+                            Empowering the next generation of African professionals through world-class online education. Forge your skills, change your future.
                         </p>
-                        <div className="flex space-x-4">
-                            <a href="#" className="text-dark-400 hover:text-white transition-colors"><Twitter size={20} /></a>
-                            <a href="#" className="text-dark-400 hover:text-white transition-colors"><Facebook size={20} /></a>
-                            <a href="#" className="text-dark-400 hover:text-white transition-colors"><Instagram size={20} /></a>
-                            <a href="#" className="text-dark-400 hover:text-white transition-colors"><Linkedin size={20} /></a>
+                        <div className="flex gap-4">
+                            {[
+                                { Icon: Facebook, link: '#' },
+                                { Icon: Twitter, link: '#' },
+                                { Icon: Linkedin, link: '#' },
+                                { Icon: Instagram, link: '#' },
+                                { Icon: Youtube, link: '#' }
+                            ].map((social, i) => (
+                                <a
+                                    key={i}
+                                    href={social.link}
+                                    className="w-10 h-10 flex items-center justify-center rounded-xl bg-dark-900 border border-dark-800 text-dark-400 hover:text-primary-400 hover:border-primary-500/50 transition-all hover:-translate-y-1"
+                                >
+                                    <social.Icon size={18} />
+                                </a>
+                            ))}
                         </div>
                     </div>
 
+                    {/* Quick Links */}
                     <div>
-                        <h3 className="text-white font-semibold mb-4">Learn</h3>
-                        <ul className="space-y-2 text-sm text-dark-400">
-                            <li><Link to="/courses" className="hover:text-primary-400 transition-colors">Browse Courses</Link></li>
-                            <li><Link to="/categories" className="hover:text-primary-400 transition-colors">Categories</Link></li>
-                            <li><Link to="/paths" className="hover:text-primary-400 transition-colors">Learning Paths</Link></li>
-                            <li><Link to="/certifications" className="hover:text-primary-400 transition-colors">Certifications</Link></li>
+                        <h4 className="text-white font-black text-sm uppercase tracking-widest mb-8">Learning</h4>
+                        <ul className="space-y-4">
+                            {['All Courses', 'Live Sessions', 'Categories', 'Instructors', 'Become a Teacher'].map((link) => (
+                                <li key={link}>
+                                    <Link to="#" className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
+                                        <ChevronRight size={14} className="text-primary-500 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0" />
+                                        {link}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
+                    {/* Company Links */}
                     <div>
-                        <h3 className="text-white font-semibold mb-4">Teach</h3>
-                        <ul className="space-y-2 text-sm text-dark-400">
-                            <li><Link to="/teach" className="hover:text-primary-400 transition-colors">Become an Instructor</Link></li>
-                            <li><Link to="/instructor/resources" className="hover:text-primary-400 transition-colors">Instructor Resources</Link></li>
-                            <li><Link to="/instructor/community" className="hover:text-primary-400 transition-colors">Community</Link></li>
+                        <h4 className="text-white font-black text-sm uppercase tracking-widest mb-8">Company</h4>
+                        <ul className="space-y-4">
+                            {['About Us', 'Contact', 'Privacy Policy', 'Terms of Service', 'Help Center'].map((link) => (
+                                <li key={link}>
+                                    <Link to="#" className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
+                                        <ChevronRight size={14} className="text-primary-500 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0" />
+                                        {link}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
 
+                    {/* Contact Info */}
                     <div>
-                        <h3 className="text-white font-semibold mb-4">Support</h3>
-                        <ul className="space-y-2 text-sm text-dark-400">
-                            <li><Link to="/help" className="hover:text-primary-400 transition-colors">Help Center</Link></li>
-                            <li><Link to="/terms" className="hover:text-primary-400 transition-colors">Terms of Service</Link></li>
-                            <li><Link to="/privacy" className="hover:text-primary-400 transition-colors">Privacy Policy</Link></li>
-                            <li><Link to="/contact" className="hover:text-primary-400 transition-colors">Contact Us</Link></li>
+                        <h4 className="text-white font-black text-sm uppercase tracking-widest mb-8">Contact Us</h4>
+                        <ul className="space-y-6">
+                            <li className="flex gap-4">
+                                <div className="w-10 h-10 shrink-0 rounded-xl bg-dark-900 border border-dark-800 flex items-center justify-center text-primary-500">
+                                    <MapPin size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-dark-500 uppercase font-black mb-1">Our Studio</p>
+                                    <p className="text-dark-300 text-sm">123 Innovation Drive, Harare, Zimbabwe</p>
+                                </div>
+                            </li>
+                            <li className="flex gap-4">
+                                <div className="w-10 h-10 shrink-0 rounded-xl bg-dark-900 border border-dark-800 flex items-center justify-center text-primary-500">
+                                    <Mail size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-dark-500 uppercase font-black mb-1">Email Support</p>
+                                    <p className="text-dark-300 text-sm lowercase">support@ngwavha.com</p>
+                                </div>
+                            </li>
+                            <li className="flex gap-4">
+                                <div className="w-10 h-10 shrink-0 rounded-xl bg-dark-900 border border-dark-800 flex items-center justify-center text-primary-500">
+                                    <Phone size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-dark-500 uppercase font-black mb-1">Call Us</p>
+                                    <p className="text-dark-300 text-sm font-bold">+263 777 000 000</p>
+                                </div>
+                            </li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="border-t border-dark-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p className="text-dark-500 text-sm">
-                        © {new Date().getFullYear()} SkillForge. All rights reserved.
+                {/* Bottom Bar */}
+                <div className="pt-8 border-t border-dark-900 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <p className="text-dark-500 text-xs">
+                        © {currentYear} <span className="text-dark-300 font-bold">Ngwavha Inc</span>. All rights reserved.
+                        <span className="ml-2 px-2 py-0.5 rounded bg-dark-900 border border-dark-800">Zimbabwe's Premiere LMS</span>
                     </p>
-                    <div className="flex space-x-6 mt-4 md:mt-0 text-sm text-dark-500">
-                        <Link to="/privacy" className="hover:text-dark-300">Privacy</Link>
-                        <Link to="/terms" className="hover:text-dark-300">Terms</Link>
-                        <Link to="/sitemap" className="hover:text-dark-300">Sitemap</Link>
+                    <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-dark-500">
+                        <Link to="#" className="hover:text-primary-500 transition-colors">Privacy</Link>
+                        <Link to="#" className="hover:text-primary-500 transition-colors">Terms</Link>
+                        <Link to="#" className="hover:text-primary-500 transition-colors">Cookies</Link>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-dark-900 rounded-full border border-dark-800">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-dark-400">All Systems Operational</span>
+                        </div>
                     </div>
                 </div>
             </div>

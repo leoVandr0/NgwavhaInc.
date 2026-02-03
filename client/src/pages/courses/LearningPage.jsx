@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Layout, Menu, Collapse, Progress, Tabs, Button, message } from 'antd';
 import api from '../../services/api';
+import Footer from '../../components/layout/Footer';
 
 const { Header, Sider, Content } = Layout;
 const { Panel } = Collapse;
@@ -197,6 +198,7 @@ const LearningPage = () => {
                                 ]}
                             />
                         </div>
+                        <Footer />
                     </div>
                 </Content>
 

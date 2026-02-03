@@ -100,7 +100,7 @@ const Navbar = () => {
                                                 <p className="text-sm text-white font-bold">{user.name}</p>
                                                 <p className="text-xs text-dark-400 truncate">{user.email}</p>
                                             </div>
-                                            <Link to="/profile" className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700">Profile</Link>
+                                            <Link to={user.role === 'instructor' ? "/teacher/profile" : "/student/profile"} className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700">Profile</Link>
                                             <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-dark-300 hover:bg-dark-700">
                                                 Sign out
                                             </button>

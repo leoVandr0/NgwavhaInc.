@@ -3,8 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
+import PublicLayout from './layouts/PublicLayout';
 import Login from './pages/auth/LoginPage';
 import Register from './pages/auth/RegisterPage';
+import OAuthCallback from './pages/auth/OAuthCallback';
 import HomePage from './pages/HomePage';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentProfile from './pages/student/StudentProfile';
@@ -13,6 +15,7 @@ import CreateCourse from './pages/teacher/CreateCourse';
 import TeacherCoursesPage from './pages/teacher/TeacherCoursesPage';
 import TeacherLiveSessions from './pages/teacher/TeacherLiveSessions';
 import StudentLiveSessions from './pages/common/StudentLiveSessions';
+import TeacherProfile from './pages/teacher/TeacherProfile';
 import LiveRoom from './pages/common/LiveRoom';
 import CourseListPage from './pages/courses/CourseListPage';
 import CourseDetailsPage from './pages/courses/CourseDetailsPage';
@@ -55,34 +58,38 @@ function App() {
       <AuthProvider>
         <AntApp>
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
+            {/* Public Routes with Navbar and Footer */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/courses" element={<CourseListPage />} />
+              <Route path="/course/:slug" element={<CourseDetailsPage />} />
+              <Route
+                path="/cart"
+                element={
+                  <ProtectedRoute>
+                    <CartPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wishlist"
+                element={
+                  <ProtectedRoute>
+                    <WishlistPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/courses" element={<CourseListPage />} />
-            <Route path="/course/:slug" element={<CourseDetailsPage />} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
 
             <Route
               path="/learn/:slug"
               element={
                 <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
                   <LearningPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <CartPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/wishlist"
-              element={
-                <ProtectedRoute>
-                  <WishlistPage />
                 </ProtectedRoute>
               }
             />
@@ -122,7 +129,7 @@ function App() {
               <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
               <Route path="students" element={<div>Students List</div>} />
               <Route path="assignments" element={<div>Assignments</div>} />
-              <Route path="profile" element={<div>Teacher Profile</div>} />
+              <Route path="profile" element={<TeacherProfile />} />
               {/* Redirect /teacher to /teacher/dashboard */}
               <Route index element={<Navigate to="dashboard" replace />} />
             </Route>

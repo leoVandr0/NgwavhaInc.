@@ -20,7 +20,7 @@ const WishlistItem = sequelize.define('WishlistItem', {
     indexes: [
         {
             unique: true,
-            fields: ['userId', 'courseId']
+            fields: ['user_id', 'course_id']
         }
     ]
 });

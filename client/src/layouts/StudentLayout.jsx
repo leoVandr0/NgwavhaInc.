@@ -12,6 +12,7 @@ import {
 } from '@ant-design/icons';
 
 import logo from '../assets/logo.jpg';
+import Footer from '../components/layout/Footer';
 
 const { Header, Content, Sider } = Layout;
 
@@ -44,6 +45,7 @@ const StudentLayout = () => {
         <Header style={{ padding: 0, background: '#1A1A1A', borderBottom: '1px solid #333' }} />
         <Content style={{ padding: '24px', minHeight: 280, background: '#000000', color: '#fff' }}>
           <Outlet />
+          <Footer />
         </Content>
       </Layout>
     </Layout>

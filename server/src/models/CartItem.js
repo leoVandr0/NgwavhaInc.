@@ -20,7 +20,7 @@ const CartItem = sequelize.define('CartItem', {
     indexes: [
         {
             unique: true,
-            fields: ['userId', 'courseId']
+            fields: ['user_id', 'course_id']
         }
     ]
 });
