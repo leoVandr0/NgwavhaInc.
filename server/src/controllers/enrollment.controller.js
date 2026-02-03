@@ -167,3 +167,62 @@ export const enrollInCourse = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Unenroll from a course
+// @route   DELETE /api/enrollments/unenroll/:courseId
+// @access  Private
+export const unenrollFromCourse = async (req, res) => {
+    try {
+        const enrollment = await Enrollment.findOne({
+            where: {
+                userId: req.user.id,
+                courseId: req.params.courseId
+            }
+        });
+
+        if (!enrollment) {
+            return res.status(404).json({ message: 'Enrollment not found' });
+        }
+
+        await enrollment.destroy();
+
+        // Update enrollment count in MySQL
+        const course = await Course.findByPk(req.params.courseId);
+        if (course) {
+            course.enrollmentsCount = Math.max(0, course.enrollmentsCount - 1);
+            await course.save();
+        }
+
+        res.json({ message: 'Successfully unenrolled from course' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get students enrolled in teacher's courses
+// @route   GET /api/enrollments/teacher-students
+// @access  Private (Instructor/Admin)
+export const getTeacherStudents = async (req, res) => {
+    try {
+        const enrollments = await Enrollment.findAll({
+            include: [
+                {
+                    model: Course,
+                    as: 'course',
+                    where: { instructorId: req.user.id },
+                    attributes: ['id', 'title', 'slug']
+                },
+                {
+                    model: User,
+                    as: 'student',
+                    attributes: ['id', 'name', 'email', 'avatar']
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        res.json(enrollments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

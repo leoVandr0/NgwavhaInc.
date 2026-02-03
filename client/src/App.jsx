@@ -14,6 +14,7 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import CreateCourse from './pages/teacher/CreateCourse';
 import TeacherCoursesPage from './pages/teacher/TeacherCoursesPage';
 import TeacherLiveSessions from './pages/teacher/TeacherLiveSessions';
+import TeacherStudentsPage from './pages/teacher/TeacherStudentsPage';
 import StudentLiveSessions from './pages/common/StudentLiveSessions';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import LiveRoom from './pages/common/LiveRoom';
@@ -127,7 +128,7 @@ function App() {
               <Route path="courses" element={<TeacherCoursesPage />} />
               <Route path="live" element={<TeacherLiveSessions />} />
               <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
-              <Route path="students" element={<div>Students List</div>} />
+              <Route path="students" element={<TeacherStudentsPage />} />
               <Route path="assignments" element={<div>Assignments</div>} />
               <Route path="profile" element={<TeacherProfile />} />
               {/* Redirect /teacher to /teacher/dashboard */}
