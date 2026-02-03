@@ -7,6 +7,7 @@ import Transaction from './Transaction.js';
 import LiveSession from './LiveSession.js';
 import CartItem from './CartItem.js';
 import WishlistItem from './WishlistItem.js';
+import Assignment from './Assignment.js';
 
 // User <-> Course (Instructor relationship)
 User.hasMany(Course, { foreignKey: 'instructorId', as: 'instructedCourses' });
@@ -68,6 +69,14 @@ WishlistItem.belongsTo(User, { foreignKey: 'userId' });
 Course.hasMany(WishlistItem, { foreignKey: 'courseId' });
 WishlistItem.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 
+// Course <-> Assignment
+Course.hasMany(Assignment, { foreignKey: 'courseId', as: 'assignments' });
+Assignment.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
+// User <-> Assignment (Instructor)
+User.hasMany(Assignment, { foreignKey: 'instructorId', as: 'instructedAssignments' });
+Assignment.belongsTo(User, { foreignKey: 'instructorId', as: 'instructor' });
+
 export {
     User,
     Course,
@@ -77,5 +86,6 @@ export {
     Transaction,
     LiveSession,
     CartItem,
-    WishlistItem
+    WishlistItem,
+    Assignment
 };

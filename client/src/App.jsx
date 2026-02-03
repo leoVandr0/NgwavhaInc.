@@ -15,6 +15,8 @@ import CreateCourse from './pages/teacher/CreateCourse';
 import TeacherCoursesPage from './pages/teacher/TeacherCoursesPage';
 import TeacherLiveSessions from './pages/teacher/TeacherLiveSessions';
 import TeacherStudentsPage from './pages/teacher/TeacherStudentsPage';
+import TeacherAssignmentsPage from './pages/teacher/TeacherAssignmentsPage';
+import StudentAssignmentsPage from './pages/student/StudentAssignmentsPage';
 import StudentLiveSessions from './pages/common/StudentLiveSessions';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import LiveRoom from './pages/common/LiveRoom';
@@ -106,6 +108,7 @@ function App() {
             >
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<div>My Courses</div>} />
+              <Route path="assignments" element={<StudentAssignmentsPage />} />
               <Route path="live" element={<StudentLiveSessions />} />
               <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
               <Route path="schedule" element={<div>My Schedule</div>} />
@@ -129,7 +132,7 @@ function App() {
               <Route path="live" element={<TeacherLiveSessions />} />
               <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
               <Route path="students" element={<TeacherStudentsPage />} />
-              <Route path="assignments" element={<div>Assignments</div>} />
+              <Route path="assignments" element={<TeacherAssignmentsPage />} />
               <Route path="profile" element={<TeacherProfile />} />
               {/* Redirect /teacher to /teacher/dashboard */}
               <Route index element={<Navigate to="dashboard" replace />} />

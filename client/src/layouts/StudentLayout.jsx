@@ -8,6 +8,7 @@ import {
   HomeOutlined,
   LogoutOutlined,
   ScheduleOutlined,
+  FileDoneOutlined,
   VideoCameraOutlined
 } from '@ant-design/icons';
 
@@ -34,6 +35,7 @@ const StudentLayout = () => {
           items={[
             { key: '1', icon: <HomeOutlined />, label: <Link to="/student/dashboard">Dashboard</Link> },
             { key: '2', icon: <BookOutlined />, label: <Link to="/student/courses">My Courses</Link> },
+            { key: 'assignments', icon: <FileDoneOutlined />, label: <Link to="/student/assignments">Assignments</Link> },
             { key: 'live', icon: <VideoCameraOutlined />, label: <Link to="/student/live">Live Classes</Link> },
             { key: '3', icon: <ScheduleOutlined />, label: <Link to="/student/schedule">Schedule</Link> },
             { key: '4', icon: <UserOutlined />, label: <Link to="/student/profile">Profile</Link> },
