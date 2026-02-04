@@ -25,6 +25,7 @@ import liveSessionRoutes from './src/routes/liveSession.routes.js';
 import assignmentRoutes from './src/routes/assignment.routes.js';
 import cartRoutes from './src/routes/cart.routes.js';
 import wishlistRoutes from './src/routes/wishlist.routes.js';
+import enrollmentRoutes from './src/routes/enrollment.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
@@ -78,6 +79,7 @@ app.use('/api/live-sessions', liveSessionRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 
 // Test route
 app.get('/api', (req, res) => {
