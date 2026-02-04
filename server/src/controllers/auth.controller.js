@@ -105,14 +105,21 @@ export const uploadAvatar = async (req, res) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        const avatarUrl = `/uploads/${req.file.filename}`;
         const user = await User.findByPk(req.user.id);
-        user.avatar = avatarUrl;
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Update user avatar with the filename
+        user.avatar = req.file.filename;
         await user.save();
 
-        res.json({ url: avatarUrl });
+        res.json({
+            url: req.file.filename,
+            message: 'Avatar uploaded successfully'
+        });
     } catch (error) {
-        console.error('Upload avatar error:', error);
+        console.error('Avatar upload error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

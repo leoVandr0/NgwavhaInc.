@@ -9,7 +9,9 @@ import {
   LogoutOutlined,
   ScheduleOutlined,
   FileDoneOutlined,
-  VideoCameraOutlined
+  VideoCameraOutlined,
+  ShoppingCartOutlined,
+  HeartOutlined
 } from '@ant-design/icons';
 
 import logo from '../assets/logo.jpg';
@@ -35,6 +37,8 @@ const StudentLayout = () => {
           items={[
             { key: '1', icon: <HomeOutlined />, label: <Link to="/student/dashboard">Dashboard</Link> },
             { key: '2', icon: <BookOutlined />, label: <Link to="/student/courses">My Courses</Link> },
+            { key: 'cart', icon: <ShoppingCartOutlined />, label: <Link to="/student/cart">Cart</Link> },
+            { key: 'wishlist', icon: <HeartOutlined />, label: <Link to="/student/wishlist">Wishlist</Link> },
             { key: 'assignments', icon: <FileDoneOutlined />, label: <Link to="/student/assignments">Assignments</Link> },
             { key: 'live', icon: <VideoCameraOutlined />, label: <Link to="/student/live">Live Classes</Link> },
             { key: '3', icon: <ScheduleOutlined />, label: <Link to="/student/schedule">Schedule</Link> },

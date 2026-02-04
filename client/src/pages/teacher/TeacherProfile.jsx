@@ -21,9 +21,10 @@ import {
 } from 'lucide-react';
 import { message } from 'antd';
 import api from '../../services/api';
+import { getAvatarUrl } from '../../utils/imageUtils';
 
 const TeacherProfile = () => {
-    const { currentUser, login } = useAuth();
+    const { currentUser, updateUser } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -76,9 +77,10 @@ const TeacherProfile = () => {
             // login(data, localStorage.getItem('token')); 
             // But we already have currentUser in context. We might need a way to refresh it.
             // For now, let's assume message success is enough or a local update if possible.
+            updateUser(data);
             message.success('Profile updated successfully!');
             setIsEditing(false);
-            window.location.reload(); // Simple way to refresh context for now
+            // window.location.reload(); // Simple way to refresh context for now
         } catch (error) {
             message.error(error.response?.data?.message || 'Failed to update profile');
         } finally {
@@ -98,6 +100,7 @@ const TeacherProfile = () => {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setFormData(prev => ({ ...prev, avatar: data.url }));
+            updateUser({ ...currentUser, avatar: data.url });
             message.success('Avatar uploaded successfully!');
         } catch (error) {
             message.error('Failed to upload avatar');
@@ -114,12 +117,6 @@ const TeacherProfile = () => {
         ));
     };
 
-    const getImageUrl = (url) => {
-        if (!url) return null;
-        if (url.startsWith('http')) return url;
-        return `http://localhost:5000${url}`;
-    };
-
     if (!currentUser) return null;
 
     return (
@@ -132,7 +129,7 @@ const TeacherProfile = () => {
                         <div className="relative group">
                             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-primary-500 shadow-2xl shadow-primary-500/20 bg-dark-800">
                                 {formData.avatar ? (
-                                    <img src={getImageUrl(formData.avatar)} alt={formData.name} className="w-full h-full object-cover" />
+                                    <img src={getAvatarUrl(formData.avatar)} alt={formData.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
                                         <User className="w-20 h-20 text-dark-400" />

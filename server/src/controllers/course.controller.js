@@ -48,7 +48,33 @@ export const getCourses = async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        res.json({ courses, page, pages: Math.ceil(count / pageSize) });
+        // Add ratings and enrollment counts to each course
+        const coursesWithStats = await Promise.all(courses.map(async (course) => {
+            const courseData = course.toJSON();
+            
+            // Get enrollment count
+            const enrollmentCount = await Enrollment.count({
+                where: { courseId: course.id }
+            });
+            
+            // Get rating statistics
+            const ratingStats = await Review.findOne({
+                where: { courseId: course.id },
+                attributes: [
+                    [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
+                    [sequelize.fn('COUNT', sequelize.col('id')), 'ratingsCount']
+                ]
+            });
+            
+            return {
+                ...courseData,
+                enrollmentsCount: enrollmentCount,
+                averageRating: ratingStats?.dataValues?.averageRating ? parseFloat(ratingStats.dataValues.averageRating).toFixed(1) : '0.0',
+                ratingsCount: ratingStats?.dataValues?.ratingsCount || 0
+            };
+        }));
+
+        res.json({ courses: coursesWithStats, page, pages: Math.ceil(count / pageSize) });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -56,11 +56,12 @@ const StudentDashboard = () => {
                         >
                             Completed
                         </button>
-                        <button
+                        <Link
+                            to="/student/wishlist"
                             className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
                         >
                             Wishlist
-                        </button>
+                        </Link>
                         <button
                             className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
                         >

@@ -57,10 +57,16 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
+  const updateUser = (userData) => {
+    setCurrentUser(userData);
+    authStore.login(userData, localStorage.getItem('token'));
+  };
+
   const value = {
     currentUser,
     login,
     logout,
+    updateUser,
     loading
   };
 

@@ -23,6 +23,8 @@ import courseRoutes from './src/routes/course.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
 import liveSessionRoutes from './src/routes/liveSession.routes.js';
 import assignmentRoutes from './src/routes/assignment.routes.js';
+import cartRoutes from './src/routes/cart.routes.js';
+import wishlistRoutes from './src/routes/wishlist.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
@@ -74,6 +76,8 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/live-sessions', liveSessionRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 // Test route
 app.get('/api', (req, res) => {

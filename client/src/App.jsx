@@ -108,6 +108,8 @@ function App() {
             >
               <Route path="dashboard" element={<StudentDashboard />} />
               <Route path="courses" element={<div>My Courses</div>} />
+              <Route path="cart" element={<CartPage />} />
+              <Route path="wishlist" element={<WishlistPage />} />
               <Route path="assignments" element={<StudentAssignmentsPage />} />
               <Route path="live" element={<StudentLiveSessions />} />
               <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
