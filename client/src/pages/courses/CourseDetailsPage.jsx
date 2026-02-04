@@ -72,7 +72,7 @@ const CourseDetailsPage = () => {
             for (const section of course.content.sections) {
                 for (const lecture of section.lectures) {
                     if (lecture.videoUrl) {
-                        setPreviewUrl(`http://localhost:5000${lecture.videoUrl}`);
+                        setPreviewUrl(`http://localhost:5001${lecture.videoUrl}`);
                         return;
                     }
                 }
