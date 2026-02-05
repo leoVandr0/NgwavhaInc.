@@ -41,7 +41,7 @@ const AdminDashboard = () => {
     const [dateRange, setDateRange] = useState(null);
     const [loading, setLoading] = useState(true);
     const { currentUser } = useAuth();
-    
+
     // Use real-time data hook
     const {
         onlineUsers,
@@ -158,8 +158,8 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <Tooltip title={connected ? "Real-time connected" : "Using polling fallback"}>
-                            <Badge 
-                                status={connected ? "success" : "warning"} 
+                            <Badge
+                                status={connected ? "success" : "warning"}
                                 text={connected ? "Live" : "Polling"}
                                 className={connected ? "text-green-500" : "text-yellow-500"}
                             />
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
                                     Online Users
                                 </span>
                             }
-                            value={realTimeData.onlineUsers}
+                            value={onlineUsers}
                             prefix={<TrendingUp size={16} className="text-green-500" />}
                             valueStyle={{ color: '#10b981' }}
                         />
@@ -206,7 +206,7 @@ const AdminDashboard = () => {
                                     Active Sessions
                                 </span>
                             }
-                            value={realTimeData.activeSessions}
+                            value={activeSessions}
                             prefix={<BarChart3 size={16} className="text-blue-500" />}
                             valueStyle={{ color: '#3b82f6' }}
                         />
@@ -288,8 +288,8 @@ const AdminDashboard = () => {
             </Row>
 
             {/* Recent Activity */}
-            <Card 
-                className="bg-dark-800 border-dark-700" 
+            <Card
+                className="bg-dark-800 border-dark-700"
                 title={
                     <span className="text-white flex items-center gap-2">
                         <Activity size={20} />
@@ -300,8 +300,8 @@ const AdminDashboard = () => {
                     </span>
                 }
                 extra={
-                    <Button 
-                        type="text" 
+                    <Button
+                        type="text"
                         className="text-primary-400 hover:text-primary-300"
                     >
                         View All

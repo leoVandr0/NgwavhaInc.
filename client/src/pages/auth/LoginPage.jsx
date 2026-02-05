@@ -38,17 +38,17 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Rate limiting check
         if (!checkRateLimit()) {
             return;
         }
-        
+
         // Basic password validation
         if (formData.password.length < 8) {
             message.warning('Password should be at least 8 characters');
         }
-        
+
         setLoading(true);
         setLastAttempt(Date.now());
 
@@ -58,7 +58,9 @@ const LoginPage = () => {
             setLoginAttempts(0); // Reset on successful login
 
             // Navigate based on user role
-            if (userData.role === 'teacher' || userData.role === 'instructor') {
+            if (userData.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else if (userData.role === 'teacher' || userData.role === 'instructor') {
                 navigate('/teacher/dashboard');
             } else {
                 navigate('/student/dashboard');
@@ -67,12 +69,12 @@ const LoginPage = () => {
             console.error('Login error:', error);
             setLoginAttempts(prev => prev + 1);
             const remainingAttempts = 5 - (loginAttempts + 1);
-            
+
             let errorMessage = error.response?.data?.message || 'We could not log you in. Please check your credentials.';
             if (remainingAttempts <= 2 && remainingAttempts > 0) {
                 errorMessage += ` (${remainingAttempts} attempts remaining)`;
             }
-            
+
             message.error(errorMessage);
         } finally {
             setLoading(false);
@@ -144,7 +146,7 @@ const LoginPage = () => {
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
-                            
+
                             {/* Password security hint */}
                             <Tooltip title="Make sure you're using a strong, unique password">
                                 <div className="flex items-center gap-2 mt-1 text-xs text-dark-400">

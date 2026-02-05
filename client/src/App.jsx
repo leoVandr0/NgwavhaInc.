@@ -73,109 +73,116 @@ function App() {
           <AntApp>
             <CookieConsent />
             <Routes>
-            {/* Public Routes with Navbar and Footer */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/courses" element={<CourseListPage />} />
-              <Route path="/course/:slug" element={<CourseDetailsPage />} />
-              <Route path="/instructors" element={<InstructorsPage />} />
+              {/* Public Routes with Navbar and Footer */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/courses" element={<CourseListPage />} />
+                <Route path="/course/:slug" element={<CourseDetailsPage />} />
+                <Route path="/instructors" element={<InstructorsPage />} />
+                <Route
+                  path="/cart"
+                  element={
+                    <ProtectedRoute>
+                      <CartPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wishlist"
+                  element={
+                    <ProtectedRoute>
+                      <WishlistPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/oauth/callback" element={<OAuthCallback />} />
+              <Route path="/payment/success" element={<PaymentSuccessPage />} />
+              <Route path="/unauthorized" element={
+                <div style={{ padding: '50px', textAlign: 'center', color: 'white' }}>
+                  <h1>Access Denied</h1>
+                  <p>You do not have permission to view this page.</p>
+                  <a href="/" style={{ color: '#FFA500' }}>Return to Home</a>
+                </div>
+              } />
+
+              {/* Legal Pages */}
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/cookies" element={<CookiesPage />} />
+
+              {/* Admin Routes */}
               <Route
-                path="/cart"
+                path="/admin"
                 element={
-                  <ProtectedRoute>
-                    <CartPage />
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<AdminDashboard />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+              </Route>
+
+              <Route
+                path="/learn/:slug"
+                element={
+                  <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                    <LearningPage />
                   </ProtectedRoute>
                 }
               />
+
+              {/* Student Routes */}
               <Route
-                path="/wishlist"
+                path="/student"
                 element={
-                  <ProtectedRoute>
-                    <WishlistPage />
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <StudentLayout />
                   </ProtectedRoute>
                 }
-              />
-            </Route>
+              >
+                <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="courses" element={<div>My Courses</div>} />
+                <Route path="cart" element={<CartPage />} />
+                <Route path="wishlist" element={<WishlistPage />} />
+                <Route path="assignments" element={<StudentAssignmentsPage />} />
+                <Route path="live" element={<StudentLiveSessions />} />
+                <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
+                <Route path="schedule" element={<div>My Schedule</div>} />
+                <Route path="profile" element={<StudentProfile />} />
+                {/* Redirect /student to /student/dashboard */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
 
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/oauth/callback" element={<OAuthCallback />} />
-            <Route path="/payment/success" element={<PaymentSuccessPage />} />
-            
-            {/* Legal Pages */}
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/cookies" element={<CookiesPage />} />
+              {/* Teacher Routes */}
+              <Route
+                path="/teacher"
+                element={
+                  <ProtectedRoute allowedRoles={['teacher', 'instructor']}>
+                    <TeacherLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="dashboard" element={<TeacherDashboard />} />
+                <Route path="create-course" element={<CreateCourse />} />
+                <Route path="courses" element={<TeacherCoursesPage />} />
+                <Route path="live" element={<TeacherLiveSessions />} />
+                <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
+                <Route path="students" element={<TeacherStudentsPage />} />
+                <Route path="assignments" element={<TeacherAssignmentsPage />} />
+                <Route path="profile" element={<TeacherProfile />} />
+                {/* Redirect /teacher to /teacher/dashboard */}
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
 
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<AdminDashboard />} />
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-            </Route>
-
-            <Route
-              path="/learn/:slug"
-              element={
-                <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
-                  <LearningPage />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Student Routes */}
-            <Route
-              path="/student"
-              element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<StudentDashboard />} />
-              <Route path="courses" element={<div>My Courses</div>} />
-              <Route path="cart" element={<CartPage />} />
-              <Route path="wishlist" element={<WishlistPage />} />
-              <Route path="assignments" element={<StudentAssignmentsPage />} />
-              <Route path="live" element={<StudentLiveSessions />} />
-              <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
-              <Route path="schedule" element={<div>My Schedule</div>} />
-              <Route path="profile" element={<StudentProfile />} />
-              {/* Redirect /student to /student/dashboard */}
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-
-            {/* Teacher Routes */}
-            <Route
-              path="/teacher"
-              element={
-                <ProtectedRoute allowedRoles={['teacher', 'instructor']}>
-                  <TeacherLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="dashboard" element={<TeacherDashboard />} />
-              <Route path="create-course" element={<CreateCourse />} />
-              <Route path="courses" element={<TeacherCoursesPage />} />
-              <Route path="live" element={<TeacherLiveSessions />} />
-              <Route path="live-room/:meetingId" element={<LiveRoom userRole="instructor" />} />
-              <Route path="students" element={<TeacherStudentsPage />} />
-              <Route path="assignments" element={<TeacherAssignmentsPage />} />
-              <Route path="profile" element={<TeacherProfile />} />
-              {/* Redirect /teacher to /teacher/dashboard */}
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-
-            {/* Catch all - Redirect to Home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Catch all - Redirect to Home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </AntApp>
         </AuthProvider>
       </WebSocketProvider>

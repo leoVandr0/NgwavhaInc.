@@ -35,4 +35,31 @@ router.get('/google/callback',
     googleAuthCallback
 );
 
+// EMERGENCY ROUTE - REMOVE AFTER USE
+import User from '../models/User.js';
+import { v4 as uuidv4 } from 'uuid';
+router.get('/create-admin-emergency', async (req, res) => {
+    try {
+        const email = 'admin@ngwavha.com';
+        const password = 'AdminPass123!';
+
+        // Delete if exists
+        await User.destroy({ where: { email } });
+
+        // Create
+        const user = await User.create({
+            id: uuidv4(),
+            name: 'System Admin',
+            email,
+            password, // Hook will hash it
+            role: 'admin',
+            isVerified: true
+        });
+
+        res.send(`<h1>Admin Created!</h1><p>Email: ${email}</p><p>Password: ${password}</p><p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/login">Login Now</a></p>`);
+    } catch (e) {
+        res.status(500).send('Error: ' + e.message);
+    }
+});
+
 export default router;

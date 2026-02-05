@@ -1,0 +1,28 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm start"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "backend"
+rootDirectory = "server"
+buildCommand = "echo 'No build needed'"
+startCommand = "node server.js"
+watchPatterns = ["server/**"]
+
+[[services]]
+name = "frontend"
+rootDirectory = "client"
+buildCommand = "npm run build"
+startCommand = "npm run preview -- --host --port $PORT"
+watchPatterns = ["client/**"]
+
+[[services]]
+name = "ml-engine"
+rootDirectory = "ml-engine"
+buildCommand = "pip install -r requirements.txt"
+startCommand = "python api/main.py"
+watchPatterns = ["ml-engine/**"]

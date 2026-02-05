@@ -21,7 +21,13 @@ export const registerUser = async (req, res) => {
         let user = await User.findOne({ where: { email: normalizedEmail } });
         if (user) {
             console.log('Registration failed: User already exists:', normalizedEmail);
-            return res.status(400).json({ message: 'User already exists' });
+            let message = 'User with this email already exists.';
+            if (user.isGoogleUser && !user.password) {
+                message += ' It appears you previously signed in with Google. Please use Google Sign In.';
+            } else {
+                message += ' Please log in instead.';
+            }
+            return res.status(400).json({ message });
         }
 
         // Create user (password will be hashed by the beforeCreate hook)
