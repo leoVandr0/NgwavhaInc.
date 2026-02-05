@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
-import { App } from 'antd'; // Use Ant Design App hook for messages
+import { Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, Shield, CheckCircle } from 'lucide-react';
+import { App, Tooltip } from 'antd'; // Use Ant Design App hook for messages
 import { useAuth } from '../../contexts/AuthContext';
 import logo from '../../assets/logo.jpg';
 import Footer from '../../components/layout/Footer';
@@ -9,6 +9,9 @@ import Footer from '../../components/layout/Footer';
 const LoginPage = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [loginAttempts, setLoginAttempts] = useState(0);
+    const [lastAttempt, setLastAttempt] = useState(null);
     const navigate = useNavigate();
     const { login } = useAuth();
     const { message } = App.useApp(); // Use the hook from the AntApp context
@@ -17,13 +20,42 @@ const LoginPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Security: Rate limiting check
+    const checkRateLimit = () => {
+        if (loginAttempts >= 5) {
+            const timeSinceLastAttempt = Date.now() - lastAttempt;
+            if (timeSinceLastAttempt < 60000) { // 1 minute cooldown
+                const remainingSeconds = Math.ceil((60000 - timeSinceLastAttempt) / 1000);
+                message.error(`Too many failed attempts. Please wait ${remainingSeconds} seconds.`);
+                return false;
+            } else {
+                // Reset after cooldown
+                setLoginAttempts(0);
+            }
+        }
+        return true;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Rate limiting check
+        if (!checkRateLimit()) {
+            return;
+        }
+        
+        // Basic password validation
+        if (formData.password.length < 8) {
+            message.warning('Password should be at least 8 characters');
+        }
+        
         setLoading(true);
+        setLastAttempt(Date.now());
 
         try {
             const userData = await login(formData.email, formData.password);
             message.success('Welcome back to Ngwavha!');
+            setLoginAttempts(0); // Reset on successful login
 
             // Navigate based on user role
             if (userData.role === 'teacher' || userData.role === 'instructor') {
@@ -33,7 +65,15 @@ const LoginPage = () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            message.error(error.response?.data?.message || 'We could not log you in. Please check your credentials.');
+            setLoginAttempts(prev => prev + 1);
+            const remainingAttempts = 5 - (loginAttempts + 1);
+            
+            let errorMessage = error.response?.data?.message || 'We could not log you in. Please check your credentials.';
+            if (remainingAttempts <= 2 && remainingAttempts > 0) {
+                errorMessage += ` (${remainingAttempts} attempts remaining)`;
+            }
+            
+            message.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -89,14 +129,29 @@ const LoginPage = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    className="block w-full pl-10 pr-10 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
                                     placeholder="Enter your password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-400 hover:text-white"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
+                            
+                            {/* Password security hint */}
+                            <Tooltip title="Make sure you're using a strong, unique password">
+                                <div className="flex items-center gap-2 mt-1 text-xs text-dark-400">
+                                    <Shield size={12} />
+                                    <span>Tip: Use a password with letters, numbers, and symbols</span>
+                                </div>
+                            </Tooltip>
                         </div>
 
                         <div className="flex items-center justify-between pt-2">

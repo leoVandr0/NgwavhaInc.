@@ -1,27 +1,66 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Briefcase } from 'lucide-react';
-import { App } from 'antd';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, User, Briefcase, Eye, EyeOff, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { App, Progress, Tooltip } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import logo from '../../assets/logo.jpg';
 import Footer from '../../components/layout/Footer';
+import { checkPasswordStrength, validatePassword, calculateCrackTime, getPasswordRequirements } from '../../utils/passwordUtils';
 
 const RegisterPage = () => {
+    const [searchParams] = useSearchParams();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'student'
+        role: searchParams.get('role') || 'student'
     });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordStrength, setPasswordStrength] = useState(null);
+    const [passwordErrors, setPasswordErrors] = useState([]);
+    const [touchedFields, setTouchedFields] = useState({});
     const navigate = useNavigate();
     const { login } = useAuth();
     const { message } = App.useApp();
 
+    useEffect(() => {
+        const roleFromUrl = searchParams.get('role');
+        if (roleFromUrl === 'instructor') {
+            setFormData(prev => ({ ...prev, role: 'instructor' }));
+        }
+    }, [searchParams]);
+
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        
+        // Check password strength in real-time
+        if (name === 'password') {
+            const strength = checkPasswordStrength(value);
+            setPasswordStrength(strength);
+            
+            const validation = validatePassword(value);
+            setPasswordErrors(validation.errors);
+        }
+    };
+
+    const handleBlur = (fieldName) => {
+        setTouchedFields({ ...touchedFields, [fieldName]: true });
+    };
+
+    const getStrengthColor = () => {
+        if (!passwordStrength) return '#374151';
+        switch (passwordStrength.strength) {
+            case 'weak': return '#ef4444';
+            case 'fair': return '#f59e0b';
+            case 'good': return '#3b82f6';
+            case 'strong': return '#10b981';
+            default: return '#374151';
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -32,8 +71,9 @@ const RegisterPage = () => {
             return;
         }
 
-        if (formData.password.length < 6) {
-            message.error('Password must be at least 6 characters');
+        const validation = validatePassword(formData.password);
+        if (!validation.isValid) {
+            message.error(validation.errors[0]);
             return;
         }
 
@@ -78,10 +118,16 @@ const RegisterPage = () => {
 
                 <div className="bg-dark-900 rounded-none border-t-4 border-primary-500 shadow-2xl p-8 w-full">
                     <h2 className="text-xl font-bold text-white mb-2">
-                        Sign up and start learning
+                        {formData.role === 'instructor' 
+                            ? 'Start teaching today' 
+                            : 'Sign up and start learning'
+                        }
                     </h2>
                     <p className="text-dark-400 text-sm mb-6">
-                        Join thousands of learners from around the world.
+                        {formData.role === 'instructor'
+                            ? 'Share your expertise and earn while teaching thousands of students.'
+                            : 'Join thousands of learners from around the world.'
+                        }
                     </p>
 
                     <form className="space-y-4" onSubmit={handleSubmit}>
@@ -147,14 +193,84 @@ const RegisterPage = () => {
                                 <input
                                     id="password"
                                     name="password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    onBlur={() => handleBlur('password')}
+                                    className="block w-full pl-10 pr-10 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
                                     placeholder="Password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-400 hover:text-white"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
+                            
+                            {/* Password Strength Indicator */}
+                            {formData.password && passwordStrength && (
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-dark-400">Password Strength</span>
+                                        <span className={`text-xs font-medium ${
+                                            passwordStrength.strength === 'weak' ? 'text-red-400' :
+                                            passwordStrength.strength === 'fair' ? 'text-yellow-400' :
+                                            passwordStrength.strength === 'good' ? 'text-blue-400' :
+                                            'text-green-400'
+                                        }`}>
+                                            {passwordStrength.strength.charAt(0).toUpperCase() + passwordStrength.strength.slice(1)}
+                                        </span>
+                                    </div>
+                                    <Progress
+                                        percent={passwordStrength.score}
+                                        showInfo={false}
+                                        strokeColor={getStrengthColor()}
+                                        trailColor="#374151"
+                                        size="small"
+                                    />
+                                    
+                                    {/* Crack Time Estimate */}
+                                    <Tooltip title="Estimated time to crack this password using brute force">
+                                        <div className="flex items-center gap-2 text-xs text-dark-400">
+                                            <Shield size={12} />
+                                            <span>Time to crack: {calculateCrackTime(formData.password)}</span>
+                                        </div>
+                                    </Tooltip>
+                                    
+                                    {/* Password Requirements Checklist */}
+                                    <div className="mt-3 space-y-1">
+                                        {getPasswordRequirements().map((req, index) => {
+                                            const isMet = passwordStrength?.requirements?.[req.key];
+                                            return (
+                                                <div 
+                                                    key={index} 
+                                                    className={`flex items-center gap-2 text-xs ${
+                                                        isMet ? 'text-green-400' : 'text-dark-400'
+                                                    }`}
+                                                >
+                                                    {isMet ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                                                    <span>{req.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    
+                                    {/* Validation Errors */}
+                                    {touchedFields.password && passwordErrors.length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                            {passwordErrors.slice(0, 2).map((error, index) => (
+                                                <div key={index} className="flex items-center gap-2 text-xs text-red-400">
+                                                    <AlertTriangle size={12} />
+                                                    <span>{error}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -165,14 +281,39 @@ const RegisterPage = () => {
                                 <input
                                     id="confirmPassword"
                                     name="confirmPassword"
-                                    type="password"
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     required
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="block w-full pl-10 pr-3 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
+                                    onBlur={() => handleBlur('confirmPassword')}
+                                    className="block w-full pl-10 pr-10 py-3 border border-dark-700 bg-dark-800 text-white placeholder-dark-400 focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-medium"
                                     placeholder="Confirm Password"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-400 hover:text-white"
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
+                            
+                            {/* Password Match Indicator */}
+                            {formData.confirmPassword && (
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    {formData.password === formData.confirmPassword ? (
+                                        <>
+                                            <CheckCircle size={12} className="text-green-400" />
+                                            <span className="text-green-400">Passwords match</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <XCircle size={12} className="text-red-400" />
+                                            <span className="text-red-400">Passwords do not match</span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="pt-2">

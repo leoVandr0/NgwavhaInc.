@@ -7,6 +7,7 @@ import { message, Modal } from 'antd';
 import api from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
+import PaymentCheckoutModal from '../../components/PaymentCheckoutModal';
 
 const CourseDetailsPage = () => {
     const { slug } = useParams();
@@ -15,6 +16,7 @@ const CourseDetailsPage = () => {
     const { isAuthenticated, user } = useAuthStore();
     const { addToCart, addToWishlist, removeFromWishlist, isInCart, isInWishlist } = useCartStore();
     const [actionLoading, setActionLoading] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const { data: course, isLoading } = useQuery(
         ['course', slug],
@@ -56,7 +58,13 @@ const CourseDetailsPage = () => {
             navigate('/login', { state: { from: `/course/${slug}` } });
             return;
         }
-        enrollMutation.mutate();
+        // Show payment modal instead of direct enrollment
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentSuccess = () => {
+        queryClient.invalidateQueries(['enrollment-check', course.id]);
+        navigate(`/learn/${course.slug}`);
     };
 
     const handleStartLearning = () => {
@@ -421,6 +429,15 @@ const CourseDetailsPage = () => {
                 .preview-modal .ant-modal-content { background: #111 !important; border: 1px solid #333; overflow: hidden; }
                 .preview-modal .ant-modal-close { top: -40px; right: -40px; }
             ` }} />
+
+            {/* Payment Checkout Modal */}
+            <PaymentCheckoutModal
+                visible={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                course={course}
+                onPaymentSuccess={handlePaymentSuccess}
+                user={user}
+            />
         </div>
     );
 };

@@ -10,6 +10,9 @@ import enrollmentRoutes from './routes/enrollment.routes.js';
 import reviewRoutes from './routes/review.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import wishlistRoutes from './routes/wishlist.routes.js';
+import instructorRoutes from './routes/instructor.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import healthRoutes from './routes/health.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
@@ -41,6 +44,9 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/instructors', instructorRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/health', healthRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

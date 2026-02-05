@@ -13,6 +13,7 @@ import {
     Github
 } from 'lucide-react';
 import logo from '../../assets/logo.jpg';
+import SystemStatus from '../SystemStatus';
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
@@ -53,11 +54,17 @@ const Footer = () => {
                     <div>
                         <h4 className="text-white font-black text-sm uppercase tracking-widest mb-8">Learning</h4>
                         <ul className="space-y-4">
-                            {['All Courses', 'Live Sessions', 'Categories', 'Instructors', 'Become a Teacher'].map((link) => (
-                                <li key={link}>
-                                    <Link to="#" className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
+                            {[
+                                { text: 'All Courses', link: '/courses' },
+                                { text: 'Live Sessions', link: '#' },
+                                { text: 'Categories', link: '#' },
+                                { text: 'Instructors', link: '/instructors' },
+                                { text: 'Become a Teacher', link: '/register?role=instructor' }
+                            ].map((item) => (
+                                <li key={item.text}>
+                                    <Link to={item.link} className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
                                         <ChevronRight size={14} className="text-primary-500 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0" />
-                                        {link}
+                                        {item.text}
                                     </Link>
                                 </li>
                             ))}
@@ -68,11 +75,17 @@ const Footer = () => {
                     <div>
                         <h4 className="text-white font-black text-sm uppercase tracking-widest mb-8">Company</h4>
                         <ul className="space-y-4">
-                            {['About Us', 'Contact', 'Privacy Policy', 'Terms of Service', 'Help Center'].map((link) => (
-                                <li key={link}>
-                                    <Link to="#" className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
+                            {[
+                                { text: 'About Us', link: '/about' },
+                                { text: 'Contact', link: '/contact' },
+                                { text: 'Privacy Policy', link: '/privacy' },
+                                { text: 'Terms of Service', link: '/terms' },
+                                { text: 'Help Center', link: '/help' }
+                            ].map((item) => (
+                                <li key={item.text}>
+                                    <Link to={item.link} className="text-dark-400 hover:text-white flex items-center gap-2 group transition-colors text-sm">
                                         <ChevronRight size={14} className="text-primary-500 opacity-0 group-hover:opacity-100 transition-all -ml-4 group-hover:ml-0" />
-                                        {link}
+                                        {item.text}
                                     </Link>
                                 </li>
                             ))}
@@ -121,13 +134,10 @@ const Footer = () => {
                         <span className="ml-2 px-2 py-0.5 rounded bg-dark-900 border border-dark-800">Zimbabwe's Premiere LMS</span>
                     </p>
                     <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-dark-500">
-                        <Link to="#" className="hover:text-primary-500 transition-colors">Privacy</Link>
-                        <Link to="#" className="hover:text-primary-500 transition-colors">Terms</Link>
-                        <Link to="#" className="hover:text-primary-500 transition-colors">Cookies</Link>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-dark-900 rounded-full border border-dark-800">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-dark-400">All Systems Operational</span>
-                        </div>
+                        <Link to="/privacy" className="hover:text-primary-500 transition-colors">Privacy</Link>
+                        <Link to="/terms" className="hover:text-primary-500 transition-colors">Terms</Link>
+                        <Link to="/cookies" className="hover:text-primary-500 transition-colors">Cookies</Link>
+                        <SystemStatus />
                     </div>
                 </div>
             </div>

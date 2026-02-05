@@ -22,9 +22,15 @@ import TeacherProfile from './pages/teacher/TeacherProfile';
 import LiveRoom from './pages/common/LiveRoom';
 import CourseListPage from './pages/courses/CourseListPage';
 import CourseDetailsPage from './pages/courses/CourseDetailsPage';
+import InstructorsPage from './pages/courses/InstructorsPage';
 import LearningPage from './pages/courses/LearningPage';
 import CartPage from './pages/student/CartPage';
 import WishlistPage from './pages/student/WishlistPage';
+import PaymentSuccessPage from './pages/payment/PaymentSuccessPage';
+import PrivacyPage from './pages/legal/PrivacyPage';
+import TermsPage from './pages/legal/TermsPage';
+import CookiesPage from './pages/legal/CookiesPage';
+import CookieConsent from './components/CookieConsent';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Protected Route component
@@ -60,12 +66,14 @@ function App() {
     >
       <AuthProvider>
         <AntApp>
+          <CookieConsent />
           <Routes>
             {/* Public Routes with Navbar and Footer */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/courses" element={<CourseListPage />} />
               <Route path="/course/:slug" element={<CourseDetailsPage />} />
+              <Route path="/instructors" element={<InstructorsPage />} />
               <Route
                 path="/cart"
                 element={
@@ -87,6 +95,12 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            
+            {/* Legal Pages */}
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiesPage />} />
 
             <Route
               path="/learn/:slug"
