@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Result, Button, Spin, Typography, Card } from 'antd';
-import { CheckCircle, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
+import { CheckCircle } from 'lucide-react';
 import api from '../../services/api';
 
 const { Title, Text } = Typography;
@@ -31,7 +32,7 @@ const PaymentSuccessPage = () => {
         try {
             const response = await api.get(`/payments/paynow/status/${reference}`);
             setPaymentStatus(response.data);
-            
+
             if (response.data.status === 'succeeded') {
                 // Redirect to learning page after a short delay
                 setTimeout(() => {
@@ -50,15 +51,15 @@ const PaymentSuccessPage = () => {
 
     if (loading) {
         return (
-            <div style={{ 
-                minHeight: '100vh', 
-                display: 'flex', 
-                justifyContent: 'center', 
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
                 alignItems: 'center',
                 background: '#f5f5f5'
             }}>
                 <Card style={{ textAlign: 'center', padding: '40px' }}>
-                    <Spin 
+                    <Spin
                         indicator={<LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} spin />}
                     />
                     <Title level={3} style={{ marginTop: '20px' }}>
@@ -74,10 +75,10 @@ const PaymentSuccessPage = () => {
 
     if (error) {
         return (
-            <div style={{ 
-                minHeight: '100vh', 
-                display: 'flex', 
-                justifyContent: 'center', 
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
                 alignItems: 'center',
                 background: '#f5f5f5'
             }}>
@@ -99,19 +100,19 @@ const PaymentSuccessPage = () => {
     }
 
     return (
-        <div style={{ 
-            minHeight: '100vh', 
-            display: 'flex', 
-            justifyContent: 'center', 
+        <div style={{
+            minHeight: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
             alignItems: 'center',
             background: '#f5f5f5'
         }}>
             <Result
                 status="success"
-                icon={<CheckCircle style={{ color: '#52c41a' }} />}
+                icon={<CheckCircle size={64} style={{ color: '#52c41a' }} />}
                 title="Payment Successful!"
                 subTitle={
-                    paymentStatus?.course ? 
+                    paymentStatus?.course ?
                         `You are now enrolled in ${paymentStatus.course.title}` :
                         'Your payment was successful and you have been enrolled in the course.'
                 }

@@ -92,18 +92,34 @@ const TeacherProfile = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            message.error('Please select an image file');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            message.error('Image size should be less than 5MB');
+            return;
+        }
+
         const formDataUpload = new FormData();
         formDataUpload.append('avatar', file);
 
         try {
-            const { data } = await api.post('/auth/avatar', formDataUpload, {
+            message.loading({ content: 'Uploading...', key: 'avatar' });
+            const { data } = await api.post('/upload/profile-photo', formDataUpload, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            setFormData(prev => ({ ...prev, avatar: data.url }));
-            updateUser({ ...currentUser, avatar: data.url });
-            message.success('Avatar uploaded successfully!');
+
+            // Update user profile with new avatar
+            await api.put('/auth/profile', { avatar: data.filename });
+
+            setFormData(prev => ({ ...prev, avatar: data.filename }));
+            updateUser({ ...currentUser, avatar: data.filename });
+            message.success({ content: 'Avatar uploaded successfully!', key: 'avatar' });
         } catch (error) {
-            message.error('Failed to upload avatar');
+            message.error({ content: 'Failed to upload avatar', key: 'avatar' });
         }
     };
 

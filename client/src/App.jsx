@@ -31,7 +31,11 @@ import PrivacyPage from './pages/legal/PrivacyPage';
 import TermsPage from './pages/legal/TermsPage';
 import CookiesPage from './pages/legal/CookiesPage';
 import CookieConsent from './components/CookieConsent';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -64,10 +68,11 @@ function App() {
         algorithm: theme.darkAlgorithm, // Enable Ant Design Dark Mode
       }}
     >
-      <AuthProvider>
-        <AntApp>
-          <CookieConsent />
-          <Routes>
+      <WebSocketProvider>
+        <AuthProvider>
+          <AntApp>
+            <CookieConsent />
+            <Routes>
             {/* Public Routes with Navbar and Footer */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<HomePage />} />
@@ -101,6 +106,20 @@ function App() {
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiesPage />} />
+
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+            </Route>
 
             <Route
               path="/learn/:slug"
@@ -157,8 +176,9 @@ function App() {
             {/* Catch all - Redirect to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AntApp>
-      </AuthProvider>
+          </AntApp>
+        </AuthProvider>
+      </WebSocketProvider>
     </ConfigProvider>
   );
 }

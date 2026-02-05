@@ -51,12 +51,12 @@ export const getCourses = async (req, res) => {
         // Add ratings and enrollment counts to each course
         const coursesWithStats = await Promise.all(courses.map(async (course) => {
             const courseData = course.toJSON();
-            
+
             // Get enrollment count
             const enrollmentCount = await Enrollment.count({
                 where: { courseId: course.id }
             });
-            
+
             // Get rating statistics
             const ratingStats = await Review.findOne({
                 where: { courseId: course.id },
@@ -65,7 +65,7 @@ export const getCourses = async (req, res) => {
                     [sequelize.fn('COUNT', sequelize.col('id')), 'ratingsCount']
                 ]
             });
-            
+
             return {
                 ...courseData,
                 enrollmentsCount: enrollmentCount,
@@ -349,7 +349,7 @@ export const getCourseBySlug = async (req, res) => {
 // @access  Private/Instructor
 export const createCourse = async (req, res) => {
     try {
-        const { title, description, price, categoryId, level } = req.body;
+        const { title, description, price, categoryId, level, thumbnail } = req.body;
 
         const course = await Course.create({
             title,
@@ -358,7 +358,7 @@ export const createCourse = async (req, res) => {
             categoryId,
             level,
             instructorId: req.user.id,
-            thumbnail: 'default-course.jpg',
+            thumbnail: thumbnail || '/uploads/default-course.jpg',
         });
 
         // Initialize MongoDB content document
@@ -396,6 +396,9 @@ export const updateCourse = async (req, res) => {
             course.categoryId = req.body.categoryId || course.categoryId;
             course.level = req.body.level || course.level;
             course.status = req.body.status || course.status;
+            if (req.body.thumbnail) {
+                course.thumbnail = req.body.thumbnail;
+            }
 
             if (req.body.status === 'published' && !course.publishedAt) {
                 course.publishedAt = new Date();

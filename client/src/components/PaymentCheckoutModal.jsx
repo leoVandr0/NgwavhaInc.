@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, Radio, message, Steps, Typography } from 'antd';
-import { CreditCard, Smartphone, Mail, Phone, User, LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined } from '@ant-design/icons';
+import { CreditCard, Smartphone, Mail, Phone, User } from 'lucide-react';
 import api from '../services/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { Step } = Steps;
 
-const PaymentCheckoutModal = ({ 
-  visible, 
-  onClose, 
-  course, 
-  onPaymentSuccess, 
-  user 
+const PaymentCheckoutModal = ({
+  visible,
+  onClose,
+  course,
+  onPaymentSuccess,
+  user
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ const PaymentCheckoutModal = ({
       }
 
       const response = await api.post('/payments/paynow/initiate', payload);
-      
+
       if (response.data.success) {
         setPaymentData(response.data);
         setCurrentStep(2);
@@ -77,13 +78,13 @@ const PaymentCheckoutModal = ({
     const pollInterval = setInterval(async () => {
       try {
         const response = await api.post('/payments/paynow/poll', { pollUrl });
-        
+
         if (response.data.paid) {
           clearInterval(pollInterval);
           setPolling(false);
           setCurrentStep(3);
           message.success('Payment successful! Enrolling you in the course...');
-          
+
           setTimeout(() => {
             onPaymentSuccess();
             onClose();
@@ -122,10 +123,10 @@ const PaymentCheckoutModal = ({
       >
         <Radio.Group onChange={handlePaymentMethodChange}>
           <Radio.Button value="web" style={{ marginRight: 8 }}>
-            <CreditCard /> Card/Online Payment
+            <CreditCard size={16} style={{ marginRight: 4 }} /> Card/Online Payment
           </Radio.Button>
           <Radio.Button value="mobile">
-            <Smartphone /> EcoCash
+            <Smartphone size={16} style={{ marginRight: 4 }} /> EcoCash
           </Radio.Button>
         </Radio.Group>
       </Form.Item>
@@ -138,8 +139,8 @@ const PaymentCheckoutModal = ({
           { type: 'email', message: 'Please enter a valid email' }
         ]}
       >
-        <Input 
-          prefix={<Mail />} 
+        <Input
+          prefix={<Mail size={16} />}
           placeholder="your@email.com"
           disabled={!!user?.email}
         />
@@ -150,8 +151,8 @@ const PaymentCheckoutModal = ({
         name="name"
         rules={[{ required: true, message: 'Please enter your full name' }]}
       >
-        <Input 
-          prefix={<User />} 
+        <Input
+          prefix={<User size={16} />}
           placeholder="John Doe"
           disabled={!!user?.name}
         />
@@ -166,17 +167,17 @@ const PaymentCheckoutModal = ({
             { pattern: /^(07|263)[0-9]{8,9}$/, message: 'Please enter a valid Zimbabwean phone number' }
           ]}
         >
-          <Input 
-            prefix={<Phone />} 
+          <Input
+            prefix={<Phone size={16} />}
             placeholder="0771234567 or 263771234567"
           />
         </Form.Item>
       )}
 
       <Form.Item>
-        <Button 
-          type="primary" 
-          htmlType="submit" 
+        <Button
+          type="primary"
+          htmlType="submit"
           loading={loading}
           size="large"
           block
@@ -196,10 +197,10 @@ const PaymentCheckoutModal = ({
   const renderMobileInstructions = () => (
     <div style={{ textAlign: 'center', padding: '20px' }}>
       <Title level={4}>EcoCash Payment Instructions</Title>
-      <div style={{ 
-        background: '#f0f8ff', 
-        padding: '20px', 
-        borderRadius: '8px', 
+      <div style={{
+        background: '#f0f8ff',
+        padding: '20px',
+        borderRadius: '8px',
         margin: '20px 0',
         border: '1px solid #1890ff'
       }}>
@@ -268,11 +269,11 @@ const PaymentCheckoutModal = ({
       destroyOnClose
     >
       <div style={{ marginBottom: '24px' }}>
-        <div style={{ 
-          background: '#f5f5f5', 
-          padding: '16px', 
-          borderRadius: '8px', 
-          marginBottom: '24px' 
+        <div style={{
+          background: '#f5f5f5',
+          padding: '16px',
+          borderRadius: '8px',
+          marginBottom: '24px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>

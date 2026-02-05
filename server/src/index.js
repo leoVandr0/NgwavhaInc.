@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectMySQL as connectDB } from './config/mysql.js';
 import connectMongoDB from './config/mongodb.js';
+import { server } from './config/websocket.js';
 import authRoutes from './routes/auth.routes.js';
 import courseRoutes from './routes/course.routes.js';
 import categoryRoutes from './routes/category.routes.js';
@@ -13,6 +14,8 @@ import wishlistRoutes from './routes/wishlist.routes.js';
 import instructorRoutes from './routes/instructor.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import healthRoutes from './routes/health.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
@@ -47,15 +50,18 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/instructors', instructorRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Fix the console.log statement
-app.listen(PORT, () => {
+// Start server with WebSocket support
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`WebSocket server enabled for real-time updates`);
 });
 
 export default app;
