@@ -21,14 +21,15 @@ const storage = multer.diskStorage({
 });
 
 function checkFileType(file, cb) {
-    const filetypes = /jpg|jpeg|png|pdf|mp4|mkv/;
+    // Allow common image formats and increase size limit for avatars
+    const filetypes = /jpg|jpeg|png|gif|webp|pdf|mp4|mkv|avi|mov/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
 
     if (extname && mimetype) {
         return cb(null, true);
     } else {
-        cb(new Error('Images, PDFs and Videos only!'));
+        cb(new Error('Images (JPG, PNG, GIF, WebP), PDFs and Videos only!'));
     }
 }
 
@@ -37,7 +38,7 @@ export const upload = multer({
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     },
-    limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for avatars
 });
 
 const chunkStorage = multer.diskStorage({

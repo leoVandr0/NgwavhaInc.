@@ -107,26 +107,59 @@ export const getUserProfile = async (req, res) => {
 
 export const uploadAvatar = async (req, res) => {
     try {
+        console.log('Avatar upload request:', {
+            file: req.file,
+            user: req.user?.id,
+            body: req.body
+        });
+
         if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
+            console.log('No file uploaded');
+            return res.status(400).json({ 
+                success: false,
+                message: 'No file uploaded',
+                error: 'Please select a file to upload'
+            });
         }
 
         const user = await User.findByPk(req.user.id);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            console.log('User not found:', req.user.id);
+            return res.status(404).json({ 
+                success: false,
+                message: 'User not found' 
+            });
         }
 
         // Update user avatar with the filename
+        const oldAvatar = user.avatar;
         user.avatar = req.file.filename;
         await user.save();
 
+        console.log('Avatar uploaded successfully:', {
+            userId: user.id,
+            oldAvatar,
+            newAvatar: req.file.filename
+        });
+
         res.json({
+            success: true,
             url: req.file.filename,
-            message: 'Avatar uploaded successfully'
+            message: 'Avatar uploaded successfully',
+            filename: req.file.filename
         });
     } catch (error) {
-        console.error('Avatar upload error:', error);
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Avatar upload error:', {
+            error: error.message,
+            stack: error.stack,
+            file: req.file,
+            user: req.user?.id
+        });
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error', 
+            error: error.message 
+        });
     }
 };
 

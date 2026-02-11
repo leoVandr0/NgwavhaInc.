@@ -32,8 +32,8 @@ export const connectMySQL = async () => {
         await sequelize.authenticate();
         console.log('🗄️  MySQL connection established successfully.');
 
-        // Sync all models (to ensure new columns like skills/certifications are added)
-        await sequelize.sync({ alter: true });
+        // Sync all models (Standard sync without alter to avoid index/key limits)
+        await sequelize.sync();
         console.log('📦 MySQL models synchronized.');
 
         return sequelize;
