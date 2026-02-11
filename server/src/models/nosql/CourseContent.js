@@ -11,9 +11,10 @@ const lectureSchema = new mongoose.Schema({
     videoPublicId: String, // for cloud storage
     type: {
         type: String,
-        enum: ['video', 'quiz', 'assignment', 'text'],
+        enum: ['video', 'quiz', 'assignment', 'text', 'live'],
         default: 'video'
     },
+    liveSessionId: String, // ID of the LiveSession from MySQL
     content: String, // for text lectures or quiz description
     resources: [{
         title: String,

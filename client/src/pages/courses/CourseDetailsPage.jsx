@@ -2,12 +2,73 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { motion } from 'framer-motion';
-import { Star, Clock, Users, Globe, Award, Play, CheckCircle, X, Heart, ShoppingCart, Loader2 } from 'lucide-react';
+import { Star, Clock, Users, Globe, Award, Play, CheckCircle, X, Heart, ShoppingCart, Loader2, Calendar, Monitor } from 'lucide-react';
 import { message, Modal } from 'antd';
 import api from '../../services/api';
+import { getImageUrl, getCourseThumbnail, getAvatarUrl } from '../../utils/imageUtils';
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
 import PaymentCheckoutModal from '../../components/PaymentCheckoutModal';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
+
+const LiveSessionCountdown = ({ session }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+    const [isLive, setIsLive] = useState(session?.status === 'live');
+
+    useEffect(() => {
+        if (!session) return;
+
+        const timer = setInterval(() => {
+            const now = dayjs();
+            const start = dayjs(session.startTime);
+            const diff = start.diff(now);
+
+            if (diff <= 0) {
+                setTimeLeft('Happening Now!');
+                setIsLive(true);
+                clearInterval(timer);
+            } else {
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                setTimeLeft(`${hours}h ${mins}m ${secs}s`);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [session]);
+
+    if (!session) return null;
+
+    return (
+        <div className={`mt-6 p-4 rounded-xl border flex items-center justify-between transition-all duration-500 scale-in-center ${isLive
+                ? 'bg-orange-600/10 border-orange-500/30'
+                : 'bg-primary-500/5 border-primary-500/20'
+            }`}>
+            <div className="flex items-center gap-4">
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isLive ? 'bg-orange-600 text-white animate-pulse' : 'bg-primary-500 text-white'
+                    }`}>
+                    {isLive ? <Monitor className="h-6 w-6" /> : <Calendar className="h-6 w-6" />}
+                </div>
+                <div>
+                    <h4 className="text-white font-bold text-lg mb-0 flex items-center gap-2">
+                        {isLive ? 'LIVE CLASS IN PROGRESS' : 'NEXT LIVE CLASS'}
+                        {isLive && <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />}
+                    </h4>
+                    <p className="text-dark-400 text-sm mb-0">{session.title}</p>
+                </div>
+            </div>
+            <div className="text-right">
+                <div className={`text-2xl font-mono font-bold ${isLive ? 'text-orange-500' : 'text-primary-400'}`}>
+                    {timeLeft || '--:--:--'}
+                </div>
+                {!isLive && <p className="text-dark-500 text-xs mb-0">Starts {dayjs(session.startTime).format('MMM D, h:mm A')}</p>}
+            </div>
+        </div>
+    );
+};
 
 const CourseDetailsPage = () => {
     const { slug } = useParams();
@@ -80,7 +141,7 @@ const CourseDetailsPage = () => {
             for (const section of course.content.sections) {
                 for (const lecture of section.lectures) {
                     if (lecture.videoUrl) {
-                        setPreviewUrl(`http://localhost:5001${lecture.videoUrl}`);
+                        setPreviewUrl(getImageUrl(lecture.videoUrl));
                         return;
                     }
                 }
@@ -140,9 +201,11 @@ const CourseDetailsPage = () => {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <LiveSessionCountdown session={course.activeLiveSession} />
+
+                            <div className="flex items-center gap-4 mt-8">
                                 <img
-                                    src={course.instructor?.avatar || '/default-avatar.png'}
+                                    src={getAvatarUrl(course.instructor?.avatar)}
                                     alt={course.instructor?.name}
                                     className="w-12 h-12 rounded-full"
                                 />
@@ -159,7 +222,7 @@ const CourseDetailsPage = () => {
                                 <div className="aspect-video bg-dark-800 relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
                                     {course.thumbnail ? (
                                         <img
-                                            src={course.thumbnail}
+                                            src={getCourseThumbnail(course.thumbnail)}
                                             alt={course.title}
                                             className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"
                                         />
@@ -323,11 +386,12 @@ const CourseDetailsPage = () => {
                                             {section.lectures?.slice(0, 3).map((lecture, lIndex) => (
                                                 <div key={lIndex} className="p-4 flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                                                        <Play className="h-4 w-4 text-dark-400" />
+                                                        {lecture.type === 'live' ? <Monitor className="h-4 w-4 text-orange-500" /> : <Play className="h-4 w-4 text-dark-400" />}
                                                         <span className="text-dark-300">{lecture.title}</span>
+                                                        {lecture.type === 'live' && <Tag color="orange" className="text-[10px] m-0">LIVE</Tag>}
                                                     </div>
                                                     <span className="text-dark-400 text-sm">
-                                                        {Math.floor(lecture.videoDuration / 60)}:{String(lecture.videoDuration % 60).padStart(2, '0')}
+                                                        {lecture.type === 'live' ? 'Scheduled' : lecture.videoDuration ? `${Math.floor(lecture.videoDuration / 60)}:${String(lecture.videoDuration % 60).padStart(2, '0')}` : 'Video'}
                                                     </span>
                                                 </div>
                                             ))}
@@ -345,7 +409,7 @@ const CourseDetailsPage = () => {
                                     <div key={review.id} className="card p-6">
                                         <div className="flex items-start gap-4">
                                             <img
-                                                src={review.user?.avatar || '/default-avatar.png'}
+                                                src={getAvatarUrl(review.user?.avatar)}
                                                 alt={review.user?.name}
                                                 className="w-12 h-12 rounded-full"
                                             />
@@ -378,7 +442,7 @@ const CourseDetailsPage = () => {
                             <h3 className="text-xl font-bold text-white mb-4">Instructor</h3>
                             <div className="flex items-center gap-4 mb-4">
                                 <img
-                                    src={course.instructor?.avatar || '/default-avatar.png'}
+                                    src={getAvatarUrl(course.instructor?.avatar)}
                                     alt={course.instructor?.name}
                                     className="w-16 h-16 rounded-full"
                                 />

@@ -41,7 +41,9 @@ const TeacherLiveSessions = () => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCourseForModal, setSelectedCourseForModal] = useState(null);
     const [form] = Form.useForm();
+    const queryParams = new URLSearchParams(location.search);
 
     // Fetch Instructor Sessions
     const { data: sessions, isLoading: sessionsLoading } = useQuery('instructor-sessions', async () => {
@@ -54,6 +56,29 @@ const TeacherLiveSessions = () => {
         const { data } = await api.get('/courses/my');
         return data;
     });
+
+    // Fetch Content for the selected course in modal
+    const { data: courseContent } = useQuery(['course-curriculum', selectedCourseForModal], async () => {
+        if (!selectedCourseForModal) return null;
+        const { data } = await api.get(`/courses/${selectedCourseForModal}/content`);
+        return data;
+    }, { enabled: !!selectedCourseForModal });
+
+    useEffect(() => {
+        const courseId = queryParams.get('courseId');
+        const lectureId = queryParams.get('lectureId');
+        const lectureTitle = queryParams.get('lectureTitle');
+
+        if (courseId && lectureId) {
+            setSelectedCourseForModal(courseId);
+            setIsModalOpen(true);
+            form.setFieldsValue({
+                courseId: isNaN(courseId) ? courseId : parseInt(courseId),
+                lectureId,
+                title: lectureTitle || ''
+            });
+        }
+    }, [location.search]);
 
     // Mutations
     const scheduleMutation = useMutation(async (values) => {
@@ -269,9 +294,34 @@ const TeacherLiveSessions = () => {
                         label={<span className="text-dark-300">Target Course</span>}
                         rules={[{ required: true, message: 'Please select a course' }]}
                     >
-                        <Select placeholder="Which course is this for?">
+                        <Select
+                            placeholder="Which course is this for?"
+                            onChange={(val) => setSelectedCourseForModal(val)}
+                        >
                             {courses?.map(c => (
                                 <Select.Option key={c.id} value={c.id}>{c.title}</Select.Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="lectureId"
+                        label={<span className="text-dark-300">Curriculum Lecture (Optional)</span>}
+                        help="Link this session to a specific item in your course curriculum"
+                    >
+                        <Select
+                            placeholder="Link to a curriculum lecture"
+                            allowClear
+                            disabled={!selectedCourseForModal}
+                        >
+                            {courseContent?.sections?.map(section => (
+                                <Select.OptGroup key={section._id} label={section.title}>
+                                    {section.lectures?.filter(l => l.type === 'live').map(lecture => (
+                                        <Select.Option key={lecture._id} value={lecture._id}>
+                                            {lecture.title}
+                                        </Select.Option>
+                                    ))}
+                                </Select.OptGroup>
                             ))}
                         </Select>
                     </Form.Item>

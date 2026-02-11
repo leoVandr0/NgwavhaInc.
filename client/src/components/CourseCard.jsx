@@ -25,7 +25,7 @@ const CourseCard = ({ course, index }) => {
     const handleCartAction = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!isAuthenticated) {
             message.warning('Please login to add courses to cart');
             return;
@@ -49,7 +49,7 @@ const CourseCard = ({ course, index }) => {
     const handleWishlistAction = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (!isAuthenticated) {
             message.warning('Please login to add courses to wishlist');
             return;
@@ -84,7 +84,7 @@ const CourseCard = ({ course, index }) => {
         >
             <Link to={`/course/${course.slug}`} className="group block h-full">
                 <div className="bg-dark-900 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-dark-800 hover:border-primary-500 relative">
-                    
+
                     {/* Course Thumbnail */}
                     <div className="relative aspect-video overflow-hidden bg-dark-800">
                         <img
@@ -92,35 +92,43 @@ const CourseCard = ({ course, index }) => {
                             alt={course.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                        
+
+                        {/* Live Now Badge */}
+                        {course.isLive && (
+                            <div className="absolute top-2 left-2 bg-orange-600 text-white px-2 py-1 text-xs font-bold rounded animate-pulse shadow-lg flex items-center gap-1">
+                                <span className="h-2 w-2 rounded-full bg-white animate-ping" />
+                                LIVE NOW
+                            </div>
+                        )}
+
                         {/* Bestseller Badge */}
-                        {course.isBestseller && (
+                        {course.isBestseller && !course.isLive && (
                             <div className="absolute top-2 left-2 bg-yellow-500 text-dark-950 px-2 py-1 text-xs font-bold rounded">
                                 Bestseller
                             </div>
                         )}
-                        
+
                         {/* New Course Badge */}
                         {course.isNew && (
                             <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">
                                 New
                             </div>
                         )}
-                        
+
                         {/* Hot & New Badge */}
                         {course.isHot && (
                             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded">
                                 Hot & New
                             </div>
                         )}
-                        
+
                         {/* Level Badge */}
                         {course.level && (
                             <div className="absolute top-2 right-2 bg-dark-950/80 backdrop-blur-sm text-white px-2 py-1 text-xs font-medium rounded">
                                 {course.level}
                             </div>
                         )}
-                        
+
                         {/* Update Badge */}
                         {course.lastUpdated && (
                             <div className="absolute bottom-2 left-2 bg-dark-950/80 backdrop-blur-sm text-white px-2 py-1 text-xs font-medium rounded">
@@ -132,22 +140,20 @@ const CourseCard = ({ course, index }) => {
                         <div className={`absolute top-2 right-2 flex gap-2 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
                             <button
                                 onClick={handleWishlistAction}
-                                className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
-                                    inWishlist 
-                                        ? 'bg-red-500 text-white hover:bg-red-600' 
+                                className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${inWishlist
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
                                         : 'bg-dark-950/80 text-white hover:bg-primary-500'
-                                }`}
+                                    }`}
                                 title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                             >
                                 <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
                             </button>
                             <button
                                 onClick={handleCartAction}
-                                className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
-                                    inCart 
-                                        ? 'bg-primary-500 text-dark-950 hover:bg-primary-600' 
+                                className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${inCart
+                                        ? 'bg-primary-500 text-dark-950 hover:bg-primary-600'
                                         : 'bg-dark-950/80 text-white hover:bg-primary-500'
-                                }`}
+                                    }`}
                                 title={inCart ? 'Remove from cart' : 'Add to cart'}
                             >
                                 <ShoppingCart className="w-4 h-4" />
@@ -219,7 +225,7 @@ const CourseCard = ({ course, index }) => {
                                         </span>
                                     )}
                                 </div>
-                                
+
                                 {/* Certificate Badge */}
                                 {course.hasCertificate && (
                                     <div className="flex items-center gap-1 text-xs text-dark-400">

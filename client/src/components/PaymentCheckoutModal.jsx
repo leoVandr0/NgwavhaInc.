@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, Radio, message, Steps, Typography } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import { CreditCard, Smartphone, Mail, Phone, User } from 'lucide-react';
+import { CreditCard, Smartphone, Mail, Phone, User, Calendar, Lock } from 'lucide-react';
 import api from '../services/api';
 
 const { Title, Text } = Typography;
@@ -117,16 +117,54 @@ const PaymentCheckoutModal = ({
       }}
     >
       <Form.Item
-        label="Payment Method"
+        label={<span style={{ color: '#aaa' }}>Select Payment Method</span>}
         name="method"
         rules={[{ required: true, message: 'Please select a payment method' }]}
       >
-        <Radio.Group onChange={handlePaymentMethodChange}>
-          <Radio.Button value="web" style={{ marginRight: 8 }}>
-            <CreditCard size={16} style={{ marginRight: 4 }} /> Card/Online Payment
+        <Radio.Group
+          onChange={handlePaymentMethodChange}
+          className="w-full flex gap-4"
+          style={{ width: '100%', display: 'flex', gap: '16px' }}
+        >
+          <Radio.Button
+            value="web"
+            style={{
+              flex: 1,
+              height: 'auto',
+              padding: '16px',
+              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: paymentMethod === 'web' ? 'rgba(255, 165, 0, 0.1)' : '#1a1a1a',
+              borderColor: paymentMethod === 'web' ? '#FFA500' : '#333',
+              color: paymentMethod === 'web' ? '#FFA500' : '#fff',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <CreditCard size={24} style={{ marginBottom: '8px' }} />
+            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Card/Online</div>
           </Radio.Button>
-          <Radio.Button value="mobile">
-            <Smartphone size={16} style={{ marginRight: 4 }} /> EcoCash
+          <Radio.Button
+            value="mobile"
+            style={{
+              flex: 1,
+              height: 'auto',
+              padding: '16px',
+              borderRadius: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: paymentMethod === 'mobile' ? 'rgba(255, 165, 0, 0.1)' : '#1a1a1a',
+              borderColor: paymentMethod === 'mobile' ? '#FFA500' : '#333',
+              color: paymentMethod === 'mobile' ? '#FFA500' : '#fff',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <Smartphone size={24} style={{ marginBottom: '8px' }} />
+            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>EcoCash / Mobile</div>
           </Radio.Button>
         </Radio.Group>
       </Form.Item>
@@ -158,61 +196,142 @@ const PaymentCheckoutModal = ({
         />
       </Form.Item>
 
+      {paymentMethod === 'web' && (
+        <div style={{ marginTop: '24px', padding: '20px', background: '#111', borderRadius: '12px', border: '1px solid #333' }}>
+          <Title level={5} style={{ color: '#FFA500', marginBottom: '16px', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Card Information
+          </Title>
+
+          <Form.Item
+            label={<span style={{ color: '#aaa' }}>Card Number</span>}
+            name="cardNumber"
+            rules={[
+              { required: true, message: 'Please enter card number' },
+              { pattern: /^[0-9\s]{13,19}$/, message: 'Invalid card number' }
+            ]}
+            className="custom-form-item"
+          >
+            <Input
+              prefix={<CreditCard size={16} style={{ color: '#FFA500' }} />}
+              placeholder="0000 0000 0000 0000"
+              style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
+              maxLength={19}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label={<span style={{ color: '#aaa' }}>Card Holder Name</span>}
+            name="cardHolder"
+            rules={[{ required: true, message: 'Please enter card holder name' }]}
+            className="custom-form-item"
+          >
+            <Input
+              prefix={<User size={16} style={{ color: '#FFA500' }} />}
+              placeholder="NAME ON CARD"
+              style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
+            />
+          </Form.Item>
+
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <Form.Item
+              label={<span style={{ color: '#aaa' }}>Expiry Date</span>}
+              name="expiry"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: 'Required' },
+                { pattern: /^(0[1-9]|1[0-2])\/?([0-9]{2})$/, message: 'MM/YY' }
+              ]}
+              className="custom-form-item"
+            >
+              <Input
+                prefix={<Calendar size={16} style={{ color: '#FFA500' }} />}
+                placeholder="MM/YY"
+                style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
+                maxLength={5}
+              />
+            </Form.Item>
+            <Form.Item
+              label={<span style={{ color: '#aaa' }}>CVV</span>}
+              name="cvv"
+              style={{ flex: 1 }}
+              rules={[
+                { required: true, message: 'Required' },
+                { pattern: /^[0-9]{3,4}$/, message: 'Enter 3-4 digits' }
+              ]}
+              className="custom-form-item"
+            >
+              <Input
+                prefix={<Lock size={16} style={{ color: '#FFA500' }} />}
+                placeholder="123"
+                style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
+                maxLength={4}
+              />
+            </Form.Item>
+          </div>
+        </div>
+      )}
+
       {paymentMethod === 'mobile' && (
         <Form.Item
-          label="EcoCash Phone Number"
+          label={<span style={{ color: '#aaa' }}>EcoCash Phone Number</span>}
           name="phone"
           rules={[
             { required: true, message: 'Please enter your EcoCash number' },
             { pattern: /^(07|263)[0-9]{8,9}$/, message: 'Please enter a valid Zimbabwean phone number' }
           ]}
+          style={{ marginTop: '16px' }}
         >
           <Input
-            prefix={<Phone size={16} />}
+            prefix={<Phone size={16} style={{ color: '#FFA500' }} />}
             placeholder="0771234567 or 263771234567"
+            style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
           />
         </Form.Item>
       )}
 
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loading}
-          size="large"
-          block
-        >
-          {loading ? (
-            <>
-              <LoadingOutlined /> Processing...
-            </>
-          ) : (
-            `Pay $${course.price} with ${paymentMethod === 'web' ? 'Card/Online' : 'EcoCash'}`
-          )}
-        </Button>
-      </Form.Item>
+      <div style={{ marginTop: '24px' }}>
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            size="large"
+            block
+            style={{ height: '54px', fontWeight: 'bold' }}
+          >
+            {loading ? (
+              <>
+                <LoadingOutlined /> Processing...
+              </>
+            ) : (
+              `Pay $${course.price} with ${paymentMethod === 'web' ? 'Card/Online' : 'EcoCash'}`
+            )}
+          </Button>
+        </Form.Item>
+      </div>
     </Form>
   );
 
   const renderMobileInstructions = () => (
     <div style={{ textAlign: 'center', padding: '20px' }}>
-      <Title level={4}>EcoCash Payment Instructions</Title>
+      <Title level={4} style={{ color: '#fff' }}>EcoCash Payment Instructions</Title>
       <div style={{
-        background: '#f0f8ff',
-        padding: '20px',
-        borderRadius: '8px',
+        background: 'rgba(255, 165, 0, 0.1)',
+        padding: '24px',
+        borderRadius: '12px',
         margin: '20px 0',
-        border: '1px solid #1890ff'
+        border: '1px solid #FFA500'
       }}>
-        <Text strong>{paymentData?.instructions || 'Dial *151# and follow the prompts to complete the payment'}</Text>
+        <Text strong style={{ color: '#fff', fontSize: '16px' }}>
+          {paymentData?.instructions || 'Check your phone for the PIN prompt to complete the payment. If no prompt appears, dial *151*2*1#'}
+        </Text>
       </div>
       {polling && (
-        <div>
-          <LoadingOutlined style={{ fontSize: '24px', color: '#1890ff' }} />
+        <div style={{ marginTop: '24px' }}>
+          <LoadingOutlined style={{ fontSize: '32px', color: '#FFA500', marginBottom: '16px' }} />
           <br />
-          <Text>Waiting for payment confirmation...</Text>
-          <br />
-          <Text type="secondary">This may take a few moments</Text>
+          <Text style={{ color: '#fff', display: 'block' }}>Waiting for payment confirmation...</Text>
+          <Text style={{ color: '#666', fontSize: '12px' }}>Please do not close this window</Text>
         </div>
       )}
     </div>
@@ -235,10 +354,10 @@ const PaymentCheckoutModal = ({
       title: 'Processing',
       content: (
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <LoadingOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
+          <LoadingOutlined style={{ fontSize: '48px', color: '#FFA500' }} />
           <br />
-          <Title level={4}>Initiating Payment...</Title>
-          <Text>Please wait while we process your payment</Text>
+          <Title level={4} style={{ color: '#fff' }}>Initiating Payment...</Title>
+          <Text style={{ color: '#aaa' }}>Please wait while we process your payment</Text>
         </div>
       )
     },
@@ -246,10 +365,10 @@ const PaymentCheckoutModal = ({
       title: paymentMethod === 'web' ? 'Redirecting' : 'Mobile Payment',
       content: paymentMethod === 'web' ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
-          <LoadingOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
+          <LoadingOutlined style={{ fontSize: '48px', color: '#FFA500' }} />
           <br />
-          <Title level={4}>Redirecting to PayNow...</Title>
-          <Text>You will be redirected to complete your payment</Text>
+          <Title level={4} style={{ color: '#fff' }}>Redirecting to PayNow...</Title>
+          <Text style={{ color: '#aaa' }}>You will be redirected to complete your payment</Text>
         </div>
       ) : renderMobileInstructions()
     },
@@ -270,17 +389,20 @@ const PaymentCheckoutModal = ({
     >
       <div style={{ marginBottom: '24px' }}>
         <div style={{
-          background: '#f5f5f5',
-          padding: '16px',
-          borderRadius: '8px',
+          background: '#1a1a1a',
+          padding: '20px',
+          borderRadius: '12px',
+          border: '1px solid #333',
           marginBottom: '24px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <Text strong>Course:</Text> {course.title}
+            <div style={{ maxWidth: '70%' }}>
+              <Text style={{ color: '#aaa', fontSize: '12px', display: 'block', textTransform: 'uppercase' }}>Selected Course</Text>
+              <Text strong style={{ color: '#fff', fontSize: '16px' }}>{course.title}</Text>
             </div>
-            <div>
-              <Text strong>Amount:</Text> <span style={{ color: '#1890ff', fontSize: '18px', fontWeight: 'bold' }}>${course.price}</span>
+            <div style={{ textAlign: 'right' }}>
+              <Text style={{ color: '#aaa', fontSize: '12px', display: 'block', textTransform: 'uppercase' }}>Amount to Pay</Text>
+              <span style={{ color: '#FFA500', fontSize: '24px', fontWeight: 'bold' }}>${course.price}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Course, User, Category, Enrollment, Review } from '../models/index.js';
+import { Course, User, Category, Enrollment, Review, LiveSession } from '../models/index.js';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,11 +66,20 @@ export const getCourses = async (req, res) => {
                 ]
             });
 
+            // Check if there's an active live session
+            const activeLiveSession = await LiveSession.findOne({
+                where: {
+                    courseId: course.id,
+                    status: 'live'
+                }
+            });
+
             return {
                 ...courseData,
                 enrollmentsCount: enrollmentCount,
                 averageRating: ratingStats?.dataValues?.averageRating ? parseFloat(ratingStats.dataValues.averageRating).toFixed(1) : '0.0',
-                ratingsCount: ratingStats?.dataValues?.ratingsCount || 0
+                ratingsCount: ratingStats?.dataValues?.ratingsCount || 0,
+                isLive: !!activeLiveSession
             };
         }));
 
@@ -335,7 +344,21 @@ export const getCourseBySlug = async (req, res) => {
                 });
             }
 
-            res.json({ ...course.toJSON(), content });
+            // Fetch next upcoming or current live session
+            const activeLiveSession = await LiveSession.findOne({
+                where: {
+                    courseId: course.id,
+                    status: { [Op.in]: ['live', 'scheduled'] },
+                    startTime: { [Op.gt]: new Date(Date.now() - 2 * 60 * 60 * 1000) } // Within last 2 hours or future
+                },
+                order: [['startTime', 'ASC']]
+            });
+
+            res.json({
+                ...course.toJSON(),
+                content,
+                activeLiveSession: activeLiveSession ? activeLiveSession.toJSON() : null
+            });
         } else {
             res.status(404).json({ message: 'Course not found' });
         }

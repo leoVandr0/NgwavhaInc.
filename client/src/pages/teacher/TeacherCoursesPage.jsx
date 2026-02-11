@@ -33,6 +33,7 @@ import {
     Tooltip
 } from 'antd';
 import api from '../../services/api';
+import { getImageUrl, getCourseThumbnail, getAvatarUrl } from '../../utils/imageUtils';
 
 const { Panel } = Collapse;
 const { Title, Text } = Typography;
@@ -48,10 +49,26 @@ const TeacherCoursesPage = () => {
     // UI States
     const [isLoadingCourses, setIsLoadingCourses] = useState(false);
     const [isLoadingContent, setIsLoadingContent] = useState(false);
+    const [activeTab, setActiveTab] = useState('curriculum'); // 'curriculum' or 'landing'
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Landing Page Form State
+    const [landingData, setLandingData] = useState({
+        title: '',
+        subtitle: '',
+        description: '',
+        level: 'beginner',
+        categoryId: '',
+        thumbnail: ''
+    });
+    const [thumbnailPreview, setThumbnailPreview] = useState('');
+    const [selectedFile, setSelectedFile] = useState(null);
+
     const [isAddingSection, setIsAddingSection] = useState(false);
     const [newSectionTitle, setNewSectionTitle] = useState('');
     const [isAddingLecture, setIsAddingLecture] = useState({ active: false, sectionId: '' });
     const [newLectureTitle, setNewLectureTitle] = useState('');
+    const [newLectureType, setNewLectureType] = useState('video');
 
     // Upload States
     const [uploadQueue, setUploadQueue] = useState([]);
@@ -101,10 +118,78 @@ const TeacherCoursesPage = () => {
     useEffect(() => {
         if (selectedCourseId) {
             fetchCourseContent(selectedCourseId);
+            // Also set landing data
+            const selectedCourse = courses.find(c => c.id === selectedCourseId);
+            if (selectedCourse) {
+                setLandingData({
+                    title: selectedCourse.title || '',
+                    subtitle: selectedCourse.subtitle || '',
+                    description: selectedCourse.description || '',
+                    level: selectedCourse.level || 'beginner',
+                    categoryId: selectedCourse.categoryId || '',
+                    thumbnail: selectedCourse.thumbnail || ''
+                });
+                setThumbnailPreview(getCourseThumbnail(selectedCourse.thumbnail));
+            }
         } else {
             setCourseContent(null);
         }
-    }, [selectedCourseId]);
+    }, [selectedCourseId, courses]);
+
+    // Handle Landing Page Changes
+    const handleLandingChange = (e) => {
+        const { name, value } = e.target;
+        setLandingData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleThumbnailChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                message.error('Please select an image file');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                message.error('Image size should be less than 5MB');
+                return;
+            }
+            setSelectedFile(file);
+            setThumbnailPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const saveLandingPage = async () => {
+        setIsSaving(true);
+        try {
+            let thumbnailPath = landingData.thumbnail;
+
+            // Upload new thumbnail if selected
+            if (selectedFile) {
+                const formData = new FormData();
+                formData.append('thumbnail', selectedFile);
+                const { data: uploadRes } = await api.post('/upload/course-thumbnail', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                thumbnailPath = uploadRes.filePath;
+            }
+
+            // Update course
+            await api.put(`/courses/${selectedCourseId}`, {
+                ...landingData,
+                thumbnail: thumbnailPath
+            });
+
+            message.success('Course landing page updated successfully!');
+            // Refresh courses list to show updated info
+            const { data } = await api.get('/courses/my');
+            setCourses(data || []);
+            setSelectedFile(null);
+        } catch (error) {
+            message.error(error.response?.data?.message || 'Failed to update course landing page');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // Course Builder Actions
     const handleAddSection = async () => {
@@ -125,10 +210,11 @@ const TeacherCoursesPage = () => {
         try {
             await api.post(`/courses/${selectedCourseId}/sections/${sectionId}/lectures`, {
                 title: newLectureTitle,
-                type: 'video'
+                type: newLectureType
             });
             message.success('Lecture added!');
             setNewLectureTitle('');
+            setNewLectureType('video');
             setIsAddingLecture({ active: false, sectionId: '' });
             fetchCourseContent(selectedCourseId);
         } catch (error) {
@@ -400,154 +486,333 @@ const TeacherCoursesPage = () => {
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            <div className="flex justify-between items-center bg-dark-900/50 p-6 rounded-2xl border border-dark-800">
-                                <div>
-                                    <Title level={4} style={{ color: 'white', margin: 0 }}>Curriculum</Title>
-                                    <Text className="text-dark-400 text-sm">{courseContent?.sections?.length || 0} Sections • {courseContent?.totalLectures || 0} Lectures</Text>
-                                </div>
-                                <Button
-                                    type="primary"
-                                    ghost
-                                    icon={<Plus className="h-4 w-4" />}
-                                    onClick={() => setIsAddingSection(true)}
+                            {/* Tabs Navigation */}
+                            <div className="flex border-b border-dark-800 mb-6">
+                                <button
+                                    onClick={() => setActiveTab('curriculum')}
+                                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === 'curriculum' ? 'border-primary-500 text-primary-500' : 'border-transparent text-dark-400 hover:text-dark-200'}`}
                                 >
-                                    Add Section
-                                </Button>
+                                    Curriculum
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('landing')}
+                                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === 'landing' ? 'border-primary-500 text-primary-500' : 'border-transparent text-dark-400 hover:text-dark-200'}`}
+                                >
+                                    Course Landing Page
+                                </button>
                             </div>
 
-                            {isAddingSection && (
-                                <Card className="bg-dark-800 border-primary-500/50 shadow-lg shadow-primary-500/5">
-                                    <div className="space-y-4">
-                                        <Input
-                                            size="large"
-                                            placeholder="Enter section title (e.g., Introduction to React)"
-                                            value={newSectionTitle}
-                                            onChange={(e) => setNewSectionTitle(e.target.value)}
-                                            onPressEnter={handleAddSection}
-                                            autoFocus
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                            <Button onClick={() => setIsAddingSection(false)}>Cancel</Button>
-                                            <Button type="primary" onClick={handleAddSection}>Save Section</Button>
+                            {activeTab === 'curriculum' ? (
+                                <>
+                                    <div className="flex justify-between items-center bg-dark-900/50 p-6 rounded-2xl border border-dark-800">
+                                        <div>
+                                            <Title level={4} style={{ color: 'white', margin: 0 }}>Curriculum</Title>
+                                            <Text className="text-dark-400 text-sm">{courseContent?.sections?.length || 0} Sections • {courseContent?.totalLectures || 0} Lectures</Text>
                                         </div>
+                                        <Button
+                                            type="primary"
+                                            ghost
+                                            icon={<Plus className="h-4 w-4" />}
+                                            onClick={() => setIsAddingSection(true)}
+                                        >
+                                            Add Section
+                                        </Button>
                                     </div>
-                                </Card>
-                            )}
 
-                            <Collapse
-                                accordion
-                                className="curriculum-collapse"
-                                expandIcon={({ isActive }) => <ChevronDown className={`h-5 w-5 transition-transform ${isActive ? 'rotate-180' : ''}`} />}
-                            >
-                                {courseContent?.sections?.map((section, sIdx) => (
-                                    <Panel
-                                        header={
-                                            <div className="flex justify-between items-center w-full pr-4">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-dark-500 font-mono text-sm">Section {sIdx + 1}:</span>
-                                                    <Text strong className="text-white text-base">{section.title}</Text>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <Text className="text-dark-400 text-xs">{section.lectures?.length || 0} Lectures</Text>
-                                                    <Button
-                                                        type="text"
-                                                        danger
-                                                        icon={<Trash2 className="h-4 w-4" />}
-                                                        size="small"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteSection(section._id);
-                                                        }}
-                                                    />
+                                    {isAddingSection && (
+                                        <Card className="bg-dark-800 border-primary-500/50 shadow-lg shadow-primary-500/5">
+                                            <div className="space-y-4">
+                                                <Input
+                                                    size="large"
+                                                    placeholder="Enter section title (e.g., Introduction to React)"
+                                                    value={newSectionTitle}
+                                                    onChange={(e) => setNewSectionTitle(e.target.value)}
+                                                    onPressEnter={handleAddSection}
+                                                    autoFocus
+                                                />
+                                                <div className="flex justify-end gap-2">
+                                                    <Button onClick={() => setIsAddingSection(false)}>Cancel</Button>
+                                                    <Button type="primary" onClick={handleAddSection}>Save Section</Button>
                                                 </div>
                                             </div>
-                                        }
-                                        key={section._id}
-                                    >
-                                        <div className="space-y-3 pl-4">
-                                            {section.lectures?.map((lecture, lIdx) => (
-                                                <div key={lecture._id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-dark-950/50 border border-dark-800 rounded-xl hover:border-dark-700 transition-all group">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="h-8 w-8 rounded-lg bg-dark-800 flex items-center justify-center text-dark-500 group-hover:bg-primary-500/10 group-hover:text-primary-500 transition-colors">
-                                                            {lecture.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                                                        </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-2">
-                                                                <Text className="text-white font-medium">{lecture.title}</Text>
-                                                                {lecture.videoUrl && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
-                                                            </div>
-                                                            {lecture.videoUrl ? (
-                                                                <Text
-                                                                    className="text-primary-500 text-xs block hover:underline cursor-pointer flex items-center gap-1"
-                                                                    onClick={() => setPreviewVideo({
-                                                                        active: true,
-                                                                        url: lecture.videoUrl,
-                                                                        title: lecture.title
-                                                                    })}
-                                                                >
-                                                                    <Play className="h-3 w-3" /> Preview tutorial
-                                                                </Text>
-                                                            ) : (
-                                                                <Text className="text-amber-500/70 text-xs block flex items-center gap-1"><Clock className="h-3 w-3" /> No video content uploaded yet</Text>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 mt-4 md:mt-0">
-                                                        <input
-                                                            id={`upload-input-${lecture._id}`}
-                                                            type="file"
-                                                            className="hidden"
-                                                            accept="video/*"
-                                                            onChange={(e) => handleFileSelection(e, section._id, lecture._id, lecture.title, section.title)}
-                                                        />
-                                                        <Button
-                                                            icon={<Upload className="h-4 w-4" />}
-                                                            size="small"
-                                                            type={lecture.videoUrl ? "default" : "primary"}
-                                                            ghost={!!lecture.videoUrl}
-                                                            onClick={() => document.getElementById(`upload-input-${lecture._id}`)?.click()}
-                                                        >
-                                                            {lecture.videoUrl ? 'Replace' : 'Upload'}
-                                                        </Button>
-                                                        <Button
-                                                            type="text"
-                                                            danger
-                                                            icon={<Trash2 className="h-4 w-4" />}
-                                                            size="small"
-                                                            onClick={() => handleDeleteLecture(section._id, lecture._id)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
+                                        </Card>
+                                    )}
 
-                                            {isAddingLecture.active && isAddingLecture.sectionId === section._id ? (
-                                                <div className="p-4 bg-dark-900 rounded-xl border border-dark-700 space-y-3">
-                                                    <Input
-                                                        placeholder="Enter lecture title"
-                                                        value={newLectureTitle}
-                                                        onChange={(e) => setNewLectureTitle(e.target.value)}
-                                                        onPressEnter={() => handleAddLecture(section._id)}
-                                                        autoFocus
-                                                    />
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button size="small" onClick={() => setIsAddingLecture({ active: false, sectionId: '' })}>Cancel</Button>
-                                                        <Button size="small" type="primary" onClick={() => handleAddLecture(section._id)}>Add</Button>
+                                    <Collapse
+                                        accordion
+                                        className="curriculum-collapse"
+                                        expandIcon={({ isActive }) => <ChevronDown className={`h-5 w-5 transition-transform ${isActive ? 'rotate-180' : ''}`} />}
+                                    >
+                                        {courseContent?.sections?.map((section, sIdx) => (
+                                            <Panel
+                                                header={
+                                                    <div className="flex justify-between items-center w-full pr-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-dark-500 font-mono text-sm">Section {sIdx + 1}:</span>
+                                                            <Text strong className="text-white text-base">{section.title}</Text>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <Text className="text-dark-400 text-xs">{section.lectures?.length || 0} Lectures</Text>
+                                                            <Button
+                                                                type="text"
+                                                                danger
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                size="small"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteSection(section._id);
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </div>
+                                                }
+                                                key={section._id}
+                                            >
+                                                <div className="space-y-3 pl-4">
+                                                    {section.lectures?.map((lecture, lIdx) => (
+                                                        <div key={lecture._id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-dark-950/50 border border-dark-800 rounded-xl hover:border-dark-700 transition-all group">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="h-8 w-8 rounded-lg bg-dark-800 flex items-center justify-center text-dark-500 group-hover:bg-primary-500/10 group-hover:text-primary-500 transition-colors">
+                                                                    {lecture.type === 'live' ? <Smartphone className="h-4 w-4" /> : lecture.type === 'video' ? <Video className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Text className="text-white font-medium">{lecture.title}</Text>
+                                                                        {lecture.type === 'live' && <Tag color="orange" className="text-[10px] m-0">LIVE</Tag>}
+                                                                        {lecture.videoUrl && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+                                                                    </div>
+                                                                    {lecture.type === 'live' ? (
+                                                                        <Text className="text-orange-500 text-xs block">Scheduled live session</Text>
+                                                                    ) : lecture.videoUrl ? (
+                                                                        <Text
+                                                                            className="text-primary-500 text-xs block hover:underline cursor-pointer flex items-center gap-1"
+                                                                            onClick={() => setPreviewVideo({
+                                                                                active: true,
+                                                                                url: lecture.videoUrl,
+                                                                                title: lecture.title
+                                                                            })}
+                                                                        >
+                                                                            <Play className="h-3 w-3" /> Preview tutorial
+                                                                        </Text>
+                                                                    ) : (
+                                                                        <Text className="text-amber-500/70 text-xs block flex items-center gap-1"><Clock className="h-3 w-3" /> No video content uploaded yet</Text>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-3 mt-4 md:mt-0">
+                                                                <input
+                                                                    id={`upload-input-${lecture._id}`}
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    accept="video/*"
+                                                                    onChange={(e) => handleFileSelection(e, section._id, lecture._id, lecture.title, section.title)}
+                                                                />
+                                                                {lecture.type !== 'live' && (
+                                                                    <Button
+                                                                        icon={<Upload className="h-4 w-4" />}
+                                                                        size="small"
+                                                                        type={lecture.videoUrl ? "default" : "primary"}
+                                                                        ghost={!!lecture.videoUrl}
+                                                                        onClick={() => document.getElementById(`upload-input-${lecture._id}`)?.click()}
+                                                                    >
+                                                                        {lecture.videoUrl ? 'Replace' : 'Upload'}
+                                                                    </Button>
+                                                                )}
+                                                                {lecture.type === 'live' && (
+                                                                    <Button
+                                                                        icon={<Calendar className="h-4 w-4" />}
+                                                                        size="small"
+                                                                        type="primary"
+                                                                        ghost
+                                                                        onClick={() => {
+                                                                            navigate(`/teacher/live?courseId=${selectedCourseId}&lectureId=${lecture._id}&lectureTitle=${encodeURIComponent(lecture.title)}`);
+                                                                        }}
+                                                                    >
+                                                                        Schedule
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    type="text"
+                                                                    danger
+                                                                    icon={<Trash2 className="h-4 w-4" />}
+                                                                    size="small"
+                                                                    onClick={() => handleDeleteLecture(section._id, lecture._id)}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+
+                                                    {isAddingLecture.active && isAddingLecture.sectionId === section._id ? (
+                                                        <div className="p-4 bg-dark-900 rounded-xl border border-dark-700 space-y-3">
+                                                            <Input
+                                                                placeholder="Enter lecture title"
+                                                                value={newLectureTitle}
+                                                                onChange={(e) => setNewLectureTitle(e.target.value)}
+                                                                onPressEnter={() => handleAddLecture(section._id)}
+                                                                autoFocus
+                                                            />
+                                                            <div className="flex justify-between items-center gap-2">
+                                                                <Radio.Group
+                                                                    value={newLectureType}
+                                                                    onChange={(e) => setNewLectureType(e.target.value)}
+                                                                    size="small"
+                                                                    className="bg-dark-800 p-1 rounded-lg border border-dark-700"
+                                                                >
+                                                                    <Radio.Button value="video" className="text-xs">Video</Radio.Button>
+                                                                    <Radio.Button value="live" className="text-xs text-orange-500">Live</Radio.Button>
+                                                                    <Radio.Button value="text" className="text-xs">Text</Radio.Button>
+                                                                </Radio.Group>
+                                                                <div className="flex gap-2">
+                                                                    <Button size="small" onClick={() => {
+                                                                        setIsAddingLecture({ active: false, sectionId: '' });
+                                                                        setNewLectureType('video');
+                                                                    }}>Cancel</Button>
+                                                                    <Button size="small" type="primary" onClick={() => handleAddLecture(section._id)}>Add</Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            type="dashed"
+                                                            block
+                                                            icon={<Plus className="h-4 w-4" />}
+                                                            onClick={() => setIsAddingLecture({ active: true, sectionId: section._id })}
+                                                        >
+                                                            Add Lecture
+                                                        </Button>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <Button
-                                                    type="dashed"
-                                                    block
-                                                    icon={<Plus className="h-4 w-4" />}
-                                                    onClick={() => setIsAddingLecture({ active: true, sectionId: section._id })}
-                                                >
-                                                    Add Lecture
-                                                </Button>
-                                            )}
+                                            </Panel>
+                                        ))}
+                                    </Collapse>
+                                </>
+                            ) : (
+                                <div className="bg-dark-900 border border-dark-800 p-8 rounded-2xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                    <div>
+                                        <Title level={4} style={{ color: 'white', marginBottom: '8px' }}>Course Landing Page</Title>
+                                        <Text className="text-dark-400 mb-8 block">Your course landing page is crucial to your success on NG-PLATFORM. It's the first thing students see.</Text>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        {/* Title & Subtitle */}
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-dark-300 mb-1">Course Title</label>
+                                                <Input
+                                                    name="title"
+                                                    value={landingData.title}
+                                                    onChange={handleLandingChange}
+                                                    placeholder="e.g., The Complete 2024 Web Development Bootcamp"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-dark-300 mb-1">Course Subtitle</label>
+                                                <Input
+                                                    name="subtitle"
+                                                    value={landingData.subtitle}
+                                                    onChange={handleLandingChange}
+                                                    placeholder="e.g., Learn HTML, CSS, JavaScript, React, Node and more!"
+                                                />
+                                            </div>
                                         </div>
-                                    </Panel>
-                                ))}
-                            </Collapse>
+
+                                        {/* Description */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-dark-300 mb-1">Course Description</label>
+                                            <Input.TextArea
+                                                name="description"
+                                                rows={6}
+                                                value={landingData.description}
+                                                onChange={handleLandingChange}
+                                                placeholder="What students will learn from your course..."
+                                            />
+                                        </div>
+
+                                        {/* Metadata */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label className="block text-sm font-medium text-dark-300 mb-1">Level</label>
+                                                <Select
+                                                    style={{ width: '100%' }}
+                                                    value={landingData.level}
+                                                    onChange={(val) => setLandingData(prev => ({ ...prev, level: val }))}
+                                                    className="custom-select"
+                                                >
+                                                    <Select.Option value="beginner">Beginner Level</Select.Option>
+                                                    <Select.Option value="intermediate">Intermediate Level</Select.Option>
+                                                    <Select.Option value="expert">Expert Level</Select.Option>
+                                                    <Select.Option value="all">All Levels</Select.Option>
+                                                </Select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-dark-300 mb-1">Category</label>
+                                                <Select
+                                                    style={{ width: '100%' }}
+                                                    value={landingData.categoryId}
+                                                    onChange={(val) => setLandingData(prev => ({ ...prev, categoryId: val }))}
+                                                    className="custom-select"
+                                                >
+                                                    <Select.Option value="1">Web Development</Select.Option>
+                                                    <Select.Option value="2">Business</Select.Option>
+                                                    <Select.Option value="3">Design</Select.Option>
+                                                    <Select.Option value="4">Marketing</Select.Option>
+                                                </Select>
+                                            </div>
+                                        </div>
+
+                                        {/* Thumbnail Section (Udemy Style) */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-dark-300 mb-1">Course Image</label>
+                                            <div className="flex flex-col md:flex-row gap-6 mt-2">
+                                                <div className="w-full md:w-1/2 overflow-hidden border border-dark-800 bg-dark-950 aspect-video flex items-center justify-center">
+                                                    {thumbnailPreview ? (
+                                                        <img src={thumbnailPreview} alt="Course preview" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="text-dark-600 flex flex-col items-center">
+                                                            <LayoutIcon className="h-12 w-12 mb-2" />
+                                                            <span className="text-xs">No image uploaded</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="w-full md:w-1/2 space-y-4">
+                                                    <p className="text-xs text-dark-400">
+                                                        Upload your course image here. It must meet our course image quality standards to be accepted.
+                                                        Important guidelines: 750x422 pixels; .jpg, .jpeg,. gif, or .png. no text on the image.
+                                                    </p>
+                                                    <input
+                                                        id="course-thumbnail-upload"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={handleThumbnailChange}
+                                                    />
+                                                    <Button
+                                                        icon={<Upload className="h-4 w-4" />}
+                                                        onClick={() => document.getElementById('course-thumbnail-upload').click()}
+                                                        block
+                                                    >
+                                                        {thumbnailPreview ? 'Change Image' : 'Upload Image'}
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Divider style={{ borderColor: '#333' }} />
+
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="primary"
+                                                size="large"
+                                                className="px-10"
+                                                loading={isSaving}
+                                                onClick={saveLandingPage}
+                                            >
+                                                Save Changes
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -659,7 +924,7 @@ const TeacherCoursesPage = () => {
             >
                 <div className="aspect-video bg-black rounded-lg overflow-hidden">
                     <video
-                        src={`http://localhost:5000${previewVideo.url}`}
+                        src={getImageUrl(previewVideo.url)}
                         controls
                         className="w-full h-full"
                         autoPlay

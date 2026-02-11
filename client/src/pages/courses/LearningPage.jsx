@@ -80,7 +80,7 @@ const LearningPage = () => {
 
     const handleNextLecture = () => {
         if (!content?.sections) return;
-        
+
         let foundCurrent = false;
         for (const section of content.sections) {
             for (const lecture of section.lectures) {
@@ -97,7 +97,7 @@ const LearningPage = () => {
 
     const handlePreviousLecture = () => {
         if (!content?.sections) return;
-        
+
         let previousLecture = null;
         for (const section of content.sections) {
             for (const lecture of section.lectures) {
@@ -114,8 +114,8 @@ const LearningPage = () => {
     useEffect(() => {
         const handleKeyPress = (e) => {
             if (e.target.tagName === 'VIDEO') return; // Don't interfere with video controls
-            
-            switch(e.key) {
+
+            switch (e.key) {
                 case 'ArrowRight':
                     handleNextLecture();
                     break;
@@ -189,7 +189,28 @@ const LearningPage = () => {
                     <div className="max-w-6xl mx-auto">
                         {/* Video Player Section */}
                         <div className="aspect-video bg-dark-900 relative group">
-                            {activeLecture?.videoUrl ? (
+                            {activeLecture?.type === 'live' ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-900 border border-dark-800 shadow-2xl">
+                                    <div className="h-24 w-24 bg-orange-500/10 rounded-full flex items-center justify-center animate-pulse mb-6 border border-orange-500/20">
+                                        <Monitor className="h-10 w-10 text-orange-500" />
+                                    </div>
+                                    <div className="text-center px-6">
+                                        <h2 className="text-2xl font-bold text-white mb-2 font-display uppercase tracking-widest">Live Class Session</h2>
+                                        <p className="text-dark-400 max-w-md mx-auto mb-8 leading-relaxed">
+                                            This is a scheduled live interactive session where you can participate in real-time discussion and learning with your instructor.
+                                        </p>
+                                        <Button
+                                            type="primary"
+                                            size="large"
+                                            icon={<Video className="h-5 w-5" />}
+                                            className="h-14 px-10 bg-orange-600 hover:bg-orange-700 border-none rounded-xl font-bold text-lg shadow-lg shadow-orange-600/20"
+                                            onClick={() => navigate(`/student/live`)}
+                                        >
+                                            Join Live Session
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : activeLecture?.videoUrl ? (
                                 <div className="relative w-full h-full">
                                     {/* Loading State */}
                                     <div className="absolute inset-0 bg-dark-900 flex items-center justify-center z-10" id="video-loading">
@@ -198,7 +219,7 @@ const LearningPage = () => {
                                             <p className="text-dark-400">Loading video...</p>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Video Element */}
                                     <video
                                         src={`http://localhost:5001${activeLecture.videoUrl}`}
@@ -208,7 +229,6 @@ const LearningPage = () => {
                                         preload="metadata"
                                         key={activeLecture._id}
                                         onLoadedData={() => {
-                                            // Hide loading state when video is ready
                                             const loadingEl = document.getElementById('video-loading');
                                             if (loadingEl) loadingEl.style.display = 'none';
                                         }}
@@ -233,13 +253,12 @@ const LearningPage = () => {
                                         <source src={`http://localhost:5001${activeLecture.videoUrl}`} type="video/mp4" />
                                         Your browser does not support the video tag.
                                     </video>
-                                    
-                                    {/* Video Overlay Info */}
+
                                     <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                         <p className="text-white text-sm font-medium">{activeLecture.title}</p>
                                         <p className="text-dark-300 text-xs">
-                                            {activeLecture.videoDuration ? 
-                                                `${Math.floor(activeLecture.videoDuration / 60)}:${String(activeLecture.videoDuration % 60).padStart(2, '0')}` : 
+                                            {activeLecture.videoDuration ?
+                                                `${Math.floor(activeLecture.videoDuration / 60)}:${String(activeLecture.videoDuration % 60).padStart(2, '0')}` :
                                                 'Unknown duration'
                                             }
                                         </p>
@@ -254,10 +273,10 @@ const LearningPage = () => {
                                         </div>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-xl mb-2">No video available</p>
+                                        <p className="text-xl mb-2">No content available</p>
                                         <p className="text-sm text-dark-600">
-                                            {activeLecture ? 
-                                                'This lecture doesn\'t have a video file' : 
+                                            {activeLecture ?
+                                                'This lecture doesn\'t have any playable content' :
                                                 'Select a lecture from the curriculum to start learning'
                                             }
                                         </p>
@@ -278,17 +297,17 @@ const LearningPage = () => {
                                         <ChevronLeft className="h-4 w-4" />
                                         Previous
                                     </Button>
-                                    
+
                                     <div className="text-center">
                                         <p className="text-white font-medium">{activeLecture.title}</p>
                                         <p className="text-dark-400 text-sm">
-                                            {activeLecture.videoDuration ? 
-                                                `${Math.floor(activeLecture.videoDuration / 60)}:${String(activeLecture.videoDuration % 60).padStart(2, '0')}` : 
+                                            {activeLecture.videoDuration ?
+                                                `${Math.floor(activeLecture.videoDuration / 60)}:${String(activeLecture.videoDuration % 60).padStart(2, '0')}` :
                                                 'Unknown duration'
                                             }
                                         </p>
                                     </div>
-                                    
+
                                     <Button
                                         onClick={handleNextLecture}
                                         className="flex items-center gap-2 bg-primary-500 border-primary-500 text-dark-950 hover:bg-primary-600"
@@ -338,7 +357,7 @@ const LearningPage = () => {
                                                         <p className="text-white">{course?.totalDuration || 0}m</p>
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Keyboard Shortcuts */}
                                                 <div className="bg-dark-900 border border-dark-800 rounded-xl p-6">
                                                     <h4 className="text-white font-bold text-lg mb-4">Keyboard Shortcuts</h4>
@@ -447,8 +466,10 @@ const LearningPage = () => {
                                                         {lIndex + 1}. {lecture.title}
                                                     </p>
                                                     <div className="flex items-center gap-2 text-dark-500 text-xs">
-                                                        <Play className="h-3 w-3" />
-                                                        <span>{Math.floor(lecture.videoDuration / 60)}:{String(lecture.videoDuration % 60).padStart(2, '0')}</span>
+                                                        {lecture.type === 'live' ? <Monitor className="h-3 w-3 text-orange-500" /> : <Play className="h-3 w-3" />}
+                                                        <span>
+                                                            {lecture.type === 'live' ? 'Live Session' : lecture.videoDuration ? `${Math.floor(lecture.videoDuration / 60)}:${String(lecture.videoDuration % 60).padStart(2, '0')}` : 'Video'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

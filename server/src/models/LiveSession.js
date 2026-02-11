@@ -23,6 +23,10 @@ const LiveSession = sequelize.define('LiveSession', {
         type: DataTypes.UUID,
         allowNull: false
     },
+    lectureId: {
+        type: DataTypes.STRING, // MongoDB ID of the lecture
+        allowNull: true
+    },
     startTime: {
         type: DataTypes.DATE,
         allowNull: false

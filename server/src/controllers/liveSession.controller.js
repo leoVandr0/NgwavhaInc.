@@ -7,7 +7,7 @@ import { Op } from 'sequelize';
 // @access  Private/Instructor
 export const scheduleSession = async (req, res) => {
     try {
-        const { title, description, courseId, startTime, duration } = req.body;
+        const { title, description, courseId, startTime, duration, lectureId } = req.body;
 
         const course = await Course.findByPk(courseId);
         if (!course) {
@@ -20,16 +20,36 @@ export const scheduleSession = async (req, res) => {
 
         const meetingId = `Ngwavha-${uuidv4().substring(0, 8)}`;
 
+        // If lectureId is provided, check if a session already exists for it and update/delete it?
+        // For simplicity, we just allow multiple sessions but the frontend will prefer the latest.
+
         const session = await LiveSession.create({
             title,
             description,
             courseId,
             instructorId: req.user.id,
+            lectureId, // Link to curriculum lecture
             startTime,
             duration,
             meetingId,
             status: 'scheduled'
         });
+
+        // Also update the CourseContent in MongoDB if lectureId is provided
+        if (lectureId) {
+            const content = await CourseContent.findOne({ courseId });
+            if (content) {
+                let found = false;
+                content.sections.forEach(section => {
+                    const lecture = section.lectures.id(lectureId);
+                    if (lecture) {
+                        lecture.liveSessionId = session.id;
+                        found = true;
+                    }
+                });
+                if (found) await content.save();
+            }
+        }
 
         res.status(201).json(session);
     } catch (error) {
