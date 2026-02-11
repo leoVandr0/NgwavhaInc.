@@ -1,11 +1,11 @@
 import express from 'express';
 import { upload } from '../middleware/upload.middleware.js';
-import { authenticate } from '../middleware/auth.middleware.js';
+import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
 // Upload course thumbnail
-router.post('/course-thumbnail', authenticate, upload.single('thumbnail'), (req, res) => {
+router.post('/course-thumbnail', protect, upload.single('thumbnail'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
@@ -26,7 +26,7 @@ router.post('/course-thumbnail', authenticate, upload.single('thumbnail'), (req,
 });
 
 // Upload profile photo
-router.post('/profile-photo', authenticate, upload.single('avatar'), (req, res) => {
+router.post('/profile-photo', protect, upload.single('avatar'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });

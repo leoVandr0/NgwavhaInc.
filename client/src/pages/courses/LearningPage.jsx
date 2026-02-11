@@ -13,7 +13,10 @@ import {
     Monitor,
     Download,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Video,
+    Calendar,
+    RefreshCw
 } from 'lucide-react';
 import { Layout, Menu, Collapse, Progress, Tabs, Button, message } from 'antd';
 import api from '../../services/api';
@@ -199,15 +202,49 @@ const LearningPage = () => {
                                         <p className="text-dark-400 max-w-md mx-auto mb-8 leading-relaxed">
                                             This is a scheduled live interactive session where you can participate in real-time discussion and learning with your instructor.
                                         </p>
-                                        <Button
-                                            type="primary"
-                                            size="large"
-                                            icon={<Video className="h-5 w-5" />}
-                                            className="h-14 px-10 bg-orange-600 hover:bg-orange-700 border-none rounded-xl font-bold text-lg shadow-lg shadow-orange-600/20"
-                                            onClick={() => navigate(`/student/live`)}
-                                        >
-                                            Join Live Session
-                                        </Button>
+                                        {activeLecture?.liveSessionData?.status === 'live' ? (
+                                            <Button
+                                                type="primary"
+                                                size="large"
+                                                icon={<Video className="h-5 w-5" />}
+                                                className="h-14 px-10 bg-orange-600 hover:bg-orange-700 border-none rounded-xl font-bold text-lg shadow-lg shadow-orange-600/20"
+                                                onClick={() => navigate(`/student/live-room/${activeLecture.liveSessionData.meetingId}?title=${encodeURIComponent(activeLecture.title)}&sessionId=${activeLecture.liveSessionId}`)}
+                                            >
+                                                Join Live Session Now
+                                            </Button>
+                                        ) : activeLecture?.liveSessionData?.status === 'ended' ? (
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="flex items-center gap-2 text-dark-400 bg-dark-800/50 px-6 py-3 rounded-xl border border-dark-700">
+                                                    <Monitor className="h-5 w-5" />
+                                                    <span className="font-bold">This Live Session has Ended</span>
+                                                </div>
+                                                <p className="text-dark-500 text-sm">The recording will be available soon if enabled by the instructor.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-4">
+                                                <Button
+                                                    disabled
+                                                    size="large"
+                                                    icon={<Calendar className="h-5 w-5" />}
+                                                    className="h-14 px-10 bg-dark-800 text-dark-400 border-dark-700 rounded-xl font-bold text-lg opacity-50"
+                                                >
+                                                    Session Not Live Yet
+                                                </Button>
+                                                {activeLecture?.liveSessionData?.startTime && (
+                                                    <p className="text-orange-500/70 text-sm font-medium animate-pulse">
+                                                        Scheduled for {new Date(activeLecture.liveSessionData.startTime).toLocaleString()}
+                                                    </p>
+                                                )}
+                                                <Button
+                                                    icon={<RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />}
+                                                    onClick={() => queryClient.invalidateQueries(['learning-content', slug])}
+                                                    className="mt-4 border-dark-700 bg-dark-800/50 text-dark-300 hover:text-white"
+                                                    size="small"
+                                                >
+                                                    {isLoading ? 'Checking...' : 'Refresh Status'}
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ) : activeLecture?.videoUrl ? (

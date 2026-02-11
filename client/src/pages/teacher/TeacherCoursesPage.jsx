@@ -11,10 +11,13 @@ import {
     ChevronDown,
     Play,
     Settings,
+    Calendar,
+    Smartphone,
     Layout as LayoutIcon,
     Pause,
     RefreshCw
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
     App,
     Button,
@@ -27,6 +30,7 @@ import {
     Divider,
     Empty,
     Spin,
+    Radio,
     Space,
     Tag,
     Modal,
@@ -40,6 +44,7 @@ const { Title, Text } = Typography;
 
 const TeacherCoursesPage = () => {
     const { message, modal } = App.useApp();
+    const navigate = useNavigate();
     const [courses, setCourses] = useState([]);
     const [courseContent, setCourseContent] = useState(null);
     const [selectedCourseId, setSelectedCourseId] = useState('');

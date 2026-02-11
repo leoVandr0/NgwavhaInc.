@@ -132,7 +132,7 @@ const TeacherLiveSessions = () => {
 
     const handleStartSession = (session) => {
         statusMutation.mutate({ id: session.id, status: 'live' });
-        navigate(`/teacher/live-room/${session.meetingId}?title=${encodeURIComponent(session.title)}`);
+        navigate(`/teacher/live-room/${session.meetingId}?title=${encodeURIComponent(session.title)}&sessionId=${session.id}`);
     };
 
     const getStatusTag = (status) => {

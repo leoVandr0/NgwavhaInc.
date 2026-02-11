@@ -9,9 +9,6 @@ import { getImageUrl, getCourseThumbnail, getAvatarUrl } from '../../utils/image
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
 import PaymentCheckoutModal from '../../components/PaymentCheckoutModal';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-dayjs.extend(relativeTime);
 
 const LiveSessionCountdown = ({ session }) => {
     const [timeLeft, setTimeLeft] = useState('');
@@ -20,22 +17,25 @@ const LiveSessionCountdown = ({ session }) => {
     useEffect(() => {
         if (!session) return;
 
-        const timer = setInterval(() => {
-            const now = dayjs();
-            const start = dayjs(session.startTime);
-            const diff = start.diff(now);
+        const updateTimer = () => {
+            const now = new Date().getTime();
+            const start = new Date(session.startTime).getTime();
+            const diff = start - now;
 
             if (diff <= 0) {
                 setTimeLeft('Happening Now!');
                 setIsLive(true);
-                clearInterval(timer);
             } else {
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const secs = Math.floor((diff % (1000 * 60)) / 1000);
                 setTimeLeft(`${hours}h ${mins}m ${secs}s`);
+                setIsLive(false);
             }
-        }, 1000);
+        };
+
+        updateTimer();
+        const timer = setInterval(updateTimer, 1000);
 
         return () => clearInterval(timer);
     }, [session]);
@@ -44,8 +44,8 @@ const LiveSessionCountdown = ({ session }) => {
 
     return (
         <div className={`mt-6 p-4 rounded-xl border flex items-center justify-between transition-all duration-500 scale-in-center ${isLive
-                ? 'bg-orange-600/10 border-orange-500/30'
-                : 'bg-primary-500/5 border-primary-500/20'
+            ? 'bg-orange-600/10 border-orange-500/30'
+            : 'bg-primary-500/5 border-primary-500/20'
             }`}>
             <div className="flex items-center gap-4">
                 <div className={`h-12 w-12 rounded-full flex items-center justify-center ${isLive ? 'bg-orange-600 text-white animate-pulse' : 'bg-primary-500 text-white'

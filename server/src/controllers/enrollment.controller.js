@@ -1,4 +1,4 @@
-import { Enrollment, Course, User, Category, Review } from '../models/index.js';
+import { Enrollment, Course, User, Category, Review, LiveSession } from '../models/index.js';
 import CourseContent from '../models/nosql/CourseContent.js';
 import sequelize from '../config/mysql.js';
 
@@ -117,7 +117,30 @@ export const getEnrolledCourseContent = async (req, res) => {
             return res.status(403).json({ message: 'You are not enrolled in this course' });
         }
 
-        const content = await CourseContent.findOne({ courseId: course.id });
+        const content = await CourseContent.findOne({ courseId: course.id }).lean();
+
+        if (content) {
+            // Fetch live sessions for this course
+            const liveSessions = await LiveSession.findAll({
+                where: { courseId: course.id }
+            });
+
+            // Map live session data to lectures
+            content.sections.forEach(section => {
+                section.lectures.forEach(lecture => {
+                    if (lecture.type === 'live' && lecture.liveSessionId) {
+                        const session = liveSessions.find(s => s.id === lecture.liveSessionId);
+                        if (session) {
+                            lecture.liveSessionData = {
+                                meetingId: session.meetingId,
+                                status: session.status,
+                                startTime: session.startTime
+                            };
+                        }
+                    }
+                });
+            });
+        }
 
         res.json({
             course,

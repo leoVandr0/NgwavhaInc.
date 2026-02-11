@@ -1,4 +1,5 @@
 import { LiveSession, Course, User, Enrollment } from '../models/index.js';
+import CourseContent from '../models/nosql/CourseContent.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 

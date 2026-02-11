@@ -18,8 +18,11 @@ import {
     Layout,
     Divider,
     Avatar,
-    Tooltip
+    Tooltip,
+    Modal
 } from 'antd';
+
+import useAuthStore from '../../store/authStore';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -28,8 +31,9 @@ const LiveRoom = ({ userRole = 'student' }) => {
     const { meetingId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { message } = App.useApp();
+    const { message, modal } = App.useApp();
     const [isLoading, setIsLoading] = useState(true);
+    const { user: authUser } = useAuthStore();
     const jitsiContainerRef = useRef(null);
     const apiRef = useRef(null);
 
@@ -60,22 +64,31 @@ const LiveRoom = ({ userRole = 'student' }) => {
             height: '100%',
             parentNode: jitsiContainerRef.current,
             userInfo: {
-                displayName: 'User' // We should get the actual user name from auth context if possible
+                displayName: authUser?.name || 'User',
+                email: authUser?.email,
+                avatarUrl: authUser?.avatar ? `http://localhost:5001/uploads/${authUser.avatar}` : null
             },
             configOverwrite: {
                 prejoinPageEnabled: false,
                 disableDeepLinking: true,
                 startWithAudioMuted: true,
-                startWithVideoMuted: true
+                startWithVideoMuted: true,
+                desktopSharingFrameRate: {
+                    min: 5,
+                    max: 15
+                },
+                enableWelcomePage: false,
+                enableClosePage: false
             },
             interfaceConfigOverwrite: {
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                DEFAULT_REMOTE_DISPLAY_NAME: 'Student',
                 TOOLBAR_BUTTONS: [
                     'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                    'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
-                    'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
-                    'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
-                    'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
-                    'security'
+                    'fodeviceselection', 'hangup', 'profile', 'chat', 'raisehand',
+                    'videoquality', 'filmstrip', 'tileview', 'videobackgroundblur',
+                    'help', 'mute-everyone', 'security'
                 ],
             }
         };
@@ -95,8 +108,41 @@ const LiveRoom = ({ userRole = 'student' }) => {
     };
 
     const handleLeave = () => {
-        if (apiRef.current) apiRef.current.executeCommand('hangup');
-        navigate(userRole === 'instructor' ? '/teacher/live' : '/student/live');
+        if (userRole === 'instructor') {
+            modal.confirm({
+                title: 'Leave or End Session?',
+                content: 'If you end the session, all participants will be disconnected.',
+                okText: 'End Session for All',
+                okType: 'danger',
+                cancelText: 'Just Leave',
+                onOk: async () => {
+                    if (apiRef.current) {
+                        // There's no direct "end meeting for all" command in Jitsi iframe api easily exposed, 
+                        // but we can update our DB status and then hangup.
+                        // Realistically, the instructor leaving usually ends it if they are the only moderator.
+                        try {
+                            // We need the session ID, which we don't have in params. 
+                            // We might need to fetch session by meetingId or pass it in query.
+                            const sessionId = queryParams.get('sessionId');
+                            if (sessionId) {
+                                await api.patch(`/live-sessions/${sessionId}/status`, { status: 'ended' });
+                            }
+                        } catch (e) {
+                            console.error('Failed to update status', e);
+                        }
+                        apiRef.current.executeCommand('hangup');
+                    }
+                    navigate('/teacher/live');
+                },
+                onCancel: () => {
+                    if (apiRef.current) apiRef.current.executeCommand('hangup');
+                    navigate('/teacher/live');
+                }
+            });
+        } else {
+            if (apiRef.current) apiRef.current.executeCommand('hangup');
+            navigate('/student/live');
+        }
     };
 
     return (
