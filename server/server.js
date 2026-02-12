@@ -33,7 +33,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Serve static files from the frontend build
-const publicPath = path.join(process.cwd(), 'public');
+const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath));
 
 // Middleware

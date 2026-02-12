@@ -11,8 +11,10 @@ COPY package.json package-lock.json* ./
 COPY client/package.json client/package-lock.json* ./client/
 COPY server/package.json server/package-lock.json* ./server/
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies for building
+RUN npm ci
+RUN cd client && npm ci
+RUN cd server && npm ci
 
 # Build the application
 FROM base AS builder
@@ -21,12 +23,12 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
-# Install all dependencies (including dev)
+# Install dependencies
 RUN npm ci
+RUN cd client && npm ci
 
 # Build client
 WORKDIR /app/client
-RUN npm ci --only=production
 RUN npx vite build
 
 # Production image
@@ -47,11 +49,12 @@ COPY --from=builder /app/server/package.json ./server/package.json
 COPY --from=builder /app/server/package-lock.json ./server/package-lock.json
 COPY --from=builder /app/server/src ./server/src
 COPY --from=builder /app/server/uploads ./server/uploads
+COPY --from=builder /app/server/.env ./server/.env
 
 # Set working directory to server
 WORKDIR /app/server
 
-# Install production dependencies
+# Install production dependencies only
 RUN npm ci --only=production && npm cache clean --force
 
 # Create uploads directory
