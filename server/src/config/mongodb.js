@@ -1,24 +1,16 @@
 ﻿import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-dotenv.config();
-
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ngwavha_content';
 
 const connectMongoDB = async () => {
-  if (!MONGODB_URI) {
+  if (!process.env.MONGO_URL) {
     console.log('ℹ️  MongoDB URI not provided, skipping MongoDB connection');
     return;
   }
 
   try {
-    const conn = await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGO_URL);
     console.log(`✅ MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌ MongoDB connection error: ${error.message}`);
-    // Don't exit process, continue without MongoDB
     console.log('⚠️  Continuing without MongoDB...');
   }
 };

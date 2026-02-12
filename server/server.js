@@ -30,7 +30,7 @@ import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -63,9 +63,17 @@ app.use(passport.session());
 
 // Database connections
 connectMySQL().then(() => {
+    console.log('✅ MySQL connected successfully');
     seedCategories().catch(console.error);
-}).catch(console.error);
-connectMongoDB().catch(console.error);
+}).catch((error) => {
+    console.log('⚠️ MySQL connection failed, continuing without MySQL...');
+    console.log('⚠️ Some features may not work without database');
+});
+
+connectMongoDB().catch((error) => {
+    console.log('⚠️ MongoDB connection failed, continuing without MongoDB...');
+    console.log('⚠️ Some features may not work without database');
+});
 
 // Static uploads
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
