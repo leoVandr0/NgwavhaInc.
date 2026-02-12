@@ -13,10 +13,27 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'http://localhost:5000',
+                target: 'http://localhost:5001',
                 changeOrigin: true,
                 secure: false,
             },
         },
+    },
+    build: {
+        minify: 'esbuild',
+        sourcemap: false,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['react', 'react-dom'],
+                    antd: ['antd'],
+                    router: ['react-router-dom'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 1000,
+    },
+    optimizeDeps: {
+        include: ['react', 'react-dom', 'antd'],
     },
 })
