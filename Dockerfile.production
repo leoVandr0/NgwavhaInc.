@@ -1,51 +1,38 @@
-# Production Dockerfile
-FROM node:22-alpine
+# Stage 1: Build Client
+FROM node:22-alpine AS client-builder
+WORKDIR /app/client
+COPY client/package*.json ./
+# Don't use --only=production here, or vite won't install
+RUN npm ci 
+COPY client/ ./
+RUN npm run build
 
+# Stage 2: Production Runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY client/ ./client/
-COPY server/ ./server/
+# Create non-root user first
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Build client
-WORKDIR /app/client
-COPY package*.json ./
-RUN npm ci --only=production
-RUN npx vite build
-
-# Copy server files and set up production
+# Setup Server
 WORKDIR /app/server
-COPY package*.json ./
-COPY --from=client /app/client/dist ./server/public
-COPY server/ ./server/src
-COPY --from=client /app/server/uploads ./server/uploads
-
-# Install production dependencies
+COPY server/package*.json ./
+# Production only for the final runtime
 RUN npm ci --only=production && npm cache clean --force
+COPY server/ ./
 
-# Create uploads directory
-RUN mkdir -p uploads && chown -R nextjs:nodejs uploads
+# Copy built client assets from stage 1 to server's public folder
+COPY --from=client-builder /app/client/dist ./public
 
-# Set environment
-ENV NODE_ENV production
+# Setup storage
+RUN mkdir -p uploads && chown -R nextjs:nodejs /app/server
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Switch to non-root user
+ENV NODE_ENV=production
 USER nextjs
-
-# Expose port
 EXPOSE 5001
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:5001/api', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
-# Start the server
 CMD ["npm", "start"]
