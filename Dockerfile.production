@@ -11,6 +11,25 @@ COPY server/ ./server/
 # Install dependencies
 RUN npm ci --only=production
 
+# Build client
+WORKDIR /app/client
+COPY package*.json ./
+RUN npm ci --only=production
+RUN npx vite build
+
+# Copy server files and set up production
+WORKDIR /app/server
+COPY package*.json ./
+COPY --from=client /app/client/dist ./server/public
+COPY server/ ./server/src
+COPY --from=client /app/server/uploads ./server/uploads
+
+# Install production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Create uploads directory
+RUN mkdir -p uploads && chown -R nextjs:nodejs uploads
+
 # Set environment
 ENV NODE_ENV production
 
