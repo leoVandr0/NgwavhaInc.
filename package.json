@@ -4,8 +4,8 @@
   "description": "A comprehensive Udemy-like learning management system",
   "private": true,
   "workspaces": [
-    "client",
-    "server"
+    "skillforge-client",
+    "skillforge-server"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ml\"",
