@@ -30,19 +30,23 @@ import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8080;
+
+// Serve static files from the frontend build
+const publicPath = path.join(process.cwd(), 'public');
+app.use(express.static(publicPath));
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Session configuration
+// Session configuration (using Railway environment variables)
 const sessionStore = new (MySQLStore(session))({
-    host: process.env.MYSQL_HOST,
-    port: process.env.MYSQL_PORT,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE
+    host: process.env.MYSQLHOST,
+    port: process.env.MYSQLPORT,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE
 });
 
 app.use(session({
@@ -52,6 +56,7 @@ app.use(session({
     store: sessionStore,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -65,7 +70,6 @@ app.use(passport.session());
 connectMySQL().then((sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
-        // Only seed categories if we have a valid connection
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });
@@ -86,7 +90,7 @@ connectMongoDB().catch((error) => {
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
 app.use('/uploads', express.static(path.join(__dirname, uploadPath)));
 
-// Routes
+// API routes (must come before SPA fallback)
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -101,8 +105,13 @@ app.get('/api', (req, res) => {
     res.json({ message: 'API is working' });
 });
 
+// SPA fallback - for React Router (must come after API routes)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 // Start server
 app.listen(PORT, () => {
-    console.log('Server is running on port ' + PORT);
-    console.log('API available at http://localhost:' + PORT + '/api');
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`API available at http://localhost:${PORT}/api`);
 });
