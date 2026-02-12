@@ -6,6 +6,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Environment variables
+server/.env
+client/.env
 .env
 .env.local
 .env.production
