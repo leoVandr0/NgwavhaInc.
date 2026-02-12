@@ -56,7 +56,7 @@ app.use('/api/upload', uploadRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Start server with WebSocket support
 server.listen(PORT, () => {
