@@ -6,6 +6,7 @@ import path from 'path';
 import passport from 'passport';
 import session from 'express-session';
 import MySQLStore from 'express-mysql-session';
+import compression from 'compression';
 import { fileURLToPath } from 'url';
 import { connectMySQL } from './src/config/mysql.js';
 import connectMongoDB from './src/config/mongodb.js';
@@ -32,9 +33,14 @@ import configurePassport from './src/config/passport.js';
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Serve static files from the frontend build
+// Serve static files from the frontend build with caching
 const publicPath = path.join(__dirname, 'public');
-app.use(express.static(publicPath));
+app.use(compression());
+app.use(express.static(publicPath, {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true
+}));
 
 // Middleware
 app.use(cors());
@@ -66,29 +72,13 @@ configurePassport();
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Database connections
-connectMySQL().then((sequelize) => {
-    if (sequelize) {
-        console.log('✅ MySQL connected successfully');
-        seedCategories().catch((error) => {
-            console.error('❌ Category seeding failed:', error.message);
-        });
-    } else {
-        console.log('⚠️ MySQL not available, skipping category seeding');
-    }
-}).catch((error) => {
-    console.log('⚠️ MySQL connection failed, continuing without MySQL...');
-    console.log('⚠️ Some features may not work without database');
-});
-
-connectMongoDB().catch((error) => {
-    console.log('⚠️ MongoDB connection failed, continuing without MongoDB...');
-    console.log('⚠️ Some features may not work without database');
-});
-
 // Static uploads
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
-app.use('/uploads', express.static(path.join(__dirname, uploadPath)));
+app.use('/uploads', express.static(path.join(__dirname, uploadPath), {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true
+}));
 
 // API routes (must come before SPA fallback)
 app.use('/api/auth', authRoutes);
@@ -110,8 +100,28 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Start server
+// Start server immediately (don't wait for DB)
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
+});
+
+// Database connections (non-blocking)
+connectMySQL().then((sequelize) => {
+    if (sequelize) {
+        console.log('✅ MySQL connected successfully');
+        seedCategories().catch((error) => {
+            console.error('❌ Category seeding failed:', error.message);
+        });
+    } else {
+        console.log('⚠️ MySQL not available, skipping category seeding');
+    }
+}).catch((error) => {
+    console.log('⚠️ MySQL connection failed, continuing without MySQL...');
+    console.log('⚠️ Some features may not work without database');
+});
+
+connectMongoDB().catch((error) => {
+    console.log('⚠️ MongoDB connection failed, continuing without MongoDB...');
+    console.log('⚠️ Some features may not work without database');
 });

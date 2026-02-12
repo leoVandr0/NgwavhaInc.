@@ -22,16 +22,25 @@ export default defineConfig({
     build: {
         minify: 'esbuild',
         sourcemap: false,
+        target: 'es2015',
         rollupOptions: {
             output: {
                 manualChunks: {
                     vendor: ['react', 'react-dom'],
-                    antd: ['antd'],
+                    antd: ['antd', '@ant-design/icons'],
                     router: ['react-router-dom'],
+                    ui: ['framer-motion', 'lucide-react'],
+                    utils: ['axios', 'date-fns', 'clsx', 'tailwind-merge'],
+                    state: ['zustand', 'react-query'],
+                    forms: ['react-hook-form'],
                 },
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]'
             },
         },
         chunkSizeWarningLimit: 1000,
+        cssCodeSplit: true,
     },
     optimizeDeps: {
         include: ['react', 'react-dom', 'antd'],
