@@ -10,24 +10,40 @@ const sequelize = new Sequelize(
     dialect: "mysql",
     logging: false,
     pool: {
-      max: 10,
+      max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000,
       idle: 10000,
+      evict: 1000,
     },
     define: {
       timestamps: true,
       underscored: true,
       freezeTableName: true,
     },
+    retry: {
+      max: 3,
+      timeout: 5000,
+    },
+    dialectOptions: {
+      connectTimeout: 60000,
+      acquireTimeout: 60000,
+      timeout: 60000,
+    },
   }
 );
 
 export const connectMySQL = async () => {
   try {
+    // Test connection with retry logic
     await sequelize.authenticate();
     console.log("🗄️ MySQL connection established successfully.");
-    await sequelize.sync();
+    
+    // Test the connection with a simple query
+    await sequelize.query('SELECT 1');
+    console.log("🔍 MySQL connection test passed.");
+    
+    await sequelize.sync({ force: false });
     console.log("📦 MySQL models synchronized.");
     return sequelize;
   } catch (error) {

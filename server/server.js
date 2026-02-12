@@ -62,9 +62,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Database connections
-connectMySQL().then(() => {
-    console.log('✅ MySQL connected successfully');
-    seedCategories().catch(console.error);
+connectMySQL().then((sequelize) => {
+    if (sequelize) {
+        console.log('✅ MySQL connected successfully');
+        // Only seed categories if we have a valid connection
+        seedCategories().catch((error) => {
+            console.error('❌ Category seeding failed:', error.message);
+        });
+    } else {
+        console.log('⚠️ MySQL not available, skipping category seeding');
+    }
 }).catch((error) => {
     console.log('⚠️ MySQL connection failed, continuing without MySQL...');
     console.log('⚠️ Some features may not work without database');

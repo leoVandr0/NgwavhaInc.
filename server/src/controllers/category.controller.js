@@ -36,17 +36,22 @@ export const createCategory = async (req, res) => {
 
 // Seed categories if empty
 export const seedCategories = async () => {
-    const count = await Category.count();
-    if (count === 0) {
-        const defaultCategories = [
-            { name: 'Web Development', slug: 'web-development' },
-            { name: 'Data Science', slug: 'data-science' },
-            { name: 'Mobile Development', slug: 'mobile-development' },
-            { name: 'UI/UX Design', slug: 'ui-ux-design' },
-            { name: 'Business', slug: 'business' },
-            { name: 'Marketing', slug: 'marketing' }
-        ];
-        await Category.bulkCreate(defaultCategories);
-        console.log('✅ Default categories seeded.');
+    try {
+        const count = await Category.count();
+        if (count === 0) {
+            const defaultCategories = [
+                { name: 'Web Development', slug: 'web-development' },
+                { name: 'Data Science', slug: 'data-science' },
+                { name: 'Mobile Development', slug: 'mobile-development' },
+                { name: 'UI/UX Design', slug: 'ui-ux-design' },
+                { name: 'Business', slug: 'business' },
+                { name: 'Marketing', slug: 'marketing' }
+            ];
+            await Category.bulkCreate(defaultCategories);
+            console.log(' Default categories seeded successfully');
+        }
+    } catch (error) {
+        console.error(' Failed to seed categories:', error.message);
+        // Don't throw error, just log it
     }
 };
