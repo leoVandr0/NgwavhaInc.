@@ -23,7 +23,7 @@ export const WebSocketProvider = ({ children }) => {
 
     useEffect(() => {
         // Initialize WebSocket connection
-        const newSocket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001', {
+        const newSocket = io(import.meta.env.VITE_SOCKET_URL || '', {
             transports: ['websocket', 'polling'],
             autoConnect: true,
             reconnection: true,
