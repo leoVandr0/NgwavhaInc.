@@ -116,15 +116,19 @@ export const loginUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
-        logger.track({
-            userId: user.id,
-            action: 'login',
-            resourceType: 'user',
-            resourceId: user.id,
-            req
-        });
+        try {
+            await logger.track({
+                userId: user.id,
+                action: 'login',
+                resourceType: 'user',
+                resourceId: user.id,
+                req
+            });
 
-        logger.info('Auth', `User logged in: ${user.id}`);
+            await logger.info('Auth', `User logged in: ${user.id}`);
+        } catch (postLoginError) {
+            console.error('Post-login logging error:', postLoginError);
+        }
         res.json({
             ...userData,
             token
