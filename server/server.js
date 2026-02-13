@@ -111,6 +111,22 @@ app.get('/api', (req, res) => {
     res.json({ message: 'API is working' });
 });
 
+// Health check with environment validation
+app.get('/api/health', (req, res) => {
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: {
+            nodeEnv: process.env.NODE_ENV || 'not set',
+            jwtSecretExists: !!process.env.JWT_SECRET,
+            jwtSecretLength: process.env.JWT_SECRET?.length || 0,
+            mongodbConfigured: !!process.env.MONGODB_URI,
+            mysqlConfigured: !!(process.env.DATABASE_URL || process.env.MYSQLHOST)
+        }
+    };
+    res.json(health);
+});
+
 // SPA fallback - for React Router (must come after API routes)
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
@@ -125,14 +141,14 @@ app.listen(PORT, () => {
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('🔌 Socket connected:', socket.id);
-    
+
     // Handle admin dashboard connection
     socket.on('join-admin-dashboard', (userData) => {
         if (userData && userData.role === 'admin') {
             connectedAdmins.add(socket.id);
             socket.join('admin-dashboard');
             console.log('👨‍💼 Admin joined dashboard:', socket.id);
-            
+
             // Send current stats to newly connected admin
             socket.emit('stats-update', {
                 type: 'initial',
@@ -140,7 +156,7 @@ io.on('connection', (socket) => {
             });
         }
     });
-    
+
     // Handle disconnection
     socket.on('disconnect', () => {
         connectedAdmins.delete(socket.id);
