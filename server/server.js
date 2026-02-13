@@ -7,6 +7,8 @@ import passport from 'passport';
 import session from 'express-session';
 import MySQLStore from 'express-mysql-session';
 import compression from 'compression';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { connectMySQL } from './src/config/mysql.js';
 import connectMongoDB from './src/config/mongodb.js';
@@ -33,6 +35,18 @@ import configurePassport from './src/config/passport.js';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+
+// Create HTTP server and Socket.IO instance
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: process.env.NODE_ENV === 'production' ? false : ["http://localhost:5173", "http://localhost:3000"],
+        methods: ["GET", "POST"]
+    }
+});
+
+// Store connected admins for real-time updates
+const connectedAdmins = new Set();
 
 // Serve static files from the frontend build with caching
 const publicPath = path.join(__dirname, 'public');
@@ -107,6 +121,42 @@ app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
 });
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log('🔌 Socket connected:', socket.id);
+    
+    // Handle admin dashboard connection
+    socket.on('join-admin-dashboard', (userData) => {
+        if (userData && userData.role === 'admin') {
+            connectedAdmins.add(socket.id);
+            socket.join('admin-dashboard');
+            console.log('👨‍💼 Admin joined dashboard:', socket.id);
+            
+            // Send current stats to newly connected admin
+            socket.emit('stats-update', {
+                type: 'initial',
+                message: 'Connected to admin dashboard'
+            });
+        }
+    });
+    
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        connectedAdmins.delete(socket.id);
+        socket.leave('admin-dashboard');
+        console.log('🔌 Socket disconnected:', socket.id);
+    });
+});
+
+// Function to broadcast real-time updates to all connected admins
+const broadcastToAdmins = (event, data) => {
+    io.to('admin-dashboard').emit(event, data);
+    console.log(`📊 Broadcasting to ${connectedAdmins.size} admins:`, event);
+};
+
+// Make broadcast function available globally
+global.broadcastToAdmins = broadcastToAdmins;
 
 // Database connections (non-blocking)
 connectMySQL().then((sequelize) => {

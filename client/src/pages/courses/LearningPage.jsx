@@ -259,7 +259,7 @@ const LearningPage = () => {
 
                                     {/* Video Element */}
                                     <video
-                                        src={`http://localhost:5001${activeLecture.videoUrl}`}
+                                        src={`${activeLecture.videoUrl}`}
                                         controls
                                         className="w-full h-full"
                                         controlsList="nodownload noremoteplayback"
@@ -287,7 +287,7 @@ const LearningPage = () => {
                                             }
                                         }}
                                     >
-                                        <source src={`http://localhost:5001${activeLecture.videoUrl}`} type="video/mp4" />
+                                        <source src={`${activeLecture.videoUrl}`} type="video/mp4" />
                                         Your browser does not support the video tag.
                                     </video>
 

@@ -11,6 +11,7 @@ export const getDashboardStats = async (req, res) => {
         // Get user statistics
         const totalUsers = await User.count();
         const totalTeachers = await User.count({ where: { role: 'instructor' } });
+        const totalStudents = await User.count({ where: { role: 'student' } });
         const pendingTeachers = await User.count({ 
             where: { 
                 role: 'instructor',
@@ -54,8 +55,9 @@ export const getDashboardStats = async (req, res) => {
             data: {
                 users: {
                     total: totalUsers,
-                    active: activeUsers,
+                    students: totalStudents,
                     teachers: totalTeachers,
+                    active: activeUsers,
                     pendingTeachers: pendingTeachers
                 },
                 courses: {
@@ -72,9 +74,11 @@ export const getDashboardStats = async (req, res) => {
                 },
                 recentActivity: recentActivity.map(user => ({
                     id: user.id,
-                    type: user.role === 'instructor' && !user.isVerified ? 'teacher_approval' : 'new_user',
+                    type: user.role === 'instructor' && !user.isVerified ? 'teacher_approval' : 
+                          user.role === 'instructor' ? 'new_teacher' : 'new_student',
                     user: user.name,
-                    action: user.role === 'instructor' && !user.isVerified ? 'Applied to become teacher' : 'Registered as student',
+                    action: user.role === 'instructor' && !user.isVerified ? 'Applied to become teacher' : 
+                            user.role === 'instructor' ? 'Registered as teacher' : 'Registered as student',
                     time: formatTimeAgo(user.createdAt),
                     status: user.isVerified ? 'success' : user.role === 'instructor' ? 'pending' : 'success'
                 }))

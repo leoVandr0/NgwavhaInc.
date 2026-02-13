@@ -15,7 +15,7 @@ const useRealTimeData = () => {
         if (!connected) {
             const interval = setInterval(async () => {
                 try {
-                    const response = await fetch('http://localhost:5001/api/admin/activity');
+                    const response = await fetch('/api/admin/activity');
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success) {

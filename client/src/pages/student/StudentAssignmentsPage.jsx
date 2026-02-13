@@ -73,7 +73,7 @@ const StudentAssignmentsPage = () => {
                 <Button
                     type="primary"
                     icon={<DownloadOutlined />}
-                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${record.fileUrl}`}
+                    href={`${record.fileUrl}`}
                     target="_blank"
                     download
                 >

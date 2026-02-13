@@ -395,6 +395,22 @@ export const createCourse = async (req, res) => {
         course.mongoContentId = content._id.toString();
         await course.save();
 
+        // Broadcast real-time update to admin dashboard
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('course-created', {
+                type: 'new_course',
+                course: {
+                    id: course.id,
+                    title: course.title,
+                    instructorId: course.instructorId,
+                    price: course.price,
+                    level: course.level,
+                    createdAt: course.createdAt
+                },
+                message: `New course created: ${course.title}`
+            });
+        }
+
         res.status(201).json(course);
     } catch (error) {
         res.status(500).json({ message: error.message });

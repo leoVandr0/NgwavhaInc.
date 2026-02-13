@@ -46,6 +46,22 @@ export const registerUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
+        // Broadcast real-time update to admin dashboard
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('user-registered', {
+                type: user.role === 'instructor' ? 'new_teacher' : 'new_student',
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isVerified: user.isVerified || false,
+                    createdAt: user.createdAt
+                },
+                message: `New ${user.role} registered: ${user.name}`
+            });
+        }
+
         logger.track({
             userId: user.id,
             action: 'register',

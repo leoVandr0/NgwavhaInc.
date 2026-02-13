@@ -66,7 +66,7 @@ const LiveRoom = ({ userRole = 'student' }) => {
             userInfo: {
                 displayName: authUser?.name || 'User',
                 email: authUser?.email,
-                avatarUrl: authUser?.avatar ? `http://localhost:5001/uploads/${authUser.avatar}` : null
+                avatarUrl: authUser?.avatar ? `/uploads/${authUser.avatar}` : null
             },
             configOverwrite: {
                 prejoinPageEnabled: false,

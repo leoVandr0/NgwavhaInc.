@@ -339,7 +339,7 @@ const RegisterPage = () => {
 
                         <div className="mt-6">
                             <a
-                                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/google`}
+                                href={`${import.meta.env.VITE_API_URL || ''}/api/auth/google`}
                                 className="w-full inline-flex justify-center py-3 px-4 border border-dark-700 shadow-sm bg-dark-800 text-sm font-medium text-white hover:bg-dark-700 focus:outline-none transition-colors"
                             >
                                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">

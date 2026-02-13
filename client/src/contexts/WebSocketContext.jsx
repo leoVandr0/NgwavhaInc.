@@ -70,6 +70,24 @@ export const WebSocketProvider = ({ children }) => {
             }));
         });
 
+        // Handle admin dashboard real-time updates
+        newSocket.on('user-registered', (data) => {
+            console.log('User registered event:', data);
+            // Dispatch custom event for admin dashboard
+            window.dispatchEvent(new CustomEvent('user-registered', { detail: data }));
+        });
+
+        newSocket.on('course-created', (data) => {
+            console.log('Course created event:', data);
+            // Dispatch custom event for admin dashboard
+            window.dispatchEvent(new CustomEvent('course-created', { detail: data }));
+        });
+
+        newSocket.on('stats-update', (data) => {
+            console.log('Stats update:', data);
+            // Handle general stats updates
+        });
+
         return () => {
             newSocket.close();
         };
