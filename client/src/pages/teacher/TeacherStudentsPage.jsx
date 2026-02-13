@@ -34,7 +34,7 @@ const TeacherStudentsPage = () => {
             render: (_, record) => (
                 <Space>
                     <Avatar
-                        src={record.student?.avatar?.startsWith('http') ? record.student.avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${record.student?.avatar}`}
+                        src={record.student?.avatar?.startsWith('http') ? record.student.avatar : `${record.student?.avatar}`}
                         icon={<UserOutlined />}
                     />
                     <div>

@@ -5,16 +5,16 @@ import { validatePassword } from '../utils/passwordUtils.js';
  */
 export const validatePasswordMiddleware = (req, res, next) => {
     const { password } = req.body;
-    
+
     if (!password) {
         return res.status(400).json({
             success: false,
             message: 'Password is required'
         });
     }
-    
+
     const validation = validatePassword(password);
-    
+
     if (!validation.isValid) {
         return res.status(400).json({
             success: false,
@@ -22,7 +22,7 @@ export const validatePasswordMiddleware = (req, res, next) => {
             errors: validation.errors
         });
     }
-    
+
     next();
 };
 
@@ -38,30 +38,35 @@ export const sanitizeInput = (req, res, next) => {
         }
         return str;
     };
-    
+
     // Recursively sanitize object
     const sanitizeObject = (obj) => {
         if (typeof obj !== 'object' || obj === null) {
             return sanitizeString(obj);
         }
-        
+
         if (Array.isArray(obj)) {
             return obj.map(sanitizeObject);
         }
-        
+
         const sanitized = {};
         for (let key in obj) {
             if (obj.hasOwnProperty(key)) {
-                sanitized[key] = sanitizeObject(obj[key]);
+                // Skip sanitization for password fields
+                if (key.toLowerCase().includes('password')) {
+                    sanitized[key] = obj[key];
+                } else {
+                    sanitized[key] = sanitizeObject(obj[key]);
+                }
             }
         }
         return sanitized;
     };
-    
+
     req.body = sanitizeObject(req.body);
     req.query = sanitizeObject(req.query);
     req.params = sanitizeObject(req.params);
-    
+
     next();
 };
 
@@ -74,17 +79,17 @@ export const rateLimitMiddleware = (maxAttempts = 5, windowMs = 60000) => {
     return (req, res, next) => {
         const key = req.ip || req.connection.remoteAddress || 'unknown';
         const now = Date.now();
-        
+
         // Clean up old entries
         for (let [k, v] of attempts) {
             if (now - v.timestamp > windowMs) {
                 attempts.delete(k);
             }
         }
-        
+
         // Check current attempts
         const currentAttempt = attempts.get(key);
-        
+
         if (currentAttempt) {
             if (currentAttempt.count >= maxAttempts) {
                 const timeLeft = Math.ceil((windowMs - (now - currentAttempt.timestamp)) / 1000);
@@ -98,7 +103,7 @@ export const rateLimitMiddleware = (maxAttempts = 5, windowMs = 60000) => {
         } else {
             attempts.set(key, { count: 1, timestamp: now });
         }
-        
+
         next();
     };
 };

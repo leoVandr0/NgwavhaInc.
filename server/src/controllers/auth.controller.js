@@ -2,6 +2,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import logger from '../utils/dbLogger.js';
 
 // Helper to generate token
 const generateToken = (userId) => {
@@ -45,13 +46,21 @@ export const registerUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
-        console.log('User created successfully:', user.id);
+        logger.track({
+            userId: user.id,
+            action: 'register',
+            resourceType: 'user',
+            resourceId: user.id,
+            req
+        });
+
+        logger.info('Auth', `User registered successfully: ${user.id}`);
         res.status(201).json({
             ...userData,
             token
         });
     } catch (error) {
-        console.error('Registration error:', error);
+        logger.error('Auth', `Registration error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -82,13 +91,21 @@ export const loginUser = async (req, res) => {
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
 
-        console.log('Login successful:', user.id);
+        logger.track({
+            userId: user.id,
+            action: 'login',
+            resourceType: 'user',
+            resourceId: user.id,
+            req
+        });
+
+        logger.info('Auth', `User logged in: ${user.id}`);
         res.json({
             ...userData,
             token
         });
     } catch (error) {
-        console.error('Login error:', error);
+        logger.error('Auth', `Login error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -115,7 +132,7 @@ export const uploadAvatar = async (req, res) => {
 
         if (!req.file) {
             console.log('No file uploaded');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
                 message: 'No file uploaded',
                 error: 'Please select a file to upload'
@@ -125,9 +142,9 @@ export const uploadAvatar = async (req, res) => {
         const user = await User.findByPk(req.user.id);
         if (!user) {
             console.log('User not found:', req.user.id);
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'User not found' 
+                message: 'User not found'
             });
         }
 
@@ -136,11 +153,16 @@ export const uploadAvatar = async (req, res) => {
         user.avatar = req.file.filename;
         await user.save();
 
-        console.log('Avatar uploaded successfully:', {
+        logger.track({
             userId: user.id,
-            oldAvatar,
-            newAvatar: req.file.filename
+            action: 'upload_avatar',
+            resourceType: 'user',
+            resourceId: user.id,
+            details: { oldAvatar, newAvatar: req.file.filename },
+            req
         });
+
+        logger.info('Auth', `Avatar updated for user ${user.id}`);
 
         res.json({
             success: true,
@@ -149,16 +171,14 @@ export const uploadAvatar = async (req, res) => {
             filename: req.file.filename
         });
     } catch (error) {
-        console.error('Avatar upload error:', {
-            error: error.message,
+        logger.error('Auth', `Avatar upload error: ${error.message}`, {
             stack: error.stack,
-            file: req.file,
-            user: req.user?.id
+            userId: req.user?.id
         });
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Server error', 
-            error: error.message 
+            message: 'Server error',
+            error: error.message
         });
     }
 };

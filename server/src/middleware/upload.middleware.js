@@ -2,6 +2,14 @@ import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import r2Client, { r2Config } from '../config/r2.js';
+
+let multerS3 = null;
+try {
+    multerS3 = (await import('multer-s3')).default;
+} catch (error) {
+    console.warn('⚠️ multer-s3 not found. R2 uploads will fallback to local storage.');
+}
 
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
 const chunkPath = process.env.UPLOAD_CHUNK_PATH || path.join(uploadPath, 'chunks');
@@ -20,8 +28,20 @@ const storage = multer.diskStorage({
     },
 });
 
+// R2 Storage configuration (only if multerS3 is available)
+let r2Storage = null;
+if (multerS3) {
+    r2Storage = multerS3({
+        s3: r2Client,
+        bucket: r2Config.bucketName,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        key: function (req, file, cb) {
+            cb(null, `${file.fieldname}-${uuidv4()}${path.extname(file.originalname)}`);
+        }
+    });
+}
+
 function checkFileType(file, cb) {
-    // Allow common image formats and increase size limit for avatars
     const filetypes = /jpg|jpeg|png|gif|webp|pdf|mp4|mkv|avi|mov/;
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = filetypes.test(file.mimetype);
@@ -33,12 +53,22 @@ function checkFileType(file, cb) {
     }
 }
 
+// Local upload (fallback/internal)
 export const upload = multer({
     storage,
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     },
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit for avatars
+    limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+// Cloudflare R2 Upload (or fallback to local if R2 storage is not available)
+export const r2Upload = multer({
+    storage: r2Storage || storage,
+    fileFilter: function (req, file, cb) {
+        checkFileType(file, cb);
+    },
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit for R2
 });
 
 const chunkStorage = multer.diskStorage({

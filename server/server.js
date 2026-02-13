@@ -27,6 +27,7 @@ import assignmentRoutes from './src/routes/assignment.routes.js';
 import cartRoutes from './src/routes/cart.routes.js';
 import wishlistRoutes from './src/routes/wishlist.routes.js';
 import enrollmentRoutes from './src/routes/enrollment.routes.js';
+import analyticsRoutes from './src/routes/analytics.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
@@ -37,9 +38,9 @@ const PORT = process.env.PORT || 8080;
 const publicPath = path.join(__dirname, 'public');
 app.use(compression());
 app.use(express.static(publicPath, {
-  maxAge: '7d',
-  etag: true,
-  lastModified: true
+    maxAge: '7d',
+    etag: true,
+    lastModified: true
 }));
 
 // Middleware
@@ -75,9 +76,9 @@ app.use(passport.session());
 // Static uploads
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
 app.use('/uploads', express.static(path.join(__dirname, uploadPath), {
-  maxAge: '7d',
-  etag: true,
-  lastModified: true
+    maxAge: '7d',
+    etag: true,
+    lastModified: true
 }));
 
 // API routes (must come before SPA fallback)
@@ -89,6 +90,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Test route
 app.get('/api', (req, res) => {

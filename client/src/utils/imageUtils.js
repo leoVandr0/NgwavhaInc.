@@ -2,8 +2,8 @@ export const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith('http')) return url;
 
-    // Remove /api from VITE_API_URL or use default localhost
-    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    // Remove /api from VITE_API_URL or use default relative
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
     // Ensure the URL starts with a slash
     const formattedUrl = url.startsWith('/') ? url : `/${url}`;

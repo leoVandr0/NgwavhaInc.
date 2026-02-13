@@ -1,23 +1,29 @@
 import express from 'express';
-import { upload } from '../middleware/upload.middleware.js';
+import { r2Upload } from '../middleware/upload.middleware.js';
 import { protect } from '../middleware/auth.middleware.js';
+import { r2Config } from '../config/r2.js';
 
 const router = express.Router();
 
 // Upload course thumbnail
-router.post('/course-thumbnail', protect, upload.single('thumbnail'), (req, res) => {
+router.post('/course-thumbnail', protect, r2Upload.single('thumbnail'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        // Return the file path relative to uploads directory
-        const filePath = `/uploads/${req.file.filename}`;
+        // Check if uploaded to R2 or local
+        const isR2 = !!req.file.key;
+        const filePath = isR2
+            ? `${r2Config.publicDomain}/${req.file.key}`
+            : `/uploads/${req.file.filename}`;
+
+        const filename = isR2 ? req.file.key : req.file.filename;
 
         res.json({
             message: 'Thumbnail uploaded successfully',
             filePath,
-            filename: req.file.filename
+            filename
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -26,19 +32,24 @@ router.post('/course-thumbnail', protect, upload.single('thumbnail'), (req, res)
 });
 
 // Upload profile photo
-router.post('/profile-photo', protect, upload.single('avatar'), (req, res) => {
+router.post('/profile-photo', protect, r2Upload.single('avatar'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        // Return the file path relative to uploads directory
-        const filePath = `/uploads/${req.file.filename}`;
+        // Check if uploaded to R2 or local
+        const isR2 = !!req.file.key;
+        const filePath = isR2
+            ? `${r2Config.publicDomain}/${req.file.key}`
+            : `/uploads/${req.file.filename}`;
+
+        const filename = isR2 ? req.file.key : req.file.filename;
 
         res.json({
             message: 'Profile photo uploaded successfully',
             filePath,
-            filename: req.file.filename
+            filename
         });
     } catch (error) {
         console.error('Upload error:', error);

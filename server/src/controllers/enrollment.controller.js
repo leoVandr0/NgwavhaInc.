@@ -1,6 +1,7 @@
 import { Enrollment, Course, User, Category, Review, LiveSession } from '../models/index.js';
 import CourseContent from '../models/nosql/CourseContent.js';
 import sequelize from '../config/mysql.js';
+import logger from '../utils/dbLogger.js';
 
 // @desc    Get logged in user's enrollments
 // @route   GET /api/enrollments/my-courses
@@ -84,6 +85,15 @@ export const updateProgress = async (req, res) => {
 
             enrollment.lastAccessedAt = new Date();
             await enrollment.save();
+
+            logger.track({
+                userId: req.user.id,
+                action: 'update_progress',
+                resourceType: 'course',
+                resourceId: req.params.courseId,
+                details: { lectureId, progress: enrollment.progress },
+                req
+            });
         }
 
         res.json(enrollment);
@@ -184,6 +194,15 @@ export const enrollInCourse = async (req, res) => {
         // Update enrollment count in MySQL
         course.enrollmentsCount += 1;
         await course.save();
+
+        logger.track({
+            userId: req.user.id,
+            action: 'enroll',
+            resourceType: 'course',
+            resourceId: course.id,
+            details: { pricePaid: enrollment.pricePaid },
+            req
+        });
 
         res.status(201).json(enrollment);
     } catch (error) {
