@@ -20,6 +20,16 @@ const __dirname = path.dirname(__filename);
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '.env') });
 
+// Debug environment variables
+console.log('\n🔍 Environment Variables Debug:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+console.log('JWT_SECRET length:', process.env.JWT_SECRET?.length || 0);
+console.log('MYSQLHOST exists:', !!process.env.MYSQLHOST);
+console.log('MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('🔍 End Environment Debug\n');
+
 // Import routes
 import authRoutes from './src/routes/auth.routes.js';
 import courseRoutes from './src/routes/course.routes.js';

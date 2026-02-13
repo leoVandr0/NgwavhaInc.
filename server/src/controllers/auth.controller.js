@@ -6,9 +6,15 @@ import logger from '../utils/dbLogger.js';
 
 // Helper to generate token
 const generateToken = (userId) => {
+    const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-emergency-use-change-in-production';
+    if (!jwtSecret) {
+        console.error('❌ JWT_SECRET is not defined! Using fallback.');
+    }
+    console.log('🔑 JWT Secret exists:', !!jwtSecret, 'Length:', jwtSecret?.length);
+    
     return jwt.sign(
         { userId },
-        process.env.JWT_SECRET,
+        jwtSecret,
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
     );
 };
@@ -16,6 +22,16 @@ const generateToken = (userId) => {
 export const registerUser = async (req, res) => {
     console.log('\n========== REGISTRATION REQUEST START ==========');
     console.log('1. Received request body:', req.body);
+    
+    // Validate JWT secret first
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        console.error('❌ CRITICAL: JWT_SECRET is not defined!');
+        return res.status(500).json({ 
+            message: 'Server configuration error: JWT secret missing',
+            error: 'JWT_SECRET environment variable not set'
+        });
+    }
 
     try {
         const { name, email, password, role } = req.body;
@@ -116,7 +132,19 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
-    console.log('Login request body:', req.body);
+    console.log('\n========== LOGIN REQUEST START ==========');
+    console.log('1. Received request body:', req.body);
+    
+    // Validate JWT secret first
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        console.error('❌ CRITICAL: JWT_SECRET is not defined!');
+        return res.status(500).json({ 
+            message: 'Server configuration error: JWT secret missing',
+            error: 'JWT_SECRET environment variable not set'
+        });
+    }
+    
     try {
         const { email, password } = req.body;
 
