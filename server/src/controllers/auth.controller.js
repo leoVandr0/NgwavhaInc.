@@ -14,14 +14,23 @@ const generateToken = (userId) => {
 };
 
 export const registerUser = async (req, res) => {
-    console.log('Register request body:', req.body);
+    console.log('\n========== REGISTRATION REQUEST START ==========');
+    console.log('1. Received request body:', req.body);
+
     try {
         const { name, email, password, role } = req.body;
+        console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password });
+
         // Check if user exists
         const normalizedEmail = email.trim().toLowerCase();
+        console.log('3. Normalized email:', normalizedEmail);
+        console.log('4. Checking if user exists...');
+
         let user = await User.findOne({ where: { email: normalizedEmail } });
+        console.log('5. User lookup result:', user ? 'EXISTS' : 'NOT FOUND');
+
         if (user) {
-            console.log('Registration failed: User already exists:', normalizedEmail);
+            console.log('❌ Registration failed: User already exists');
             let message = 'User with this email already exists.';
             if (user.isGoogleUser && !user.password) {
                 message += ' It appears you previously signed in with Google. Please use Google Sign In.';
@@ -32,19 +41,26 @@ export const registerUser = async (req, res) => {
         }
 
         // Create user (password will be hashed by the beforeCreate hook)
-        console.log('Creating user:', normalizedEmail);
+        console.log('6. Creating new user in database...');
         user = await User.create({
             name,
             email: normalizedEmail,
             password,
             role: role || 'student'
         });
+        console.log('7. ✅ User created successfully. ID:', user.id);
 
         // Generate token
+        console.log('8. Generating JWT token...');
+        console.log('   - JWT_SECRET exists:', !!process.env.JWT_SECRET);
+        console.log('   - JWT_SECRET length:', process.env.JWT_SECRET?.length);
         const token = generateToken(user.id);
+        console.log('9. ✅ Token generated. Length:', token?.length);
 
         // Remove password from response
+        console.log('10. Preparing response data...');
         const { password: _, ...userData } = user.dataValues;
+        console.log('11. User data prepared. Fields:', Object.keys(userData).join(', '));
 
         // Broadcast real-time update to admin dashboard
         // Broadcast real-time update to admin dashboard
@@ -78,15 +94,24 @@ export const registerUser = async (req, res) => {
 
             logger.info('Auth', `User registered successfully: ${user.id}`);
         } catch (postRegError) {
-            console.error('Post-registration logging error:', postRegError);
+            console.error('⚠️  Post-registration logging error:', postRegError);
         }
+
+        console.log('12. Sending success response (201)...');
         res.status(201).json({
             ...userData,
             token
         });
+        console.log('13. ✅ Response sent successfully');
+        console.log('========== REGISTRATION REQUEST END ==========\n');
     } catch (error) {
+        console.error('\n❌ REGISTRATION ERROR CAUGHT:');
+        console.error('   Message:', error.message);
+        console.error('   Name:', error.name);
+        console.error('   Stack:', error.stack);
         logger.error('Auth', `Registration error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
+        console.log('========== REGISTRATION REQUEST END (ERROR) ==========\n');
     }
 };
 
@@ -145,7 +170,7 @@ export const loginUser = async (req, res) => {
         } catch (postLoginError) {
             console.error('Post-login logging error:', postLoginError);
         }
-        
+
         console.log('Login successful for user:', user.id);
         res.json({
             ...userData,
