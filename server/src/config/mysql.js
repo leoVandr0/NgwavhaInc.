@@ -44,21 +44,33 @@ if (connectionString) {
 }
 
 export const connectMySQL = async () => {
-  try {
-    // Test connection with retry logic
-    await sequelize.authenticate();
-    console.log("🗄️ MySQL connection established successfully.");
+  const maxRetries = 5;
+  const retryDelay = 5000; // 5 seconds
 
-    // Test the connection with a simple query
-    await sequelize.query('SELECT 1');
-    console.log("🔍 MySQL connection test passed.");
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Test connection
+      await sequelize.authenticate();
+      console.log("🗄️ MySQL connection established successfully.");
 
-    await sequelize.sync({ force: false });
-    console.log("📦 MySQL models synchronized.");
-    return sequelize;
-  } catch (error) {
-    console.error("❌ Unable to connect to MySQL:", error.message);
-    return null;
+      // Test the connection with a simple query
+      await sequelize.query('SELECT 1');
+      console.log("🔍 MySQL connection test passed.");
+
+      await sequelize.sync({ force: false });
+      console.log("📦 MySQL models synchronized.");
+      return sequelize;
+    } catch (error) {
+      console.error(`❌ MySQL connection attempt ${attempt}/${maxRetries} failed:`, error.message);
+
+      if (attempt < maxRetries) {
+        console.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      } else {
+        console.error("❌ Unable to connect to MySQL after multiple attempts.");
+        return null;
+      }
+    }
   }
 };
 
