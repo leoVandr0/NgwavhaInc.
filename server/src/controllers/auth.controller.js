@@ -47,30 +47,39 @@ export const registerUser = async (req, res) => {
         const { password: _, ...userData } = user.dataValues;
 
         // Broadcast real-time update to admin dashboard
-        if (global.broadcastToAdmins) {
-            global.broadcastToAdmins('user-registered', {
-                type: user.role === 'instructor' ? 'new_teacher' : 'new_student',
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    isVerified: user.isVerified || false,
-                    createdAt: user.createdAt
-                },
-                message: `New ${user.role} registered: ${user.name}`
-            });
+        // Broadcast real-time update to admin dashboard
+        try {
+            if (global.broadcastToAdmins) {
+                global.broadcastToAdmins('user-registered', {
+                    type: user.role === 'instructor' ? 'new_teacher' : 'new_student',
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        isVerified: user.isVerified || false,
+                        createdAt: user.createdAt
+                    },
+                    message: `New ${user.role} registered: ${user.name}`
+                });
+            }
+        } catch (postRegError) {
+            console.error('Post-registration broadcast error:', postRegError);
         }
 
-        logger.track({
-            userId: user.id,
-            action: 'register',
-            resourceType: 'user',
-            resourceId: user.id,
-            req
-        });
+        try {
+            await logger.track({
+                userId: user.id,
+                action: 'register',
+                resourceType: 'user',
+                resourceId: user.id,
+                req
+            });
 
-        logger.info('Auth', `User registered successfully: ${user.id}`);
+            await logger.info('Auth', `User registered successfully: ${user.id}`);
+        } catch (postRegError) {
+            console.error('Post-registration logging error:', postRegError);
+        }
         res.status(201).json({
             ...userData,
             token
