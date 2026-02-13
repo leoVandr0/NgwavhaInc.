@@ -8,13 +8,13 @@ import {
     getUserDetails,
     getRealTimeActivity
 } from '../controllers/admin.controller.js';
-import { protect, adminOnly } from '../middleware/auth.middleware.js';
+import { protect, authorize } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
 // Apply admin middleware to all routes
 router.use(protect);
-router.use(adminOnly);
+router.use(authorize('admin'));
 
 // Dashboard routes
 router.get('/dashboard', getDashboardStats);

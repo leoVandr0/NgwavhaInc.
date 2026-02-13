@@ -30,7 +30,7 @@ const storage = multer.diskStorage({
 
 // R2 Storage configuration (only if multerS3 is available)
 let r2Storage = null;
-if (multerS3) {
+if (multerS3 && r2Client && r2Config.bucketName) {
     r2Storage = multerS3({
         s3: r2Client,
         bucket: r2Config.bucketName,
@@ -39,6 +39,10 @@ if (multerS3) {
             cb(null, `${file.fieldname}-${uuidv4()}${path.extname(file.originalname)}`);
         }
     });
+} else {
+    if (multerS3 && (!r2Client || !r2Config.bucketName)) {
+        console.warn('⚠️ R2 Storage skipped: Missing R2 Client or Bucket Name. Falling back to local storage.');
+    }
 }
 
 function checkFileType(file, cb) {
