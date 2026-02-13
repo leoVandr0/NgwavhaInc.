@@ -7,12 +7,24 @@ const connectMongoDB = async () => {
     return;
   }
 
-  try {
-    const conn = await mongoose.connect(mongoUri);
-    console.log(`✅ MongoDB connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`❌ MongoDB connection error: ${error.message}`);
-    console.log('⚠️  Continuing without MongoDB...');
+  const maxRetries = 5;
+  const retryDelay = 5000; // 5 seconds
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const conn = await mongoose.connect(mongoUri);
+      console.log(`✅ MongoDB connected: ${conn.connection.host}`);
+      return; // Success
+    } catch (error) {
+      console.error(`❌ MongoDB connection attempt ${attempt}/${maxRetries} failed: ${error.message}`);
+
+      if (attempt < maxRetries) {
+        console.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      } else {
+        console.log('⚠️  Continuing without MongoDB after multiple failed attempts...');
+      }
+    }
   }
 };
 

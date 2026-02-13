@@ -76,7 +76,7 @@ export const registerUser = async (req, res) => {
                 req
             });
 
-            await logger.info('Auth', `User registered successfully: ${user.id}`);
+            logger.info('Auth', `User registered successfully: ${user.id}`);
         } catch (postRegError) {
             console.error('Post-registration logging error:', postRegError);
         }
@@ -95,12 +95,28 @@ export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Check if user exists
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide email and password' });
+        }
+
+        // Normalize email
         const normalizedEmail = email.trim().toLowerCase();
+        console.log('Attempting login for:', normalizedEmail);
+
+        // Find user
         const user = await User.findOne({ where: { email: normalizedEmail } });
         if (!user) {
             console.log('Login failed: User not found:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        console.log('User found:', { id: user.id, email: user.email, hasPassword: !!user.password });
+
+        // Check if user has password (OAuth users might not)
+        if (!user.password) {
+            console.log('Login failed: User has no password (OAuth user)');
+            return res.status(400).json({ message: 'Please use Google Sign In for this account' });
         }
 
         // Check password
@@ -125,15 +141,22 @@ export const loginUser = async (req, res) => {
                 req
             });
 
-            await logger.info('Auth', `User logged in: ${user.id}`);
+            logger.info('Auth', `User logged in: ${user.id}`);
         } catch (postLoginError) {
             console.error('Post-login logging error:', postLoginError);
         }
+        
+        console.log('Login successful for user:', user.id);
         res.json({
             ...userData,
             token
         });
     } catch (error) {
+        console.error('Login error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
         logger.error('Auth', `Login error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
     }
