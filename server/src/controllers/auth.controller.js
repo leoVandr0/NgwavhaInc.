@@ -99,19 +99,20 @@ export const registerUser = async (req, res) => {
             console.error('Post-registration broadcast error:', postRegError);
         }
 
-        try {
-            await logger.track({
-                userId: user.id,
-                action: 'register',
-                resourceType: 'user',
-                resourceId: user.id,
-                req
-            });
+        // MongoDB logging temporarily disabled to prevent timeouts
+        // try {
+        //     await logger.track({
+        //         userId: user.id,
+        //         action: 'register',
+        //         resourceType: 'user',
+        //         resourceId: user.id,
+        //         req
+        //     });
 
-            logger.info('Auth', `User registered successfully: ${user.id}`);
-        } catch (postRegError) {
-            console.error('⚠️  Post-registration logging error:', postRegError);
-        }
+        //     logger.info('Auth', `User registered successfully: ${user.id}`);
+        // } catch (postRegError) {
+        //     console.error('⚠️  Post-registration logging error:', postRegError);
+        // }
 
         console.log('12. Sending success response (201)...');
         res.status(201).json({
@@ -125,7 +126,8 @@ export const registerUser = async (req, res) => {
         console.error('   Message:', error.message);
         console.error('   Name:', error.name);
         console.error('   Stack:', error.stack);
-        logger.error('Auth', `Registration error: ${error.message}`, { stack: error.stack });
+        // MongoDB error logging temporarily disabled
+        // logger.error('Auth', `Registration error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
         console.log('========== REGISTRATION REQUEST END (ERROR) ==========\n');
     }
