@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api from '../services/api';
 import useAuthStore from '../store/authStore';
 
 const AuthContext = createContext();
