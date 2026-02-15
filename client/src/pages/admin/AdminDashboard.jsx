@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Card, Statistic, Progress, Table, Tag, Button, Select, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
-import useRealTimeData from '../../hooks/useRealTimeData';
+// import useRealTimeData from '../../hooks/useRealTimeData'; // Temporarily disabled
 
 const { RangePicker } = DatePicker;
 
@@ -42,59 +42,59 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const { currentUser } = useAuth();
 
-    // Use real-time data hook
-    const {
-        onlineUsers,
-        activeSessions,
-        recentActivity,
-        connected,
-        emitAdminEvent
-    } = useRealTimeData();
+    // Temporarily disabled real-time features
+    // const {
+    //     onlineUsers,
+    //     activeSessions,
+    //     recentActivity,
+    //     connected,
+    //     emitAdminEvent
+    // } = useRealTimeData();
 
-    // Listen for real-time updates
-    useEffect(() => {
-        if (!connected) return;
+    // Listen for real-time updates - TEMPORARILY DISABLED
+    // useEffect(() => {
+    //     if (!connected) return;
 
-        // Join admin dashboard room
-        emitAdminEvent('join-admin-dashboard', {
-            role: 'admin',
-            userId: currentUser?.id
-        });
+    //     // Join admin dashboard room
+    //     emitAdminEvent('join-admin-dashboard', {
+    //         role: 'admin',
+    //         userId: currentUser?.id
+    //     });
 
-        // Listen for user registrations
-        const handleUserRegistered = (data) => {
-            console.log('New user registered:', data);
+    //     // Listen for user registrations
+    //     const handleUserRegistered = (data) => {
+    //         console.log('New user registered:', data);
             
-            // Update stats based on user type
-            setStats(prev => ({
-                ...prev,
-                totalUsers: prev.totalUsers + 1,
-                totalTeachers: data.type === 'new_teacher' ? prev.totalTeachers + 1 : prev.totalTeachers,
-                totalStudents: data.type === 'new_student' ? prev.totalStudents + 1 : prev.totalStudents,
-                pendingTeachers: data.type === 'new_teacher' && !data.user.isVerified ? 
-                    prev.pendingTeachers + 1 : prev.pendingTeachers
-            }));
-        };
+    //         // Update stats based on user type
+    //         setStats(prev => ({
+    //             ...prev,
+    //             totalUsers: prev.totalUsers + 1,
+    //             totalTeachers: data.type === 'new_teacher' ? prev.totalTeachers + 1 : prev.totalTeachers,
+    //             totalStudents: data.type === 'new_student' ? prev.totalStudents + 1 : prev.totalStudents,
+    //             pendingTeachers: data.type === 'new_teacher' && !data.user.isVerified ? 
+    //                 prev.pendingTeachers + 1 : prev.pendingTeachers
+    //         }));
+    //     };
 
-        // Listen for course creations
-        const handleCourseCreated = (data) => {
-            console.log('New course created:', data);
+    //     // Listen for course creations
+    //     const handleCourseCreated = (data) => {
+    //         console.log('New course created:', data);
             
-            setStats(prev => ({
-                ...prev,
-                totalCourses: prev.totalCourses + 1
-            }));
-        };
+    //         setStats(prev => ({
+    //             ...prev,
+    //             totalCourses: prev.totalCourses + 1
+    //         }));
+    //     };
 
-        // Register event listeners (these will be handled by the WebSocket context)
-        window.addEventListener('user-registered', handleUserRegistered);
-        window.addEventListener('course-created', handleCourseCreated);
+    //     // Register event listeners (these will be handled by the WebSocket context)
+    //     window.addEventListener('user-registered', handleUserRegistered);
+    //     window.addEventListener('course-created', handleCourseCreated);
 
-        return () => {
-            window.removeEventListener('user-registered', handleUserRegistered);
-            window.removeEventListener('course-created', handleCourseCreated);
-        };
-    }, [connected, currentUser, emitAdminEvent]);
+    //     return () => {
+    //         window.removeEventListener('user-registered', handleUserRegistered);
+    //         window.removeEventListener('course-created', handleCourseCreated);
+    //     };
+    // }, [connected, currentUser, emitAdminEvent]);
 
     // Fetch dashboard data
     useEffect(() => {
@@ -105,24 +105,49 @@ const AdminDashboard = () => {
                 
                 if (data.success) {
                     setStats({
-                        totalUsers: data.data.users.total,
-                        activeUsers: data.data.users.active,
-                        totalTeachers: data.data.users.teachers,
-                        totalStudents: data.data.users.students,
-                        pendingTeachers: data.data.users.pendingTeachers,
-                        totalCourses: data.data.courses.total,
-                        activeCourses: data.data.courses.active,
-                        totalRevenue: data.data.revenue.total,
-                        monthlyRevenue: data.data.revenue.monthly
+                        totalUsers: data.data.users.total || 0,
+                        activeUsers: data.data.users.active || 0,
+                        totalTeachers: data.data.users.teachers || 0,
+                        totalStudents: data.data.users.students || 0,
+                        pendingTeachers: data.data.users.pendingTeachers || 0,
+                        totalCourses: data.data.courses.total || 0,
+                        activeCourses: data.data.courses.active || 0,
+                        totalRevenue: data.data.revenue.total || 0,
+                        monthlyRevenue: data.data.revenue.monthly || 0
                     });
                     
                     // Update recent activity from server
                     if (data.data.recentActivity) {
                         // This will be updated by WebSocket events
                     }
+                } else {
+                    // Set fallback data if API fails
+                    setStats({
+                        totalUsers: 0,
+                        activeUsers: 0,
+                        totalTeachers: 0,
+                        totalStudents: 0,
+                        pendingTeachers: 0,
+                        totalCourses: 0,
+                        activeCourses: 0,
+                        totalRevenue: 0,
+                        monthlyRevenue: 0
+                    });
                 }
             } catch (error) {
                 console.error('Dashboard data fetch error:', error);
+                // Set fallback data on error
+                setStats({
+                    totalUsers: 0,
+                    activeUsers: 0,
+                    totalTeachers: 0,
+                    totalStudents: 0,
+                    pendingTeachers: 0,
+                    totalCourses: 0,
+                    activeCourses: 0,
+                    totalRevenue: 0,
+                    monthlyRevenue: 0
+                });
             } finally {
                 setLoading(false);
             }
