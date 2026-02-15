@@ -16,7 +16,7 @@ import {
     completeChunkedUpload
 } from '../controllers/course.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
-import { upload, chunkUpload } from '../middleware/upload.middleware.js';
+import { upload, chunkUpload, uploadToR2 } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
@@ -59,5 +59,26 @@ router.route('/:id/sections/:sectionId/lectures/:lectureId/video/chunked')
 
 router.route('/:id/sections/:sectionId/lectures/:lectureId/video/chunked/complete')
     .post(protect, authorize('instructor', 'admin'), completeChunkedUpload);
+
+// Thumbnail upload route
+router.post('/thumbnail/upload', protect, authorize('instructor', 'admin'), upload.single('thumbnail'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No thumbnail file provided' });
+        }
+
+        // Upload to R2 or fallback to local
+        const thumbnailUrl = await uploadToR2(req.file);
+        
+        res.json({
+            success: true,
+            thumbnailUrl,
+            filename: req.file.filename
+        });
+    } catch (error) {
+        console.error('Thumbnail upload error:', error);
+        res.status(500).json({ message: 'Thumbnail upload failed', error: error.message });
+    }
+});
 
 export default router;

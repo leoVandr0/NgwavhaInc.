@@ -75,6 +75,33 @@ export const r2Upload = multer({
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit for R2
 });
 
+// Enhanced R2 upload handler that returns file location
+export const uploadToR2 = async (file) => {
+    if (!r2Client || !r2Config.bucketName) {
+        // Fallback to local storage
+        return `/uploads/${file.filename}`;
+    }
+
+    try {
+        const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+        const command = new PutObjectCommand({
+            Bucket: r2Config.bucketName,
+            Key: file.filename,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+        });
+
+        await r2Client.send(command);
+        
+        // Return the public URL
+        const publicUrl = `${r2Config.publicDomain}/${file.filename}`;
+        return publicUrl;
+    } catch (error) {
+        console.error('R2 upload error:', error);
+        throw error;
+    }
+};
+
 const chunkStorage = multer.diskStorage({
     destination(req, file, cb) {
         cb(null, chunkPath);
