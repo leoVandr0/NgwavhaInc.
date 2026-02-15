@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
@@ -11,7 +11,14 @@ import {
     Activity,
     DollarSign,
     X,
-    Menu
+    Menu,
+    Home,
+    User,
+    Calendar,
+    FileText,
+    Video,
+    ShoppingCart,
+    Heart
 } from 'lucide-react';
 import { Badge, Avatar } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,59 +26,180 @@ import logo from '../../assets/logo.jpg';
 
 const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { currentUser, logout } = useAuth();
 
-    const menuItems = [
-        {
-            path: '/admin/dashboard',
-            icon: <LayoutDashboard size={20} />,
-            label: 'Dashboard',
-            badge: null
-        },
-        {
-            path: '/admin/users',
-            icon: <Users size={20} />,
-            label: 'Users',
-            badge: null
-        },
-        {
-            path: '/admin/teachers',
-            icon: <GraduationCap size={20} />,
-            label: 'Teachers',
-            badge: 5
-        },
-        {
-            path: '/admin/courses',
-            icon: <BookOpen size={20} />,
-            label: 'Courses',
-            badge: null
-        },
-        {
-            path: '/admin/analytics',
-            icon: <Activity size={20} />,
-            label: 'Analytics',
-            badge: null
-        },
-        {
-            path: '/admin/finance',
-            icon: <DollarSign size={20} />,
-            label: 'Finance',
-            badge: null
-        },
-        {
-            path: '/admin/settings',
-            icon: <Settings size={20} />,
-            label: 'Settings',
-            badge: null
+    // Get menu items based on user role
+    const getMenuItems = () => {
+        const path = location.pathname;
+        
+        if (path.startsWith('/admin')) {
+            return [
+                {
+                    path: '/admin/dashboard',
+                    icon: <LayoutDashboard size={20} />,
+                    label: 'Dashboard',
+                    badge: null
+                },
+                {
+                    path: '/admin/users',
+                    icon: <Users size={20} />,
+                    label: 'Users',
+                    badge: null
+                },
+                {
+                    path: '/admin/teachers',
+                    icon: <GraduationCap size={20} />,
+                    label: 'Teachers',
+                    badge: 5
+                },
+                {
+                    path: '/admin/courses',
+                    icon: <BookOpen size={20} />,
+                    label: 'Courses',
+                    badge: null
+                },
+                {
+                    path: '/admin/analytics',
+                    icon: <Activity size={20} />,
+                    label: 'Analytics',
+                    badge: null
+                },
+                {
+                    path: '/admin/finance',
+                    icon: <DollarSign size={20} />,
+                    label: 'Finance',
+                    badge: null
+                },
+                {
+                    path: '/admin/settings',
+                    icon: <Settings size={20} />,
+                    label: 'Settings',
+                    badge: null
+                }
+            ];
         }
-    ];
+        
+        if (path.startsWith('/teacher')) {
+            return [
+                {
+                    path: '/teacher/dashboard',
+                    icon: <LayoutDashboard size={20} />,
+                    label: 'Dashboard',
+                    badge: null
+                },
+                {
+                    path: '/teacher/courses',
+                    icon: <BookOpen size={20} />,
+                    label: 'My Courses',
+                    badge: null
+                },
+                {
+                    path: '/teacher/live',
+                    icon: <Video size={20} />,
+                    label: 'Live Lessons',
+                    badge: null
+                },
+                {
+                    path: '/teacher/students',
+                    icon: <Users size={20} />,
+                    label: 'Students',
+                    badge: null
+                },
+                {
+                    path: '/teacher/assignments',
+                    icon: <FileText size={20} />,
+                    label: 'Assignments',
+                    badge: null
+                },
+                {
+                    path: '/teacher/profile',
+                    icon: <User size={20} />,
+                    label: 'Profile',
+                    badge: null
+                }
+            ];
+        }
+        
+        if (path.startsWith('/student')) {
+            return [
+                {
+                    path: '/student/dashboard',
+                    icon: <Home size={20} />,
+                    label: 'Dashboard',
+                    badge: null
+                },
+                {
+                    path: '/student/courses',
+                    icon: <BookOpen size={20} />,
+                    label: 'My Courses',
+                    badge: null
+                },
+                {
+                    path: '/student/cart',
+                    icon: <ShoppingCart size={20} />,
+                    label: 'Cart',
+                    badge: null
+                },
+                {
+                    path: '/student/wishlist',
+                    icon: <Heart size={20} />,
+                    label: 'Wishlist',
+                    badge: null
+                },
+                {
+                    path: '/student/assignments',
+                    icon: <FileText size={20} />,
+                    label: 'Assignments',
+                    badge: null
+                },
+                {
+                    path: '/student/live',
+                    icon: <Video size={20} />,
+                    label: 'Live Classes',
+                    badge: null
+                },
+                {
+                    path: '/student/schedule',
+                    icon: <Calendar size={20} />,
+                    label: 'Schedule',
+                    badge: null
+                },
+                {
+                    path: '/student/profile',
+                    icon: <User size={20} />,
+                    label: 'Profile',
+                    badge: null
+                }
+            ];
+        }
+        
+        return [];
+    };
 
+    const menuItems = getMenuItems();
     const isActive = (path) => location.pathname === path;
 
     const handleLogout = async () => {
         await logout();
-        window.location.href = '/login';
+        navigate('/login');
     };
+
+    const getLayoutInfo = () => {
+        const path = location.pathname;
+        if (path.startsWith('/admin')) {
+            return { title: 'Ngwavha', subtitle: 'Admin Panel', showShield: true };
+        }
+        if (path.startsWith('/teacher')) {
+            return { title: 'Ngwavha', subtitle: 'Teacher Portal', showShield: false };
+        }
+        if (path.startsWith('/student')) {
+            return { title: 'Ngwavha', subtitle: 'Student Portal', showShield: false };
+        }
+        return { title: 'Ngwavha', subtitle: 'Learning Platform', showShield: false };
+    };
+
+    const layoutInfo = getLayoutInfo();
 
     // Mobile overlay
     if (isMobile) {
@@ -93,11 +221,11 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 >
                     {/* Mobile Header */}
                     <div className="h-16 flex items-center justify-between px-6 border-b border-dark-800">
-                        <Link to="/admin/dashboard" className="flex items-center gap-3">
+                        <Link to="/" className="flex items-center gap-3">
                             <img src={logo} alt="Ngwavha" className="h-8 w-8 rounded-full object-cover" />
                             <div>
-                                <span className="text-lg font-bold text-white">Ngwavha</span>
-                                <span className="text-xs text-primary-500 block">Admin Panel</span>
+                                <span className="text-lg font-bold text-white">{layoutInfo.title}</span>
+                                <span className="text-xs text-primary-500 block">{layoutInfo.subtitle}</span>
                             </div>
                         </Link>
                         <button
@@ -108,13 +236,15 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                         </button>
                     </div>
 
-                    {/* Admin Badge */}
-                    <div className="px-6 py-4">
-                        <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
-                            <Shield size={14} className="text-primary-500" />
-                            <span className="text-xs font-medium text-primary-400">Administrator Access</span>
+                    {/* Badge */}
+                    {layoutInfo.showShield && (
+                        <div className="px-6 py-4">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
+                                <Shield size={14} className="text-primary-500" />
+                                <span className="text-xs font-medium text-primary-400">Administrator Access</span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Navigation */}
                     <nav className="px-4 pb-4 flex-1 overflow-y-auto">
@@ -189,12 +319,12 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
         >
             {/* Desktop Header */}
             <div className="h-16 flex items-center justify-between px-4 border-b border-dark-800">
-                <Link to="/admin/dashboard" className="flex items-center gap-3">
+                <Link to="/" className="flex items-center gap-3">
                     <img src={logo} alt="Ngwavha" className="h-8 w-8 rounded-full object-cover flex-shrink-0" />
                     {isOpen && (
                         <div className="overflow-hidden">
-                            <span className="text-lg font-bold text-white block">Ngwavha</span>
-                            <span className="text-xs text-primary-500 block">Admin Panel</span>
+                            <span className="text-lg font-bold text-white block">{layoutInfo.title}</span>
+                            <span className="text-xs text-primary-500 block">{layoutInfo.subtitle}</span>
                         </div>
                     )}
                 </Link>
@@ -206,8 +336,8 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 </button>
             </div>
 
-            {/* Admin Badge */}
-            {isOpen && (
+            {/* Badge */}
+            {isOpen && layoutInfo.showShield && (
                 <div className="px-4 py-3">
                     <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
                         <Shield size={14} className="text-primary-500 flex-shrink-0" />
