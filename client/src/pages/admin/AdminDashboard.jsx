@@ -21,8 +21,9 @@ import {
     Wifi,
     WifiOff
 } from 'lucide-react';
-import { Card, Statistic, Progress, Table, Tag, Button, Select, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
+import { Card, Statistic, Progress, Tag, Button, Select, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
+import ResponsiveTable from '../../components/layout/ResponsiveTable';
 // import useRealTimeData from '../../hooks/useRealTimeData'; // Temporarily disabled
 
 const { RangePicker } = DatePicker;
@@ -454,13 +455,12 @@ const AdminDashboard = () => {
                     </Button>
                 }
             >
-                <Table
+                <ResponsiveTable
                     dataSource={recentActivity}
                     columns={columns}
                     pagination={false}
                     rowKey="id"
                     className="bg-dark-800"
-                    rowClassName="hover:bg-dark-700"
                 />
             </Card>
         </div>
