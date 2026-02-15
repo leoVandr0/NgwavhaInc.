@@ -40,6 +40,7 @@ import cartRoutes from './src/routes/cart.routes.js';
 import wishlistRoutes from './src/routes/wishlist.routes.js';
 import enrollmentRoutes from './src/routes/enrollment.routes.js';
 import analyticsRoutes from './src/routes/analytics.routes.js';
+import uploadRoutes from './src/routes/upload.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
@@ -115,6 +116,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Test route
 app.get('/api', (req, res) => {
