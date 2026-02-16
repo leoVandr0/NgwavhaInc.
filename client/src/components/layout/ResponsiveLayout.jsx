@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import ResponsiveSidebar from './ResponsiveSidebar';
 import { useAuth } from '../../contexts/AuthContext';
+import useNotifications from '../../hooks/useNotifications';
+import notificationService from '../../services/notificationService';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const ResponsiveLayout = ({ title = "Dashboard" }) => {
@@ -10,6 +12,19 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
+    const { unreadCount, markAllAsRead } = useNotifications();
+
+    // Connect to notification service when user is available
+    useEffect(() => {
+        if (currentUser) {
+            notificationService.connect(currentUser.id);
+        }
+        
+        return () => {
+            notificationService.disconnect();
+        };
+    }, [currentUser]);
 
     const handleSidebarToggle = () => {
         if (isMobile) {

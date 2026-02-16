@@ -1,16 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bell, Trash2, Clock, MessageSquare, BookOpen } from 'lucide-react';
-import { Button, Empty, List, Typography } from 'antd';
+import { Bell, X, Check, Trash2, Clock, MessageSquare, BookOpen } from 'lucide-react';
+import { Badge, Button, Divider, Empty, List, Typography } from 'antd';
 import { useNotifications } from '../../hooks/useNotifications';
 
 const { Text } = Typography;
 
 const NotificationDropdown = () => {
-    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+    const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -102,7 +100,10 @@ const NotificationDropdown = () => {
                             {unreadCount > 0 && (
                                 <Button
                                     size="small"
-                                    onClick={() => markAllAsRead()}
+                                    onClick={() => {
+                                        // Mark all as read logic would go here
+                                        console.log('Mark all as read');
+                                    }}
                                     className="text-xs"
                                 >
                                     Mark all as read

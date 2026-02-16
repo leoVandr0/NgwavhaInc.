@@ -58,9 +58,6 @@ const io = new Server(server, {
     }
 });
 
-// Attach io to app so notification (and other) routes can emit to clients
-app.set('io', io);
-
 // Store connected admins for real-time updates
 const connectedAdmins = new Set();
 

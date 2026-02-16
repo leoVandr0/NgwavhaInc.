@@ -18,20 +18,20 @@ import useStudentData from '../../hooks/useStudentData';
 
 const StudentProfile = () => {
     const { currentUser } = useAuth();
-    const { 
-        loading, 
-        studentStats, 
-        enrolledCourses, 
-        weeklyProgress, 
-        achievements, 
-        recentActivity 
+    const {
+        loading,
+        studentStats,
+        enrolledCourses,
+        weeklyProgress,
+        achievements,
+        recentActivity
     } = useStudentData();
 
     const [activeTab, setActiveTab] = useState('overview');
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+            <div className="flex items-center justify-center py-20">
                 <div className="text-white text-xl">Loading profile data...</div>
             </div>
         );
@@ -74,7 +74,7 @@ const StudentProfile = () => {
             <Row gutter={[16, 16]}>
                 {statsCards.map((stat, index) => (
                     <Col xs={24} sm={12} lg={6} key={index}>
-                        <Card 
+                        <Card
                             className="bg-dark-800 border-dark-700 hover:border-primary-500/30 transition-all duration-300"
                             bodyStyle={{ padding: '24px' }}
                         >
@@ -93,7 +93,7 @@ const StudentProfile = () => {
             </Row>
 
             {/* Weekly Progress */}
-            <Card 
+            <Card
                 title="This Week's Progress"
                 className="bg-dark-800 border-dark-700"
                 bodyStyle={{ padding: '24px' }}
@@ -106,9 +106,8 @@ const StudentProfile = () => {
                                     <div key={index} className="flex-1 flex flex-col items-center">
                                         <div className="w-full bg-dark-700 rounded-lg h-32 relative overflow-hidden mb-2">
                                             <div
-                                                className={`absolute bottom-0 w-full rounded-b-lg transition-all duration-700 ${
-                                                    index === weeklyProgress.length - 1 ? 'bg-primary-500' : 'bg-primary-600/40'
-                                                }`}
+                                                className={`absolute bottom-0 w-full rounded-b-lg transition-all duration-700 ${index === weeklyProgress.length - 1 ? 'bg-primary-500' : 'bg-primary-600/40'
+                                                    }`}
                                                 style={{ height: day.height }}
                                             />
                                         </div>
@@ -121,7 +120,7 @@ const StudentProfile = () => {
                                 <div>
                                     <p className="text-xs text-dark-400">Total this week</p>
                                     <p className="text-2xl font-bold text-white">
-                                        {weeklyProgress.reduce((sum, day) => sum + day.hours, 0)} 
+                                        {weeklyProgress.reduce((sum, day) => sum + day.hours, 0)}
                                         <span className="text-primary-500 text-xl ml-1">hours</span>
                                     </p>
                                 </div>
@@ -146,8 +145,8 @@ const StudentProfile = () => {
                             </div>
                             <div className="bg-dark-700 rounded-lg p-4">
                                 <p className="text-xs text-dark-400 mb-2">Average Progress</p>
-                                <Progress 
-                                    percent={studentStats?.averageProgress || 0} 
+                                <Progress
+                                    percent={studentStats?.averageProgress || 0}
                                     strokeColor={{
                                         '0%': '#FFA500',
                                         '100%': '#FFA500',
@@ -165,7 +164,7 @@ const StudentProfile = () => {
             </Card>
 
             {/* Recent Achievements */}
-            <Card 
+            <Card
                 title="Recent Achievements"
                 className="bg-dark-800 border-dark-700"
                 bodyStyle={{ padding: '24px' }}
@@ -178,7 +177,7 @@ const StudentProfile = () => {
                 <Row gutter={[16, 16]}>
                     {achievements.slice(0, 4).map((achievement) => (
                         <Col xs={24} sm={12} lg={6} key={achievement.id}>
-                            <Card 
+                            <Card
                                 className="bg-dark-700 border-dark-600 hover:border-primary-500/20 transition-all duration-300 group"
                                 bodyStyle={{ padding: '16px' }}
                             >
@@ -190,7 +189,7 @@ const StudentProfile = () => {
                                         {achievement.title}
                                     </h4>
                                     <p className="text-dark-400 text-sm mb-3">{achievement.description}</p>
-                                    <Badge 
+                                    <Badge
                                         count={achievement.date}
                                         className="bg-primary-500/10 text-primary-500 border-primary-500/20"
                                     />
@@ -212,8 +211,8 @@ const StudentProfile = () => {
                             className="bg-dark-800 border-dark-700 hover:border-primary-500/30 transition-all duration-300 group"
                             cover={
                                 <div className="relative">
-                                    <img 
-                                        src={course.thumbnail} 
+                                    <img
+                                        src={course.thumbnail}
                                         alt={course.title}
                                         className="w-full h-48 object-cover"
                                     />
@@ -228,7 +227,7 @@ const StudentProfile = () => {
                                     </h4>
                                     <p className="text-dark-400 text-sm">{course.instructor}</p>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between text-xs text-dark-400">
                                     <span className="flex items-center gap-1">
                                         <Clock className="w-4 h-4 text-primary-500" />
@@ -245,8 +244,8 @@ const StudentProfile = () => {
                                         <span className="text-xs text-dark-400">Progress</span>
                                         <span className="text-sm font-bold text-primary-500">{course.progress}%</span>
                                     </div>
-                                    <Progress 
-                                        percent={course.progress} 
+                                    <Progress
+                                        percent={course.progress}
                                         strokeColor={{
                                             '0%': '#FFA500',
                                             '100%': '#FFA500',
@@ -256,8 +255,8 @@ const StudentProfile = () => {
                                     />
                                 </div>
 
-                                <Button 
-                                    type="primary" 
+                                <Button
+                                    type="primary"
                                     className="w-full"
                                     icon={<Play className="w-4 h-4" />}
                                 >
@@ -272,7 +271,7 @@ const StudentProfile = () => {
     );
 
     const renderActivity = () => (
-        <Card 
+        <Card
             title="Recent Activity"
             className="bg-dark-800 border-dark-700"
             bodyStyle={{ padding: '24px' }}
@@ -296,15 +295,15 @@ const StudentProfile = () => {
     );
 
     return (
-        <div className="min-h-screen bg-dark-950">
+        <div className="w-full overflow-hidden">
             {/* Header */}
             <div className="bg-dark-900 border-b border-dark-800">
-                <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+                <div className="w-full px-4 lg:px-6 py-6">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
                         {/* Profile Section */}
                         <div className="flex items-center gap-6">
-                            <Avatar 
-                                size={80} 
+                            <Avatar
+                                size={80}
                                 src={currentUser?.avatar}
                                 className="bg-primary-500"
                             >
@@ -344,7 +343,7 @@ const StudentProfile = () => {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+            <div className="w-full px-4 lg:px-6 py-6">
                 {activeTab === 'overview' && renderOverview()}
                 {activeTab === 'courses' && renderCourses()}
                 {activeTab === 'activity' && renderActivity()}

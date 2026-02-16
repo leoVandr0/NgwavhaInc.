@@ -14,10 +14,7 @@ class NotificationService {
             this.socket.disconnect();
         }
 
-        const socketUrl = typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOCKET_URL
-            ? import.meta.env.VITE_SOCKET_URL
-            : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080');
-        this.socket = io(socketUrl, {
+        this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:8080', {
             auth: {
                 token: localStorage.getItem('token'),
                 userId: userId
