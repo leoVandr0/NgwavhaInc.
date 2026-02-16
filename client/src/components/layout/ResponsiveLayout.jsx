@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Menu, Bell } from 'lucide-react';
 import { Badge } from 'antd';
 import ResponsiveSidebar from './ResponsiveSidebar';
@@ -9,8 +9,9 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [notifications, setNotifications] = useState(3);
+    const [notifications, setNotifications] = useState(0); // Changed from 3 to 0
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
 
     // Detect mobile screen size
     useEffect(() => {
@@ -42,6 +43,18 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
         setIsMobileMenuOpen(false);
     };
 
+    const handleBellClick = () => {
+        console.log('🔔 ResponsiveLayout bell clicked!');
+        console.log('🔍 Current user:', currentUser);
+        console.log('🔍 Navigate function:', typeof navigate);
+        try {
+            navigate('/settings/notifications');
+            console.log('✅ Navigation successful');
+        } catch (error) {
+            console.error('❌ Navigation failed:', error);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-dark-950 flex">
             {/* Sidebar */}
@@ -70,13 +83,30 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
 
                     <div className="flex items-center gap-4 flex-shrink-0">
                         {/* Notifications */}
-                        <button className="relative p-2 text-dark-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors">
+                        <button 
+                            onClick={handleBellClick}
+                            className="relative p-2 text-dark-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors"
+                            title="Notifications"
+                            style={{ border: '2px solid red' }} // Add red border for visibility
+                        >
                             <Bell size={20} />
                             {notifications > 0 && (
                                 <span className="absolute top-1 right-1 w-4 h-4 bg-primary-500 text-dark-950 text-xs font-bold flex items-center justify-center rounded-full">
                                     {notifications}
                                 </span>
                             )}
+                        </button>
+                        
+                        {/* Test Button */}
+                        <button 
+                            onClick={() => {
+                                console.log('🧪 Test button clicked!');
+                                alert('Test button works!');
+                            }}
+                            className="p-2 bg-red-500 text-white rounded"
+                            style={{ marginLeft: '10px' }}
+                        >
+                            TEST
                         </button>
 
                         {/* User Avatar */}
