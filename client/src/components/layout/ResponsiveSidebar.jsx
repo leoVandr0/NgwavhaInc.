@@ -32,7 +32,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
     // Get menu items based on user role
     const getMenuItems = () => {
         const path = location.pathname;
-        
+
         if (path.startsWith('/admin')) {
             return [
                 {
@@ -79,7 +79,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 }
             ];
         }
-        
+
         if (path.startsWith('/teacher')) {
             return [
                 {
@@ -120,7 +120,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 }
             ];
         }
-        
+
         if (path.startsWith('/student')) {
             return [
                 {
@@ -173,7 +173,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 }
             ];
         }
-        
+
         return [];
     };
 
@@ -201,109 +201,123 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
 
     const layoutInfo = getLayoutInfo();
 
-    // Mobile overlay
+    // Mobile overlay — full-screen Udemy-style menu
     if (isMobile) {
         return (
             <>
-                {/* Overlay */}
-                {isOpen && (
-                    <div
-                        className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                        onClick={onMobileClose}
-                    />
-                )}
-                
-                {/* Mobile Sidebar */}
+                {/* Full-screen mobile menu */}
                 <aside
-                    className={`fixed inset-y-0 left-0 z-50 w-64 bg-dark-900 border-r border-dark-800 transform transition-transform duration-300 ease-in-out lg:hidden ${
-                        isOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
+                    className={`fixed inset-0 z-50 bg-dark-950 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                        }`}
+                    style={{ willChange: 'transform' }}
                 >
-                    {/* Mobile Header */}
-                    <div className="h-16 flex items-center justify-between px-6 border-b border-dark-800">
-                        <Link to="/" className="flex items-center gap-3">
-                            <img src={logo} alt="Ngwavha" className="h-8 w-8 rounded-full object-cover" />
-                            <div>
-                                <span className="text-lg font-bold text-white">{layoutInfo.title}</span>
-                                <span className="text-xs text-primary-500 block">{layoutInfo.subtitle}</span>
-                            </div>
-                        </Link>
-                        <button
-                            onClick={onMobileClose}
-                            className="text-dark-400 hover:text-white"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-
-                    {/* Badge */}
-                    {layoutInfo.showShield && (
-                        <div className="px-6 py-4">
-                            <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
-                                <Shield size={14} className="text-primary-500" />
-                                <span className="text-xs font-medium text-primary-400">Administrator Access</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Navigation */}
-                    <nav className="px-4 pb-4 flex-1 overflow-y-auto">
-                        <ul className="space-y-1">
-                            {menuItems.map((item) => (
-                                <li key={item.path}>
-                                    <Link
-                                        to={item.path}
-                                        onClick={onMobileClose}
-                                        className={`flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                            isActive(item.path)
-                                                ? 'bg-primary-500 text-dark-950'
-                                                : 'text-dark-300 hover:bg-dark-800 hover:text-white'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className={isActive(item.path) ? 'text-dark-950' : ''}>
-                                                {item.icon}
-                                            </span>
-                                            <span>{item.label}</span>
-                                        </div>
-                                        {item.badge && (
-                                            <Badge
-                                                count={item.badge}
-                                                className="bg-primary-500 text-dark-950"
-                                                style={{ backgroundColor: '#FFA500', color: '#000' }}
-                                            />
-                                        )}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </nav>
-
-                    {/* Mobile User Section */}
-                    <div className="border-t border-dark-800 p-4">
-                        <div className="flex items-center gap-3 px-4 py-3 mb-3">
-                            <Avatar
-                                src={currentUser?.avatar}
-                                className="bg-primary-500"
+                    <div className="flex flex-col h-full">
+                        {/* ── Top Bar ── */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-800 flex-shrink-0">
+                            <Link to="/" onClick={onMobileClose} className="flex items-center gap-3">
+                                <img src={logo} alt="Ngwavha" className="h-9 w-9 rounded-full object-cover" />
+                                <div>
+                                    <span className="text-lg font-bold text-white leading-tight block">
+                                        {layoutInfo.title}
+                                    </span>
+                                    <span className="text-[11px] text-primary-500 font-medium leading-tight block">
+                                        {layoutInfo.subtitle}
+                                    </span>
+                                </div>
+                            </Link>
+                            <button
+                                onClick={onMobileClose}
+                                className="p-2 -mr-2 text-dark-400 hover:text-white rounded-full hover:bg-dark-800 transition-colors"
+                                aria-label="Close menu"
                             >
-                                {currentUser?.name?.charAt(0)?.toUpperCase()}
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-white truncate">
-                                    {currentUser?.name}
-                                </p>
-                                <p className="text-xs text-dark-400 truncate">
-                                    {currentUser?.email}
-                                </p>
+                                <X size={22} />
+                            </button>
+                        </div>
+
+                        {/* ── User Card ── */}
+                        <div className="px-5 py-5 border-b border-dark-800 flex-shrink-0">
+                            <div className="flex items-center gap-4">
+                                <Avatar
+                                    size={52}
+                                    src={currentUser?.avatar}
+                                    className="bg-primary-500 flex-shrink-0"
+                                    style={{ fontSize: '20px' }}
+                                >
+                                    {currentUser?.name?.charAt(0)?.toUpperCase()}
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-base font-semibold text-white truncate">
+                                        {currentUser?.name || 'Student'}
+                                    </p>
+                                    <p className="text-sm text-dark-400 truncate">
+                                        {currentUser?.email}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-dark-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        >
-                            <LogOut size={18} />
-                            <span>Logout</span>
-                        </button>
+
+                        {/* ── Badge (Admin) ── */}
+                        {layoutInfo.showShield && (
+                            <div className="px-5 py-3 border-b border-dark-800 flex-shrink-0">
+                                <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
+                                    <Shield size={14} className="text-primary-500" />
+                                    <span className="text-xs font-medium text-primary-400">Administrator Access</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Scrollable Navigation ── */}
+                        <nav className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+                            <p className="px-3 pb-2 text-[11px] font-semibold text-dark-500 uppercase tracking-wider">
+                                Navigation
+                            </p>
+                            <ul className="space-y-0.5">
+                                {menuItems.map((item) => (
+                                    <li key={item.path}>
+                                        <Link
+                                            to={item.path}
+                                            onClick={onMobileClose}
+                                            className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-[15px] font-medium transition-all duration-200 ${isActive(item.path)
+                                                    ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/20'
+                                                    : 'text-dark-200 active:bg-dark-800'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <span className={`flex-shrink-0 ${isActive(item.path) ? 'text-dark-950' : 'text-dark-400'}`}>
+                                                    {item.icon}
+                                                </span>
+                                                <span>{item.label}</span>
+                                            </div>
+                                            {item.badge ? (
+                                                <Badge
+                                                    count={item.badge}
+                                                    style={{ backgroundColor: '#FFA500', color: '#000', fontWeight: 600 }}
+                                                />
+                                            ) : (
+                                                !isActive(item.path) && (
+                                                    <span className="text-dark-600">
+                                                        <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+                                                            <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                    </span>
+                                                )
+                                            )}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </nav>
+
+                        {/* ── Bottom Bar ── */}
+                        <div className="border-t border-dark-800 px-4 py-4 flex-shrink-0">
+                            <button
+                                onClick={() => { handleLogout(); onMobileClose(); }}
+                                className="flex items-center gap-4 px-4 py-3.5 w-full text-[15px] font-medium text-red-400 hover:bg-red-500/10 active:bg-red-500/15 rounded-xl transition-colors"
+                            >
+                                <LogOut size={20} />
+                                <span>Log Out</span>
+                            </button>
+                        </div>
                     </div>
                 </aside>
             </>
@@ -313,9 +327,8 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
     // Desktop Sidebar
     return (
         <aside
-            className={`hidden lg:flex flex-col bg-dark-900 border-r border-dark-800 transition-all duration-300 ease-in-out ${
-                isOpen ? 'w-64' : 'w-20'
-            }`}
+            className={`hidden lg:flex flex-col bg-dark-900 border-r border-dark-800 transition-all duration-300 ease-in-out ${isOpen ? 'w-64' : 'w-20'
+                }`}
         >
             {/* Desktop Header */}
             <div className="h-16 flex items-center justify-between px-4 border-b border-dark-800">
@@ -353,11 +366,10 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                         <li key={item.path}>
                             <Link
                                 to={item.path}
-                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                    isActive(item.path)
+                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
                                         ? 'bg-primary-500 text-dark-950'
                                         : 'text-dark-300 hover:bg-dark-800 hover:text-white'
-                                }`}
+                                    }`}
                                 title={!isOpen ? item.label : undefined}
                             >
                                 <div className="flex items-center gap-3 min-w-0">
