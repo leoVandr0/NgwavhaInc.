@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import ResponsiveSidebar from './ResponsiveSidebar';
@@ -7,54 +7,71 @@ import useNotifications from '../../hooks/useNotifications';
 import notificationService from '../../services/notificationService';
 import NotificationDropdown from '../notifications/NotificationDropdown';
 
+const MOBILE_BREAKPOINT = 1024; // matches Tailwind 'lg'
+
 const ResponsiveLayout = ({ title = "Dashboard" }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
+    const [isMobile, setIsMobile] = useState(
+        () => typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT
+    );
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const { unreadCount, markAllAsRead } = useNotifications();
 
-    // Detect mobile viewport
+    // ── Responsive detection ──
     useEffect(() => {
-        const handleResize = () => {
-            const mobile = window.innerWidth < 1024;
-            setIsMobile(mobile);
-            if (!mobile) {
-                setIsMobileMenuOpen(false);
-            }
+        const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+
+        const onChange = (e) => {
+            setIsMobile(e.matches);
+            if (!e.matches) setIsMobileMenuOpen(false);   // closing resize → desktop
         };
 
-        window.addEventListener('resize', handleResize);
-        handleResize(); // Check on mount
-        return () => window.removeEventListener('resize', handleResize);
+        // Set initial state from media query (handles SSR mismatch)
+        setIsMobile(mql.matches);
+
+        // Modern browsers
+        if (mql.addEventListener) {
+            mql.addEventListener('change', onChange);
+            return () => mql.removeEventListener('change', onChange);
+        }
+        // Safari < 14 fallback
+        mql.addListener(onChange);
+        return () => mql.removeListener(onChange);
     }, []);
 
-    // Connect to notification service when user is available
+    // ── Lock body scroll when mobile menu is open ──
     useEffect(() => {
-        if (currentUser) {
-            notificationService.connect(currentUser.id);
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
         }
+        return () => { document.body.style.overflow = ''; };
+    }, [isMobileMenuOpen]);
 
-        return () => {
-            notificationService.disconnect();
-        };
+    // ── Notification service ──
+    useEffect(() => {
+        if (currentUser) notificationService.connect(currentUser.id);
+        return () => notificationService.disconnect();
     }, [currentUser]);
 
-    const handleSidebarToggle = () => {
+    // ── Handlers ──
+    const handleSidebarToggle = useCallback(() => {
         if (isMobile) {
-            setIsMobileMenuOpen(!isMobileMenuOpen);
+            setIsMobileMenuOpen(prev => !prev);
         } else {
-            setIsSidebarOpen(!isSidebarOpen);
+            setIsSidebarOpen(prev => !prev);
         }
-    };
+    }, [isMobile]);
 
-    const handleMobileClose = () => {
+    const handleMobileClose = useCallback(() => {
         setIsMobileMenuOpen(false);
-    };
+    }, []);
 
     return (
-        <div className="min-h-screen bg-dark-950 flex">
+        <div className="min-h-screen bg-dark-950 flex overflow-x-hidden">
             {/* Sidebar */}
             <ResponsiveSidebar
                 isOpen={isMobile ? isMobileMenuOpen : isSidebarOpen}
@@ -64,13 +81,14 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 max-w-full">
+            <div className="flex-1 flex flex-col min-w-0 w-full">
                 {/* Header */}
-                <header className="h-16 bg-dark-900 border-b border-dark-800 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
+                <header className="h-16 bg-dark-900 border-b border-dark-800 flex items-center justify-between px-4 lg:px-6 flex-shrink-0 sticky top-0 z-30">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                         <button
                             onClick={handleSidebarToggle}
                             className="p-2 text-dark-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors flex-shrink-0"
+                            aria-label="Toggle menu"
                         >
                             <Menu size={20} />
                         </button>
@@ -102,7 +120,7 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
 
                 {/* Page Content */}
                 <main className="flex-1 overflow-auto p-4 lg:p-6 min-w-0">
-                    <div className="max-w-full">
+                    <div className="w-full">
                         <Outlet />
                     </div>
                 </main>

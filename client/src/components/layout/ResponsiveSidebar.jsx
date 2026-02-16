@@ -201,118 +201,159 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
 
     const layoutInfo = getLayoutInfo();
 
-    // Mobile overlay — full-screen Udemy-style menu
+    // ═══════════════════════════════════════════════════════════════
+    //  MOBILE — Full-screen sliding menu (Udemy-style)
+    // ═══════════════════════════════════════════════════════════════
     if (isMobile) {
         return (
             <>
-                {/* Full-screen mobile menu */}
+                {/* ── Backdrop overlay ── */}
+                {isOpen && (
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                        style={{ zIndex: 9998 }}
+                        onClick={onMobileClose}
+                        aria-hidden="true"
+                    />
+                )}
+
+                {/* ── Slide-in panel ── */}
                 <aside
-                    className={`fixed inset-0 z-50 bg-dark-950 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                    className={`fixed inset-y-0 left-0 w-[85vw] max-w-[320px] bg-dark-950 shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
                         }`}
-                    style={{ willChange: 'transform' }}
+                    style={{ zIndex: 9999, willChange: 'transform' }}
                 >
                     <div className="flex flex-col h-full">
-                        {/* ── Top Bar ── */}
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-dark-800 flex-shrink-0">
+
+                        {/* ─── Header ─── */}
+                        <div className="flex items-center justify-between px-5 h-16 border-b border-dark-800 flex-shrink-0">
                             <Link to="/" onClick={onMobileClose} className="flex items-center gap-3">
-                                <img src={logo} alt="Ngwavha" className="h-9 w-9 rounded-full object-cover" />
-                                <div>
-                                    <span className="text-lg font-bold text-white leading-tight block">
+                                <img
+                                    src={logo}
+                                    alt="Ngwavha"
+                                    className="h-9 w-9 rounded-full object-cover flex-shrink-0"
+                                />
+                                <div className="leading-tight">
+                                    <span className="text-lg font-bold text-white block">
                                         {layoutInfo.title}
                                     </span>
-                                    <span className="text-[11px] text-primary-500 font-medium leading-tight block">
+                                    <span className="text-[11px] text-primary-500 font-medium block">
                                         {layoutInfo.subtitle}
                                     </span>
                                 </div>
                             </Link>
                             <button
                                 onClick={onMobileClose}
-                                className="p-2 -mr-2 text-dark-400 hover:text-white rounded-full hover:bg-dark-800 transition-colors"
+                                className="p-2.5 -mr-2 text-dark-400 hover:text-white rounded-full hover:bg-dark-800 active:bg-dark-700 transition-colors"
                                 aria-label="Close menu"
                             >
                                 <X size={22} />
                             </button>
                         </div>
 
-                        {/* ── User Card ── */}
-                        <div className="px-5 py-5 border-b border-dark-800 flex-shrink-0">
-                            <div className="flex items-center gap-4">
+                        {/* ─── User card ─── */}
+                        <div className="px-5 py-4 border-b border-dark-800 flex-shrink-0">
+                            <div className="flex items-center gap-3">
                                 <Avatar
-                                    size={52}
+                                    size={48}
                                     src={currentUser?.avatar}
                                     className="bg-primary-500 flex-shrink-0"
-                                    style={{ fontSize: '20px' }}
+                                    style={{ fontSize: '18px' }}
                                 >
                                     {currentUser?.name?.charAt(0)?.toUpperCase()}
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-base font-semibold text-white truncate">
+                                    <p className="text-[15px] font-semibold text-white truncate">
                                         {currentUser?.name || 'Student'}
                                     </p>
-                                    <p className="text-sm text-dark-400 truncate">
+                                    <p className="text-xs text-dark-400 truncate">
                                         {currentUser?.email}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* ── Badge (Admin) ── */}
+                        {/* ─── Admin badge ─── */}
                         {layoutInfo.showShield && (
-                            <div className="px-5 py-3 border-b border-dark-800 flex-shrink-0">
+                            <div className="px-5 py-2.5 border-b border-dark-800 flex-shrink-0">
                                 <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
                                     <Shield size={14} className="text-primary-500" />
-                                    <span className="text-xs font-medium text-primary-400">Administrator Access</span>
+                                    <span className="text-xs font-medium text-primary-400">
+                                        Administrator Access
+                                    </span>
                                 </div>
                             </div>
                         )}
 
-                        {/* ── Scrollable Navigation ── */}
-                        <nav className="flex-1 overflow-y-auto overscroll-contain px-4 py-3">
-                            <p className="px-3 pb-2 text-[11px] font-semibold text-dark-500 uppercase tracking-wider">
-                                Navigation
-                            </p>
-                            <ul className="space-y-0.5">
-                                {menuItems.map((item) => (
-                                    <li key={item.path}>
-                                        <Link
-                                            to={item.path}
-                                            onClick={onMobileClose}
-                                            className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-[15px] font-medium transition-all duration-200 ${isActive(item.path)
-                                                    ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/20'
-                                                    : 'text-dark-200 active:bg-dark-800'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <span className={`flex-shrink-0 ${isActive(item.path) ? 'text-dark-950' : 'text-dark-400'}`}>
-                                                    {item.icon}
-                                                </span>
-                                                <span>{item.label}</span>
-                                            </div>
-                                            {item.badge ? (
-                                                <Badge
-                                                    count={item.badge}
-                                                    style={{ backgroundColor: '#FFA500', color: '#000', fontWeight: 600 }}
-                                                />
-                                            ) : (
-                                                !isActive(item.path) && (
-                                                    <span className="text-dark-600">
-                                                        <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
-                                                            <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
+                        {/* ─── Navigation (scrollable) ─── */}
+                        <nav className="flex-1 overflow-y-auto overscroll-contain">
+                            <div className="px-4 pt-4 pb-1">
+                                <p className="px-3 pb-2 text-[10px] font-bold text-dark-500 uppercase tracking-widest">
+                                    Menu
+                                </p>
+                            </div>
+                            <ul className="px-3 pb-4 space-y-0.5">
+                                {menuItems.map((item) => {
+                                    const active = isActive(item.path);
+                                    return (
+                                        <li key={item.path}>
+                                            <Link
+                                                to={item.path}
+                                                onClick={onMobileClose}
+                                                className={`flex items-center justify-between px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${active
+                                                        ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/25'
+                                                        : 'text-dark-200 active:bg-dark-800/80'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3.5">
+                                                    <span className={active ? 'text-dark-950' : 'text-dark-400'}>
+                                                        {item.icon}
                                                     </span>
-                                                )
-                                            )}
-                                        </Link>
-                                    </li>
-                                ))}
+                                                    <span>{item.label}</span>
+                                                </div>
+                                                {item.badge ? (
+                                                    <Badge
+                                                        count={item.badge}
+                                                        style={{
+                                                            backgroundColor: '#FFA500',
+                                                            color: '#000',
+                                                            fontWeight: 600,
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    !active && (
+                                                        <svg
+                                                            width="7"
+                                                            height="12"
+                                                            viewBox="0 0 7 12"
+                                                            fill="none"
+                                                            className="text-dark-600 flex-shrink-0"
+                                                        >
+                                                            <path
+                                                                d="M1 1L6 6L1 11"
+                                                                stroke="currentColor"
+                                                                strokeWidth="1.5"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            />
+                                                        </svg>
+                                                    )
+                                                )}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </nav>
 
-                        {/* ── Bottom Bar ── */}
-                        <div className="border-t border-dark-800 px-4 py-4 flex-shrink-0">
+                        {/* ─── Bottom logout ─── */}
+                        <div className="border-t border-dark-800 px-4 py-3 flex-shrink-0">
                             <button
-                                onClick={() => { handleLogout(); onMobileClose(); }}
-                                className="flex items-center gap-4 px-4 py-3.5 w-full text-[15px] font-medium text-red-400 hover:bg-red-500/10 active:bg-red-500/15 rounded-xl transition-colors"
+                                onClick={() => {
+                                    handleLogout();
+                                    onMobileClose();
+                                }}
+                                className="flex items-center gap-3.5 px-4 py-3 w-full text-[15px] font-medium text-red-400 active:bg-red-500/10 rounded-xl transition-colors"
                             >
                                 <LogOut size={20} />
                                 <span>Log Out</span>
@@ -367,8 +408,8 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                             <Link
                                 to={item.path}
                                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
-                                        ? 'bg-primary-500 text-dark-950'
-                                        : 'text-dark-300 hover:bg-dark-800 hover:text-white'
+                                    ? 'bg-primary-500 text-dark-950'
+                                    : 'text-dark-300 hover:bg-dark-800 hover:text-white'
                                     }`}
                                 title={!isOpen ? item.label : undefined}
                             >
