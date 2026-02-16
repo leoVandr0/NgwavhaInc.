@@ -85,9 +85,9 @@ const Navbar = () => {
                                         </Link>
                                     )}
 
-                                    <button className="text-dark-300 hover:text-white p-2">
+                                    <Link to="/settings/notifications" className="text-dark-300 hover:text-white p-2 relative">
                                         <Bell className="h-6 w-6" />
-                                    </button>
+                                    </Link>
                                     <div className="relative group">
                                         <button className="flex items-center max-w-xs bg-dark-800 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-white">
                                             <div className="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">

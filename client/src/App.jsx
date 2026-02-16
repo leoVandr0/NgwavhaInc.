@@ -34,8 +34,10 @@ import CookieConsent from './components/CookieConsent';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
+import NotificationSettings from './pages/settings/NotificationSettings';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
+import { clearNotificationCache } from './utils/clearNotificationCache';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -56,7 +58,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-function App() {
+const App = () => {
+  // Clear any cached notification data on app load
+  React.useEffect(() => {
+    clearNotificationCache();
+  }, []);
+
   return (
     <ConfigProvider
       theme={{
@@ -179,6 +186,16 @@ function App() {
                 {/* Redirect /teacher to /teacher/dashboard */}
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
+
+              {/* Settings Routes */}
+              <Route
+                path="/settings/notifications"
+                element={
+                  <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+                    <NotificationSettings />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Catch all - Redirect to Home */}
               <Route path="*" element={<Navigate to="/" replace />} />
