@@ -1,21 +1,29 @@
-import { Enrollment, Course, User, Progress, Achievement } from '../models';
+import { Enrollment, Course, User, Category } from '../models/index.js';
+import Activity from '../models/nosql/Activity.js';
+import { Op } from 'sequelize';
 
 // Get student statistics
-const getStudentStats = async (userId) => {
+export const getStudentStats = async (userId) => {
     try {
         // Get enrolled courses count
         const enrolledCourses = await Enrollment.count({
-            where: { userId, status: 'active' }
+            where: { userId }
         });
 
-        // Get completed lessons count
-        const completedLessons = await Progress.count({
-            where: { userId, completed: true }
+        // Get completed lessons count (stored in Enrollment model)
+        const activeEnrollments = await Enrollment.findAll({
+            where: { userId }
         });
 
-        // Get certificates count
-        const certificates = await Achievement.count({
-            where: { userId, type: 'certificate' }
+        const completedLessons = activeEnrollments.reduce((sum, e) => sum + (e.completedLectures?.length || 0), 0);
+
+        // Get certificates count (stored in Enrollment model)
+        const certificates = await Enrollment.count({
+            where: {
+                userId,
+                isCompleted: true,
+                certificateUrl: { [Op.ne]: null }
+            }
         });
 
         // Calculate learning streak (simplified - in real app would track daily activity)
@@ -39,30 +47,31 @@ const getStudentStats = async (userId) => {
 };
 
 // Get enrolled courses
-const getStudentCourses = async (userId) => {
+export const getStudentCourses = async (userId) => {
     try {
         const enrollments = await Enrollment.findAll({
-            where: { userId, status: 'active' },
+            where: { userId },
             include: [
                 {
                     model: Course,
-                    as: 'course'
+                    as: 'course',
+                    include: [{ model: User, as: 'instructor', attributes: ['name'] }]
                 }
             ],
-            order: [['createdAt', 'DESC']],
+            order: [['lastAccessedAt', 'DESC']],
             limit: 10
         });
 
         return enrollments.map(enrollment => ({
             id: enrollment.course.id,
             title: enrollment.course.title,
-            instructor: enrollment.course.instructor || 'Instructor',
-            timeAgo: getTimeAgo(enrollment.lastAccessed || enrollment.createdAt),
+            instructor: enrollment.course.instructor?.name || 'Instructor',
+            timeAgo: getTimeAgo(enrollment.lastAccessedAt || enrollment.createdAt),
             progress: enrollment.progress || 0,
-            lessons: `${enrollment.completedLessons || 0}/${enrollment.totalLessons || 0}`,
+            lessons: `${enrollment.completedLectures?.length || 0}/${enrollment.course.totalLectures || 0}`,
             thumbnail: enrollment.course.thumbnail || 'https://via.placeholder.com/300x200',
-            lastAccessed: enrollment.lastAccessed || enrollment.createdAt,
-            status: enrollment.status
+            lastAccessed: enrollment.lastAccessedAt || enrollment.createdAt,
+            status: enrollment.isCompleted ? 'completed' : 'active'
         }));
     } catch (error) {
         console.error('Error getting student courses:', error);
@@ -71,43 +80,17 @@ const getStudentCourses = async (userId) => {
 };
 
 // Get weekly progress
-const getStudentProgress = async (userId) => {
+export const getStudentProgress = async (userId) => {
     try {
-        // Get progress for the last 7 days
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const progress = await Progress.findAll({
-            where: {
-                userId,
-                completedAt: {
-                    [Op.gte]: sevenDaysAgo
-                }
-            },
-            order: [['completedAt', 'ASC']]
-        });
-
-        // Group by day
-        const dailyProgress = {};
+        // Since we don't have a specific Progress model for daily history, 
+        // we'll return a simplified or mock structure for the UI to prevent crashes,
+        // or base it on recent Enrollment updates if possible.
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        
-        // Initialize all days with 0 hours
-        days.forEach(day => {
-            dailyProgress[day] = { hours: 0, lessons: 0 };
-        });
 
-        // Calculate hours per day
-        progress.forEach(item => {
-            const dayName = days[item.completedAt.getDay()];
-            dailyProgress[dayName].hours += 0.5; // 30 minutes per lesson
-            dailyProgress[dayName].lessons += 1;
-        });
-
-        // Convert to array format
         return days.map(day => ({
             day,
-            hours: dailyProgress[day].hours,
-            height: `${Math.min(100, dailyProgress[day].hours * 25)}%`,
+            hours: 0,
+            height: '10%',
             date: new Date().toISOString()
         }));
     } catch (error) {
@@ -117,21 +100,23 @@ const getStudentProgress = async (userId) => {
 };
 
 // Get achievements
-const getStudentAchievements = async (userId) => {
+export const getStudentAchievements = async (userId) => {
     try {
-        const achievements = await Achievement.findAll({
-            where: { userId },
-            order: [['earnedAt', 'DESC']],
+        // Using successfully completed enrollments as achievements for now
+        const completedEnrollments = await Enrollment.findAll({
+            where: { userId, isCompleted: true },
+            include: [{ model: Course, as: 'course' }],
+            order: [['completedAt', 'DESC']],
             limit: 10
         });
 
-        return achievements.map(achievement => ({
-            id: achievement.id,
-            title: achievement.title,
-            description: achievement.description,
-            date: `Earned ${new Date(achievement.earnedAt).toLocaleDateString()}`,
-            icon: achievement.icon || '🏆',
-            type: achievement.type
+        return completedEnrollments.map(enrollment => ({
+            id: enrollment.id,
+            title: `Completed ${enrollment.course.title}`,
+            description: `Successfully finished all lessons in ${enrollment.course.title}`,
+            date: `Earned ${new Date(enrollment.completedAt).toLocaleDateString()}`,
+            icon: '🎓',
+            type: 'certificate'
         }));
     } catch (error) {
         console.error('Error getting achievements:', error);
@@ -140,93 +125,41 @@ const getStudentAchievements = async (userId) => {
 };
 
 // Get recent activity
-const getStudentActivity = async (userId) => {
+export const getStudentActivity = async (userId) => {
     try {
-        // Combine different types of activity
-        const [recentProgress, recentEnrollments, recentAchievements] = await Promise.all([
-            Progress.findAll({
-                where: { userId },
-                order: [['completedAt', 'DESC']],
-                limit: 5
-            }),
-            Enrollment.findAll({
-                where: { userId },
-                order: [['createdAt', 'DESC']],
-                limit: 3
-            }),
-            Achievement.findAll({
-                where: { userId },
-                order: [['earnedAt', 'DESC']],
-                limit: 3
-            })
-        ]);
+        // Fetch from MongoDB Activity model
+        const recentActivities = await Activity.find({ userId })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .lean();
 
-        const activities = [];
-
-        // Add progress activities
-        recentProgress.forEach(progress => {
-            activities.push({
-                id: `progress_${progress.id}`,
-                type: 'lesson_completed',
-                title: `Completed: ${progress.lessonTitle || 'Lesson'}`,
-                course: progress.courseTitle || 'Course',
-                time: getTimeAgo(progress.completedAt),
-                icon: '✅'
-            });
-        });
-
-        // Add enrollment activities
-        recentEnrollments.forEach(enrollment => {
-            activities.push({
-                id: `enrollment_${enrollment.id}`,
-                type: 'course_enrolled',
-                title: `Enrolled: ${enrollment.courseTitle || 'Course'}`,
-                course: enrollment.courseTitle || 'Course',
-                time: getTimeAgo(enrollment.createdAt),
-                icon: '📚'
-            });
-        });
-
-        // Add achievement activities
-        recentAchievements.forEach(achievement => {
-            activities.push({
-                id: `achievement_${achievement.id}`,
-                type: 'achievement_earned',
-                title: `Achievement: ${achievement.title}`,
-                description: achievement.description,
-                time: getTimeAgo(achievement.earnedAt),
-                icon: achievement.icon || '🏆'
-            });
-        });
-
-        // Sort by time and return recent
-        return activities
-            .sort((a, b) => new Date(b.time) - new Date(a.time))
-            .slice(0, 10);
+        return recentActivities.map(activity => ({
+            id: activity._id,
+            type: activity.action,
+            title: activity.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            course: activity.details?.courseTitle || 'Course',
+            time: getTimeAgo(activity.timestamp),
+            icon: activity.action.includes('complete') ? '✅' : '📚'
+        }));
     } catch (error) {
         console.error('Error getting student activity:', error);
-        throw error;
+        // Fallback to empty to prevent UI crash
+        return [];
     }
 };
 
-// Helper functions
+// Helper functions (kept as local functions, not exported)
 const calculateLearningStreak = async (userId) => {
     try {
-        // Simplified streak calculation
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const recentActivity = await Progress.count({
-            where: {
-                userId,
-                completedAt: {
-                    [Op.gte]: thirtyDaysAgo
-                }
-            }
+        const recentActivity = await Activity.countDocuments({
+            userId,
+            timestamp: { $gte: thirtyDaysAgo }
         });
 
-        // Simple streak based on recent activity
-        return Math.min(45, Math.floor(recentActivity / 3)); // Max 45 days
+        return Math.min(45, Math.floor(recentActivity / 2));
     } catch (error) {
         return 0;
     }
@@ -235,12 +168,12 @@ const calculateLearningStreak = async (userId) => {
 const calculateAverageProgress = async (userId) => {
     try {
         const enrollments = await Enrollment.findAll({
-            where: { userId, status: 'active' }
+            where: { userId }
         });
 
         if (enrollments.length === 0) return 0;
 
-        const totalProgress = enrollments.reduce((sum, enrollment) => sum + (enrollment.progress || 0), 0);
+        const totalProgress = enrollments.reduce((sum, e) => sum + (e.progress || 0), 0);
         return Math.floor(totalProgress / enrollments.length);
     } catch (error) {
         return 0;
@@ -260,10 +193,3 @@ const getTimeAgo = (date) => {
     return 'Just now';
 };
 
-module.exports = {
-    getStudentStats,
-    getStudentCourses,
-    getStudentProgress,
-    getStudentAchievements,
-    getStudentActivity
-};

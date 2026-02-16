@@ -1,4 +1,4 @@
-import { User, Course, Review, Enrollment } from '../models/index.js';
+import { User, Course, Review, Enrollment, Category } from '../models/index.js';
 import { Op } from 'sequelize';
 
 // @desc    Get public instructors list with filtering and sorting
@@ -35,7 +35,7 @@ export const getPublicInstructors = async (req, res) => {
         const instructors = await User.findAll({
             where: whereClause,
             attributes: [
-                'id', 'name', 'email', 'avatar', 'headline', 'bio', 'location', 
+                'id', 'name', 'email', 'avatar', 'headline', 'bio', 'location',
                 'averageRating', 'totalReviews', 'isVerified', 'createdAt'
             ],
             include: [
@@ -72,7 +72,7 @@ export const getPublicInstructors = async (req, res) => {
                 // Get expertise areas from course categories
                 const courses = await Course.findAll({
                     where: { instructorId: instructor.id },
-                    include: [{ model: require('../models').Category, as: 'category' }]
+                    include: [{ model: Category, as: 'category' }]
                 });
 
                 const expertise = [...new Set(courses.map(course => course.category?.name).filter(Boolean))];
@@ -127,10 +127,10 @@ export const getInstructorDetails = async (req, res) => {
         const { id } = req.params;
 
         const instructor = await User.findOne({
-            where: { 
-                id, 
-                role: 'instructor', 
-                isActive: true 
+            where: {
+                id,
+                role: 'instructor',
+                isActive: true
             },
             attributes: [
                 'id', 'name', 'email', 'avatar', 'headline', 'bio', 'location',
@@ -144,12 +144,12 @@ export const getInstructorDetails = async (req, res) => {
 
         // Get instructor's courses
         const courses = await Course.findAll({
-            where: { 
-                instructorId: id, 
-                isPublished: true 
+            where: {
+                instructorId: id,
+                isPublished: true
             },
             include: [
-                { model: require('../models').Category, as: 'category' }
+                { model: Category, as: 'category' }
             ],
             order: [['enrollmentsCount', 'DESC']]
         });
