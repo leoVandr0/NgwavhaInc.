@@ -116,7 +116,7 @@ const createSystemNotification = async (userId, type, title, message, data = nul
     }
 };
 
-module.exports = {
+export {
     createNotification,
     getUserNotifications,
     markNotificationAsRead,
