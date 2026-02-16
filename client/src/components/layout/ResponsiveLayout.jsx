@@ -10,17 +10,32 @@ import NotificationDropdown from '../notifications/NotificationDropdown';
 const ResponsiveLayout = ({ title = "Dashboard" }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 1024);
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const { unreadCount, markAllAsRead } = useNotifications();
+
+    // Detect mobile viewport
+    useEffect(() => {
+        const handleResize = () => {
+            const mobile = window.innerWidth < 1024;
+            setIsMobile(mobile);
+            if (!mobile) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Check on mount
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Connect to notification service when user is available
     useEffect(() => {
         if (currentUser) {
             notificationService.connect(currentUser.id);
         }
-        
+
         return () => {
             notificationService.disconnect();
         };
