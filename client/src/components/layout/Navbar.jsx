@@ -61,6 +61,16 @@ const Navbar = () => {
                                 Categories
                             </Link>
 
+                            {/* Always visible Bell Icon */}
+                            <button 
+                                onClick={handleBellClick}
+                                className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none"
+                                style={{ zIndex: 1000 }}
+                                title="Notifications"
+                            >
+                                <Bell className="h-6 w-6" />
+                            </button>
+
                             {isAuthenticated ? (
                                 <>
                                     <Link to="/my-courses" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
@@ -90,15 +100,6 @@ const Navbar = () => {
                                             Instructor
                                         </Link>
                                     )}
-
-                                    {/* Fixed Bell Icon with Manual Click Handler */}
-                                    <button 
-                                        onClick={handleBellClick}
-                                        className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none"
-                                        style={{ zIndex: 1000 }}
-                                    >
-                                        <Bell className="h-6 w-6" />
-                                    </button>
                                     
                                     <div className="relative group">
                                         <button className="flex items-center max-w-xs bg-dark-800 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-white">
@@ -151,6 +152,15 @@ const Navbar = () => {
                         <Link to="/courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
                             Browse Courses
                         </Link>
+                        
+                        {/* Mobile Bell Icon */}
+                        <button 
+                            onClick={handleBellClick}
+                            className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                        >
+                            🔔 Notifications
+                        </button>
+                        
                         {isAuthenticated ? (
                             <>
                                 <Link to="/my-courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
