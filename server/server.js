@@ -187,9 +187,24 @@ const broadcastToAdmins = (event, data) => {
 global.broadcastToAdmins = broadcastToAdmins;
 
 // Database connections (non-blocking)
-connectMySQL().then((sequelize) => {
+connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
+        
+        // Run notification preferences migration
+        try {
+            console.log('🔄 Running notification preferences migration...');
+            const { up } = await import('./src/migrations/add-notification-preferences.js');
+            await up();
+            console.log('✅ Notification preferences migration completed');
+        } catch (migrationError) {
+            if (migrationError.message.includes('Duplicate column name')) {
+                console.log('✅ Notification preferences columns already exist');
+            } else {
+                console.error('❌ Migration failed:', migrationError.message);
+            }
+        }
+        
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });
