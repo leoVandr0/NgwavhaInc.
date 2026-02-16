@@ -93,17 +93,19 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
     ];
 
     const handleToggle = (key) => {
-        onChange({
+        const newPrefs = {
             ...preferences,
             [key]: !preferences[key]
-        });
+        };
+        onChange(newPrefs);
     };
 
     const handleCategoryToggle = (key) => {
-        onChange({
+        const newPrefs = {
             ...preferences,
             [key]: !preferences[key]
-        });
+        };
+        onChange(newPrefs);
     };
 
     const getColorClasses = (color, enabled) => {
@@ -140,6 +142,14 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
                                 : 'border-dark-700 bg-dark-800 hover:border-dark-600'
                         }`}
                         onClick={() => handleToggle(type.key)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleToggle(type.key);
+                            }
+                        }}
                     >
                         <div className="flex items-start gap-3">
                             <div className={`p-2 rounded-lg ${getColorClasses(type.color, preferences[type.key])}`}>
