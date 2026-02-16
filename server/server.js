@@ -42,6 +42,7 @@ import enrollmentRoutes from './src/routes/enrollment.routes.js';
 import analyticsRoutes from './src/routes/analytics.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import notificationRoutes from './src/routes/notification.routes.js';
+import studentRoutes from './src/routes/student.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
@@ -119,6 +120,7 @@ app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/student', studentRoutes);
 
 // Test route
 app.get('/api', (req, res) => {
