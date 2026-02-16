@@ -23,12 +23,6 @@ const Navbar = () => {
         navigate('/login');
     };
 
-    const handleBellClick = (e) => {
-        e.preventDefault();
-        console.log('🔔 Bell icon clicked manually!');
-        navigate('/settings/notifications');
-    };
-
     return (
         <nav className="bg-dark-900 border-b border-dark-800 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,15 +85,13 @@ const Navbar = () => {
                                         </Link>
                                     )}
 
-                                    {/* Fixed Bell Icon with Manual Click Handler */}
-                                    <button 
-                                        onClick={handleBellClick}
-                                        className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none"
-                                        style={{ zIndex: 1000 }}
-                                    >
-                                        <Bell className="h-6 w-6" />
-                                    </button>
-                                    
+                                    <Link 
+                                    to="/settings/notifications" 
+                                    className="text-dark-300 hover:text-white p-2 relative"
+                                    onClick={() => console.log('🔔 Bell icon clicked!')}
+                                >
+                                    <Bell className="h-6 w-6" />
+                                </Link>
                                     <div className="relative group">
                                         <button className="flex items-center max-w-xs bg-dark-800 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-800 focus:ring-white">
                                             <div className="h-8 w-8 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold">

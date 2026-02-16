@@ -35,9 +35,11 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import NotificationSettings from './pages/settings/NotificationSettings';
+import TestNotificationPage from './pages/settings/TestNotificationPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { clearNotificationCache } from './utils/clearNotificationCache';
+import { debugBellIcon } from './debug/debug-bell';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -62,6 +64,10 @@ const App = () => {
   // Clear any cached notification data on app load
   React.useEffect(() => {
     clearNotificationCache();
+    // Debug bell icon after a delay
+    setTimeout(() => {
+      debugBellIcon();
+    }, 3000);
   }, []);
 
   return (
@@ -192,7 +198,7 @@ const App = () => {
                 path="/settings/notifications"
                 element={
                   <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
-                    <NotificationSettings />
+                    <TestNotificationPage />
                   </ProtectedRoute>
                 }
               />
