@@ -22,8 +22,9 @@ export const WebSocketProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        // Initialize WebSocket connection
-        const newSocket = io(import.meta.env.VITE_SOCKET_URL || '', {
+        // Connect to backend: use VITE_SOCKET_URL in production when API is on another host; in dev proxy /socket.io to backend
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+        const newSocket = io(socketUrl, {
             transports: ['websocket', 'polling'],
             autoConnect: true,
             reconnection: true,

@@ -1,9 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Menu, X, Search, ShoppingCart, Bell, User, Heart } from 'lucide-react';
+import { Menu, X, Search, ShoppingCart, Heart } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
 import Logo from '../Logo';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,12 +22,6 @@ const Navbar = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
-    };
-
-    const handleBellClick = (e) => {
-        e.preventDefault();
-        console.log('🔔 Bell icon clicked manually!');
-        navigate('/settings/notifications');
     };
 
     return (
@@ -61,15 +56,20 @@ const Navbar = () => {
                                 Categories
                             </Link>
 
-                            {/* Always visible Bell Icon */}
-                            <button 
-                                onClick={handleBellClick}
-                                className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none"
-                                style={{ zIndex: 1000 }}
-                                title="Notifications"
-                            >
-                                <Bell className="h-6 w-6" />
-                            </button>
+                            {/* Notifications dropdown – shows current user's notifications when logged in */}
+                            {isAuthenticated ? (
+                                <NotificationDropdown />
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="text-dark-300 hover:text-white p-2 relative cursor-pointer"
+                                    title="Sign in to see notifications"
+                                >
+                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                </Link>
+                            )}
 
                             {isAuthenticated ? (
                                 <>
@@ -153,13 +153,16 @@ const Navbar = () => {
                             Browse Courses
                         </Link>
                         
-                        {/* Mobile Bell Icon */}
-                        <button 
-                            onClick={handleBellClick}
-                            className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
-                        >
-                            🔔 Notifications
-                        </button>
+                        {/* Mobile: Notifications (dropdown when logged in, else link to login) */}
+                        {isAuthenticated ? (
+                            <div className="px-3 py-2">
+                                <NotificationDropdown />
+                            </div>
+                        ) : (
+                            <Link to="/login" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                                Notifications (sign in)
+                            </Link>
+                        )}
                         
                         {isAuthenticated ? (
                             <>

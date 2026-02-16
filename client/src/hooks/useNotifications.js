@@ -1,6 +1,7 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import notificationService from '../services/notificationService';
 
 const useNotifications = () => {
     const { currentUser } = useAuth();
@@ -8,23 +9,47 @@ const useNotifications = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
 
+    const addNotification = useCallback((notification) => {
+        setNotifications(prev => [notification, ...prev]);
+        if (!notification.read) {
+            setUnreadCount(prev => prev + 1);
+        }
+    }, []);
+
     useEffect(() => {
         if (currentUser) {
             fetchNotifications();
+        } else {
+            setNotifications([]);
+            setUnreadCount(0);
         }
     }, [currentUser]);
+
+    // Connect to real-time notification service when user is logged in (works from Navbar and dashboard)
+    useEffect(() => {
+        if (!currentUser?.id) return;
+        notificationService.connect(currentUser.id);
+        notificationService.on('notification', addNotification);
+        return () => {
+            notificationService.off('notification', addNotification);
+            notificationService.disconnect();
+        };
+    }, [currentUser?.id, addNotification]);
 
     const fetchNotifications = async () => {
         try {
             setLoading(true);
             const response = await api.get('/notifications');
-            if (response.data) {
-                setNotifications(response.data);
-                const unread = response.data.filter(n => !n.read).length;
-                setUnreadCount(unread);
-            }
+            const payload = response.data;
+            // API returns { success: true, data: notifications, count }
+            const list = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+            setNotifications(list);
+            const unread = list.filter(n => !n.read).length;
+            setUnreadCount(unread);
         } catch (error) {
             console.error('Error fetching notifications:', error);
+            setNotifications([]);
+            setUnreadCount(0);
         } finally {
             setLoading(false);
         }
@@ -64,13 +89,6 @@ const useNotifications = () => {
             }
         } catch (error) {
             console.error('Error deleting notification:', error);
-        }
-    };
-
-    const addNotification = (notification) => {
-        setNotifications(prev => [notification, ...prev]);
-        if (!notification.read) {
-            setUnreadCount(prev => prev + 1);
         }
     };
 

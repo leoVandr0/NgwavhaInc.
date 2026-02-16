@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Users,
     Search,
-    Filter,
     UserPlus,
     UserCheck,
     UserX,
-    Mail,
-    Calendar,
-    BookOpen,
-    DollarSign,
     Shield,
     Eye,
-    Edit,
     Trash2,
     ChevronDown,
     Download,
@@ -27,7 +20,6 @@ import {
     Tag,
     Avatar,
     Modal,
-    Form,
     message,
     Space,
     Tooltip,
@@ -35,8 +27,31 @@ import {
     Badge
 } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
+import { format } from 'date-fns';
 
 const { Option } = Select;
+
+// Map API user to table row (role: instructor -> teacher for display)
+const mapUserToRow = (u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role === 'instructor' ? 'teacher' : u.role,
+    status: u.role === 'instructor'
+        ? (u.isVerified ? 'approved' : 'pending')
+        : 'active',
+    avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
+    joinDate: u.createdAt ? format(new Date(u.createdAt), 'yyyy-MM-dd') : '-',
+    lastLogin: u.lastLogin ? format(new Date(u.lastLogin), 'yyyy-MM-dd') : '-',
+    courses: u.courses ?? 0,
+    students: u.students ?? 0,
+    revenue: u.revenue ?? 0,
+    bio: u.bio,
+    skills: typeof u.skills === 'string' ? (u.skills || '').split(',').map(s => s.trim()).filter(Boolean) : (u.skills || []),
+    certifications: typeof u.certifications === 'string' ? (u.certifications || '').split(',').map(s => s.trim()).filter(Boolean) : (u.certifications || []),
+    isVerified: !!u.isVerified
+});
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -53,108 +68,59 @@ const AdminUsers = () => {
     });
     const { currentUser } = useAuth();
 
-    // Mock data - in real app, fetch from API
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                // Simulate API call
-                const mockUsers = [
-                    {
-                        id: 1,
-                        name: 'John Smith',
-                        email: 'john.smith@example.com',
-                        role: 'teacher',
-                        status: 'pending',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-                        joinDate: '2024-01-15',
-                        lastLogin: '2024-01-20',
-                        courses: 3,
-                        students: 45,
-                        revenue: 2340,
-                        bio: 'Experienced software developer with 10+ years in web development',
-                        skills: ['JavaScript', 'React', 'Node.js'],
-                        certifications: ['AWS Certified', 'Google Cloud'],
-                        isVerified: false
-                    },
-                    {
-                        id: 2,
-                        name: 'Sarah Johnson',
-                        email: 'sarah.j@example.com',
-                        role: 'teacher',
-                        status: 'approved',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-                        joinDate: '2024-01-10',
-                        lastLogin: '2024-01-21',
-                        courses: 5,
-                        students: 128,
-                        revenue: 5670,
-                        bio: 'Data science expert specializing in machine learning and AI',
-                        skills: ['Python', 'TensorFlow', 'Data Science'],
-                        certifications: ['PhD Computer Science', 'ML Engineer'],
-                        isVerified: true
-                    },
-                    {
-                        id: 3,
-                        name: 'Michael Chen',
-                        email: 'michael.chen@example.com',
-                        role: 'teacher',
-                        status: 'declined',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael',
-                        joinDate: '2024-01-18',
-                        lastLogin: '2024-01-19',
-                        courses: 0,
-                        students: 0,
-                        revenue: 0,
-                        bio: 'Aspiring instructor',
-                        skills: ['Mathematics'],
-                        certifications: [],
-                        isVerified: false
-                    },
-                    {
-                        id: 4,
-                        name: 'Alice Brown',
-                        email: 'alice.b@example.com',
-                        role: 'student',
-                        status: 'active',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-                        joinDate: '2024-01-12',
-                        lastLogin: '2024-01-21',
-                        courses: 8,
-                        students: 0,
-                        revenue: 0,
-                        bio: 'Computer science student',
-                        skills: [],
-                        certifications: [],
-                        isVerified: false
-                    },
-                    {
-                        id: 5,
-                        name: 'Bob Davis',
-                        email: 'bob.d@example.com',
-                        role: 'student',
-                        status: 'active',
-                        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-                        joinDate: '2024-01-08',
-                        lastLogin: '2024-01-20',
-                        courses: 5,
-                        students: 0,
-                        revenue: 0,
-                        bio: 'Business student',
-                        skills: [],
-                        certifications: [],
-                        isVerified: false
-                    }
-                ];
-                setUsers(mockUsers);
-                setPagination(prev => ({ ...prev, total: mockUsers.length }));
-            } catch (error) {
-                message.error('Failed to fetch users');
-            } finally {
-                setLoading(false);
+    const fetchUsers = async (page = 1, pageSize = 10) => {
+        try {
+            setLoading(true);
+            const params = {
+                page,
+                limit: pageSize,
+                search: searchTerm || undefined,
+                role: userType !== 'all' ? (userType === 'teacher' ? 'instructor' : userType) : undefined,
+                status: status !== 'all' ? status : undefined
+            };
+            const response = await api.get('/admin/users', { params });
+            const data = response.data;
+            if (data.success && data.data?.users) {
+                const rows = data.data.users.map(mapUserToRow);
+                setUsers(rows);
+                setPagination(prev => ({
+                    ...prev,
+                    current: data.data.pagination?.current ?? page,
+                    pageSize: data.data.pagination?.pageSize ?? pageSize,
+                    total: data.data.pagination?.total ?? 0
+                }));
             }
-        };
+        } catch (error) {
+            message.error(error.response?.data?.message || 'Failed to fetch users');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchUsers();
+    useEffect(() => {
+        fetchUsers(pagination.current, pagination.pageSize);
+    }, [searchTerm, userType, status]);
+
+    // Real-time: when a new user registers, prepend to list and bump total
+    useEffect(() => {
+        const handleUserRegistered = (e) => {
+            const data = e.detail || e;
+            const u = data.user;
+            if (!u?.id) return;
+            const row = mapUserToRow({
+                ...u,
+                createdAt: u.createdAt || new Date().toISOString(),
+                role: data.type === 'new_teacher' ? 'instructor' : 'student'
+            });
+            setUsers(prev => {
+                if (prev.some(uu => uu.id === row.id)) return prev;
+                return [row, ...prev];
+            });
+            setPagination(prev => ({ ...prev, total: (prev.total || 0) + 1 }));
+            message.success(`${row.name} just registered as ${row.role}`);
+        };
+        window.addEventListener('user-registered', handleUserRegistered);
+        return () => window.removeEventListener('user-registered', handleUserRegistered);
     }, []);
 
     // Filter users based on search and filters
@@ -169,31 +135,35 @@ const AdminUsers = () => {
 
     const handleApproveTeacher = async (userId) => {
         try {
-            // API call to approve teacher
-            setUsers(prev => prev.map(user => 
-                user.id === userId ? { ...user, status: 'approved' } : user
+            await api.put(`/admin/users/${userId}/approve`);
+            setUsers(prev => prev.map(user =>
+                user.id === userId ? { ...user, status: 'approved', isVerified: true } : user
             ));
             message.success('Teacher approved successfully');
             setActionModal(null);
         } catch (error) {
-            message.error('Failed to approve teacher');
+            message.error(error.response?.data?.message || 'Failed to approve teacher');
         }
     };
 
     const handleDeclineTeacher = async (userId, reason) => {
         try {
-            // API call to decline teacher
-            setUsers(prev => prev.map(user => 
+            await api.put(`/admin/users/${userId}/decline`, { reason });
+            setUsers(prev => prev.map(user =>
                 user.id === userId ? { ...user, status: 'declined' } : user
             ));
             message.success('Teacher declined');
             setActionModal(null);
         } catch (error) {
-            message.error('Failed to decline teacher');
+            message.error(error.response?.data?.message || 'Failed to decline teacher');
         }
     };
 
     const handleDeleteUser = async (userId) => {
+        if (userId === currentUser?.id) {
+            message.error('You cannot delete your own account');
+            return;
+        }
         Modal.confirm({
             title: 'Delete User',
             content: 'Are you sure you want to delete this user? This action cannot be undone.',
@@ -202,11 +172,12 @@ const AdminUsers = () => {
             cancelText: 'Cancel',
             onOk: async () => {
                 try {
-                    // API call to delete user
+                    await api.delete(`/admin/users/${userId}`);
                     setUsers(prev => prev.filter(user => user.id !== userId));
+                    setPagination(prev => ({ ...prev, total: Math.max(0, (prev.total || 1) - 1) }));
                     message.success('User deleted successfully');
                 } catch (error) {
-                    message.error('Failed to delete user');
+                    message.error(error.response?.data?.message || 'Failed to delete user');
                 }
             }
         });
@@ -420,7 +391,9 @@ const AdminUsers = () => {
                         showQuickJumper: true,
                         showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} users`
                     }}
-                    onChange={(newPagination) => setPagination(newPagination)}
+                    onChange={(newPagination) => {
+                        fetchUsers(newPagination.current, newPagination.pageSize);
+                    }}
                     rowKey="id"
                     className="bg-dark-800"
                     rowClassName="hover:bg-dark-700"

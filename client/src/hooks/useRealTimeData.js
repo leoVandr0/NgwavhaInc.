@@ -44,19 +44,18 @@ const useRealTimeData = () => {
         }
     }, [connected, realTimeData]);
 
-    // Emit admin events
-    const emitAdminEvent = (eventType, data) => {
-        emitEvent('admin_event', {
-            type: eventType,
-            data,
-            timestamp: new Date().toISOString()
+    // Join admin dashboard room so server sends real-time events (new registrations, etc.)
+    const joinAdminDashboard = (userId) => {
+        emitEvent('join-admin-dashboard', {
+            role: 'admin',
+            userId
         });
     };
 
     return {
         ...localStats,
         connected,
-        emitAdminEvent
+        joinAdminDashboard
     };
 };
 

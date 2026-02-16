@@ -1,4 +1,4 @@
-﻿// server.js
+// server.js
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -57,6 +57,9 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
+
+// Attach io to app so notification (and other) routes can emit to clients
+app.set('io', io);
 
 // Store connected admins for real-time updates
 const connectedAdmins = new Set();
@@ -148,10 +151,11 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Start server immediately (don't wait for DB)
-app.listen(PORT, () => {
+// Attach Express app to the same HTTP server that Socket.IO uses (required for real-time)
+server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
+    console.log(`Socket.IO enabled for real-time admin dashboard`);
 });
 
 // Socket.IO connection handling

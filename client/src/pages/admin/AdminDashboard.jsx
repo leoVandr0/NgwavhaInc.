@@ -2,108 +2,115 @@ import React, { useState, useEffect } from 'react';
 import {
     Users,
     UserPlus,
-    UserCheck,
-    UserX,
     TrendingUp,
-    TrendingDown,
     Activity,
     DollarSign,
     BookOpen,
     GraduationCap,
     Eye,
     BarChart3,
-    PieChart,
-    Calendar,
-    Clock,
     AlertTriangle,
-    CheckCircle,
-    RefreshCw,
-    Wifi,
-    WifiOff
+    RefreshCw
 } from 'lucide-react';
-import { Card, Statistic, Progress, Tag, Button, Select, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
+import { Card, Statistic, Tag, Button, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import ResponsiveTable from '../../components/layout/ResponsiveTable';
-// import useRealTimeData from '../../hooks/useRealTimeData'; // Temporarily disabled
+import useRealTimeData from '../../hooks/useRealTimeData';
+import api from '../../services/api';
 
 const { RangePicker } = DatePicker;
+
+const formatTimeAgo = (date) => {
+    const now = new Date();
+    const d = new Date(date);
+    const diff = now - d;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours} hr ago`;
+    return `${days} day(s) ago`;
+};
 
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
         totalUsers: 0,
         activeUsers: 0,
         totalTeachers: 0,
+        totalStudents: 0,
         pendingTeachers: 0,
         totalCourses: 0,
         activeCourses: 0,
         totalRevenue: 0,
         monthlyRevenue: 0
     });
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [onlineUsers, setOnlineUsers] = useState(0);
+    const [activeSessions, setActiveSessions] = useState(0);
     const [dateRange, setDateRange] = useState(null);
     const [loading, setLoading] = useState(true);
     const { currentUser } = useAuth();
+    const { connected, joinAdminDashboard, onlineUsers: rtOnline, activeSessions: rtSessions } = useRealTimeData();
 
-    // Temporarily disabled real-time features
-    // const {
-    //     onlineUsers,
-    //     activeSessions,
-    //     recentActivity,
-    //     connected,
-    //     emitAdminEvent
-    // } = useRealTimeData();
+    // Join admin dashboard room when connected so we receive real-time events
+    useEffect(() => {
+        if (connected && currentUser?.role === 'admin') {
+            joinAdminDashboard(currentUser.id);
+        }
+    }, [connected, currentUser?.id, currentUser?.role, joinAdminDashboard]);
 
-    // Listen for real-time updates - TEMPORARILY DISABLED
-    // useEffect(() => {
-    //     if (!connected) return;
+    // Listen for real-time user registration (teacher or student)
+    useEffect(() => {
+        const handleUserRegistered = (e) => {
+            const data = e.detail || e;
+            const { type, user: u, message: msg } = data;
+            setStats(prev => ({
+                ...prev,
+                totalUsers: prev.totalUsers + 1,
+                totalTeachers: type === 'new_teacher' ? prev.totalTeachers + 1 : prev.totalTeachers,
+                totalStudents: type === 'new_student' ? prev.totalStudents + 1 : prev.totalStudents,
+                pendingTeachers: type === 'new_teacher' && !u?.isVerified
+                    ? prev.pendingTeachers + 1
+                    : prev.pendingTeachers
+            }));
+            setRecentActivity(prev => [{
+                id: u?.id || Date.now(),
+                type: type === 'new_teacher' ? 'new_teacher' : 'new_student',
+                user: u?.name || 'New user',
+                action: type === 'new_teacher' ? 'Registered as teacher' : 'Registered as student',
+                time: 'Just now',
+                status: u?.isVerified ? 'success' : (type === 'new_teacher' ? 'pending' : 'success')
+            }, ...prev.slice(0, 19)]);
+        };
 
-    //     // Join admin dashboard room
-    //     emitAdminEvent('join-admin-dashboard', {
-    //         role: 'admin',
-    //         userId: currentUser?.id
-    //     });
+        const handleCourseCreated = (e) => {
+            const data = e.detail || e;
+            setStats(prev => ({ ...prev, totalCourses: prev.totalCourses + 1 }));
+        };
 
-    //     // Listen for user registrations
-    //     const handleUserRegistered = (data) => {
-    //         console.log('New user registered:', data);
-            
-    //         // Update stats based on user type
-    //         setStats(prev => ({
-    //             ...prev,
-    //             totalUsers: prev.totalUsers + 1,
-    //             totalTeachers: data.type === 'new_teacher' ? prev.totalTeachers + 1 : prev.totalTeachers,
-    //             totalStudents: data.type === 'new_student' ? prev.totalStudents + 1 : prev.totalStudents,
-    //             pendingTeachers: data.type === 'new_teacher' && !data.user.isVerified ? 
-    //                 prev.pendingTeachers + 1 : prev.pendingTeachers
-    //         }));
-    //     };
+        window.addEventListener('user-registered', handleUserRegistered);
+        window.addEventListener('course-created', handleCourseCreated);
+        return () => {
+            window.removeEventListener('user-registered', handleUserRegistered);
+            window.removeEventListener('course-created', handleCourseCreated);
+        };
+    }, []);
 
-    //     // Listen for course creations
-    //     const handleCourseCreated = (data) => {
-    //         console.log('New course created:', data);
-            
-    //         setStats(prev => ({
-    //             ...prev,
-    //             totalCourses: prev.totalCourses + 1
-    //         }));
-    //     };
-
-    //     // Register event listeners (these will be handled by the WebSocket context)
-    //     window.addEventListener('user-registered', handleUserRegistered);
-    //     window.addEventListener('course-created', handleCourseCreated);
-
-    //     return () => {
-    //         window.removeEventListener('user-registered', handleUserRegistered);
-    //         window.removeEventListener('course-created', handleCourseCreated);
-    //     };
-    // }, [connected, currentUser, emitAdminEvent]);
+    // Use real-time online/session counts when connected
+    useEffect(() => {
+        if (connected && (rtOnline !== undefined || rtSessions !== undefined)) {
+            if (rtOnline !== undefined) setOnlineUsers(rtOnline);
+            if (rtSessions !== undefined) setActiveSessions(rtSessions);
+        }
+    }, [connected, rtOnline, rtSessions]);
 
     // Fetch dashboard data
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const response = await fetch('/api/admin/dashboard');
-                const data = await response.json();
-                
+                const response = await api.get('/admin/dashboard');
+                const data = response.data;
                 if (data.success) {
                     setStats({
                         totalUsers: data.data.users.total || 0,
@@ -113,47 +120,23 @@ const AdminDashboard = () => {
                         pendingTeachers: data.data.users.pendingTeachers || 0,
                         totalCourses: data.data.courses.total || 0,
                         activeCourses: data.data.courses.active || 0,
-                        totalRevenue: data.data.revenue.total || 0,
-                        monthlyRevenue: data.data.revenue.monthly || 0
+                        totalRevenue: data.data.revenue?.total || 0,
+                        monthlyRevenue: data.data.revenue?.monthly || 0
                     });
-                    
-                    // Update recent activity from server
-                    if (data.data.recentActivity) {
-                        // This will be updated by WebSocket events
+                    if (data.data.recentActivity?.length) {
+                        setRecentActivity(data.data.recentActivity);
                     }
-                } else {
-                    // Set fallback data if API fails
-                    setStats({
-                        totalUsers: 0,
-                        activeUsers: 0,
-                        totalTeachers: 0,
-                        totalStudents: 0,
-                        pendingTeachers: 0,
-                        totalCourses: 0,
-                        activeCourses: 0,
-                        totalRevenue: 0,
-                        monthlyRevenue: 0
-                    });
+                    if (data.data.realTime) {
+                        setOnlineUsers(data.data.realTime.onlineUsers ?? 0);
+                        setActiveSessions(data.data.realTime.activeSessions ?? 0);
+                    }
                 }
             } catch (error) {
                 console.error('Dashboard data fetch error:', error);
-                // Set fallback data on error
-                setStats({
-                    totalUsers: 0,
-                    activeUsers: 0,
-                    totalTeachers: 0,
-                    totalStudents: 0,
-                    pendingTeachers: 0,
-                    totalCourses: 0,
-                    activeCourses: 0,
-                    totalRevenue: 0,
-                    monthlyRevenue: 0
-                });
             } finally {
                 setLoading(false);
             }
         };
-
         fetchDashboardData();
     }, []);
 
