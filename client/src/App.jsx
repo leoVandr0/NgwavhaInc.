@@ -38,7 +38,6 @@ import NotificationSettings from './pages/settings/NotificationSettings';
 import TestNotificationPage from './pages/settings/TestNotificationPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
-import { clearNotificationCache } from './utils/clearNotificationCache';
 import { debugBellIcon } from './debug/debug-bell';
 
 // Protected Route component
@@ -61,13 +60,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const App = () => {
-  // Clear any cached notification data on app load
+  // Debug bell icon after a delay (only in development)
   React.useEffect(() => {
-    clearNotificationCache();
-    // Debug bell icon after a delay
-    setTimeout(() => {
-      debugBellIcon();
-    }, 3000);
+    if (import.meta.env.DEV) {
+      setTimeout(() => {
+        debugBellIcon();
+      }, 5000); // Increased delay to reduce impact on initial load
+    }
   }, []);
 
   return (
