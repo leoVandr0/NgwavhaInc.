@@ -1,35 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Menu, Bell } from 'lucide-react';
-import { Badge } from 'antd';
+import { Menu } from 'lucide-react';
 import ResponsiveSidebar from './ResponsiveSidebar';
 import { useAuth } from '../../contexts/AuthContext';
+import useNotifications from '../../hooks/useNotifications';
+import notificationService from '../../services/notificationService';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const ResponsiveLayout = ({ title = "Dashboard" }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [notifications, setNotifications] = useState(0); // Changed from 3 to 0
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+    const { unreadCount, markAllAsRead } = useNotifications();
 
-    // Detect mobile screen size
+    // Connect to notification service when user is available
     useEffect(() => {
-        const checkMobile = () => {
-            const mobile = window.innerWidth < 1024;
-            setIsMobile(mobile);
-            if (mobile) {
-                setIsSidebarOpen(false);
-            } else {
-                setIsSidebarOpen(true);
-                setIsMobileMenuOpen(false);
-            }
+        if (currentUser) {
+            notificationService.connect(currentUser.id);
+        }
+        
+        return () => {
+            notificationService.disconnect();
         };
-
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    }, [currentUser]);
 
     const handleSidebarToggle = () => {
         if (isMobile) {
@@ -41,18 +36,6 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
 
     const handleMobileClose = () => {
         setIsMobileMenuOpen(false);
-    };
-
-    const handleBellClick = () => {
-        console.log('🔔 ResponsiveLayout bell clicked!');
-        console.log('🔍 Current user:', currentUser);
-        console.log('🔍 Navigate function:', typeof navigate);
-        try {
-            navigate('/settings/notifications');
-            console.log('✅ Navigation successful');
-        } catch (error) {
-            console.error('❌ Navigation failed:', error);
-        }
     };
 
     return (
@@ -83,31 +66,7 @@ const ResponsiveLayout = ({ title = "Dashboard" }) => {
 
                     <div className="flex items-center gap-4 flex-shrink-0">
                         {/* Notifications */}
-                        <button 
-                            onClick={handleBellClick}
-                            className="relative p-2 text-dark-400 hover:text-white hover:bg-dark-800 rounded-lg transition-colors"
-                            title="Notifications"
-                            style={{ border: '2px solid red' }} // Add red border for visibility
-                        >
-                            <Bell size={20} />
-                            {notifications > 0 && (
-                                <span className="absolute top-1 right-1 w-4 h-4 bg-primary-500 text-dark-950 text-xs font-bold flex items-center justify-center rounded-full">
-                                    {notifications}
-                                </span>
-                            )}
-                        </button>
-                        
-                        {/* Test Button */}
-                        <button 
-                            onClick={() => {
-                                console.log('🧪 Test button clicked!');
-                                alert('Test button works!');
-                            }}
-                            className="p-2 bg-red-500 text-white rounded"
-                            style={{ marginLeft: '10px' }}
-                        >
-                            TEST
-                        </button>
+                        <NotificationDropdown />
 
                         {/* User Avatar */}
                         <div className="hidden sm:flex items-center gap-3">
