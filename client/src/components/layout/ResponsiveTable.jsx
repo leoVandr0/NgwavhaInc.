@@ -14,7 +14,7 @@ const ResponsiveTable = ({
         className: col.className ? `${col.className} whitespace-nowrap` : 'whitespace-nowrap',
         // Ensure proper text wrapping for long content
         render: col.render ? col.render : (text) => (
-            <span className="block truncate max-w-xs" title={text}>
+            <span className="block truncate" title={text} style={{ maxWidth: col.width ? `${col.width - 20}px` : '200px' }}>
                 {text}
             </span>
         )
@@ -33,6 +33,7 @@ const ResponsiveTable = ({
                         rowClassName="hover:bg-dark-700 transition-colors"
                         scroll={{ x: 'max-content' }}
                         size="middle"
+                        tableLayout="fixed"
                     />
                 </div>
             </div>

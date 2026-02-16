@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, Select, DatePicker, message, Card, Typography, Space, Tag } from 'antd';
+import { Button, Modal, Form, Input, Select, DatePicker, message, Card, Typography, Space, Tag } from 'antd';
 import { FilePdfOutlined, PlusOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/layout/ResponsiveTable';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -92,34 +93,51 @@ const TeacherAssignmentsPage = () => {
             title: 'Title',
             dataIndex: 'title',
             key: 'title',
+            width: 250,
+            className: 'min-w-[200px]',
             render: (text, record) => (
-                <Space>
-                    <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: '20px' }} />
-                    <Text strong>{text}</Text>
-                </Space>
+                <div className="flex items-center gap-2">
+                    <FilePdfOutlined style={{ color: '#ff4d4f', fontSize: '16px', flexShrink: 0 }} />
+                    <span className="font-medium truncate">{text}</span>
+                </div>
             )
         },
         {
             title: 'Course',
             dataIndex: ['course', 'title'],
             key: 'course',
+            width: 200,
+            className: 'min-w-[150px]',
+            render: (text) => (
+                <span className="truncate block">{text}</span>
+            )
         },
         {
             title: 'Due Date',
             dataIndex: 'dueDate',
             key: 'dueDate',
-            render: (date) => date ? dayjs(date).format('MMM D, YYYY') : 'No Due Date',
+            width: 150,
+            className: 'min-w-[120px]',
+            render: (date) => (
+                <span className="whitespace-nowrap">
+                    {date ? dayjs(date).format('MMM D, YYYY') : 'No Due Date'}
+                </span>
+            )
         },
         {
             title: 'Actions',
             key: 'actions',
+            width: 180,
+            className: 'min-w-[160px]',
             render: (_, record) => (
-                <Space>
+                <div className="flex items-center gap-2">
                     <Button
                         type="link"
                         icon={<DownloadOutlined />}
                         href={`${record.fileUrl}`}
                         target="_blank"
+                        size="small"
+                        className="px-2"
                     >
                         Download
                     </Button>
@@ -128,8 +146,10 @@ const TeacherAssignmentsPage = () => {
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => handleDelete(record.id)}
+                        size="small"
+                        className="px-2"
                     />
-                </Space>
+                </div>
             )
         }
     ];
@@ -152,12 +172,13 @@ const TeacherAssignmentsPage = () => {
             </div>
 
             <Card bordered={false} className="shadow-sm">
-                <Table
+                <ResponsiveTable
                     columns={columns}
                     dataSource={assignments}
                     rowKey="id"
                     loading={loading}
                     pagination={{ pageSize: 10 }}
+                    className="assignments-table"
                 />
             </Card>
 
