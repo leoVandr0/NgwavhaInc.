@@ -34,8 +34,8 @@ export const registerUser = async (req, res) => {
     }
 
     try {
-        const { name, email, password, role } = req.body;
-        console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password });
+        const { name, email, password, role, notificationPreferences, phoneNumber, whatsappNumber } = req.body;
+        console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password, hasNotificationPrefs: !!notificationPreferences });
 
         // Check if user exists
         const normalizedEmail = email.trim().toLowerCase();
@@ -56,14 +56,36 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message });
         }
 
-        // Create user (password will be hashed by the beforeCreate hook)
-        console.log('6. Creating new user in database...');
-        user = await User.create({
+        // Prepare user data with notification preferences
+        const userData = {
             name,
             email: normalizedEmail,
             password,
-            role: role || 'student'
+            role: role || 'student',
+            notificationPreferences: notificationPreferences || {
+                email: true,
+                whatsapp: false,
+                sms: false,
+                push: true,
+                inApp: true,
+                courseUpdates: true,
+                assignmentReminders: true,
+                newMessages: true,
+                promotionalEmails: false,
+                weeklyDigest: false
+            },
+            phoneNumber: phoneNumber || null,
+            whatsappNumber: whatsappNumber || null
+        };
+
+        console.log('6. Creating new user in database...', { 
+            hasNotificationPrefs: !!userData.notificationPreferences,
+            hasPhoneNumber: !!userData.phoneNumber,
+            hasWhatsappNumber: !!userData.whatsappNumber
         });
+
+        // Create user (password will be hashed by beforeCreate hook)
+        user = await User.create(userData);
         console.log('7. ✅ User created successfully. ID:', user.id);
 
         // Generate token
@@ -75,10 +97,9 @@ export const registerUser = async (req, res) => {
 
         // Remove password from response
         console.log('10. Preparing response data...');
-        const { password: _, ...userData } = user.dataValues;
-        console.log('11. User data prepared. Fields:', Object.keys(userData).join(', '));
+        const { password: _, ...responseUserData } = user.dataValues;
+        console.log('11. User data prepared. Fields:', Object.keys(responseUserData).join(', '));
 
-        // Broadcast real-time update to admin dashboard
         // Broadcast real-time update to admin dashboard
         try {
             if (global.broadcastToAdmins) {
@@ -90,7 +111,8 @@ export const registerUser = async (req, res) => {
                         email: user.email,
                         role: user.role,
                         isVerified: user.isVerified || false,
-                        createdAt: user.createdAt
+                        createdAt: user.createdAt,
+                        notificationPreferences: user.notificationPreferences
                     },
                     message: `New ${user.role} registered: ${user.name}`
                 });
@@ -100,23 +122,9 @@ export const registerUser = async (req, res) => {
         }
 
         // MongoDB logging temporarily disabled to prevent timeouts
-        // try {
-        //     await logger.track({
-        //         userId: user.id,
-        //         action: 'register',
-        //         resourceType: 'user',
-        //         resourceId: user.id,
-        //         req
-        //     });
-
-        //     logger.info('Auth', `User registered successfully: ${user.id}`);
-        // } catch (postRegError) {
-        //     console.error('⚠️  Post-registration logging error:', postRegError);
-        // }
-
         console.log('12. Sending success response (201)...');
         res.status(201).json({
-            ...userData,
+            ...responseUserData,
             token
         });
         console.log('13. ✅ Response sent successfully');
@@ -126,8 +134,6 @@ export const registerUser = async (req, res) => {
         console.error('   Message:', error.message);
         console.error('   Name:', error.name);
         console.error('   Stack:', error.stack);
-        // MongoDB error logging temporarily disabled
-        // logger.error('Auth', `Registration error: ${error.message}`, { stack: error.stack });
         res.status(500).json({ message: 'Server error', error: error.message });
         console.log('========== REGISTRATION REQUEST END (ERROR) ==========\n');
     }

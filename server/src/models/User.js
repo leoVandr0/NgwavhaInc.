@@ -96,6 +96,36 @@ const User = sequelize.define('User', {
     experience: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    // Notification preferences
+    notificationPreferences: {
+        type: DataTypes.JSON,
+        defaultValue: {
+            email: true,
+            whatsapp: false,
+            sms: false,
+            push: true,
+            inApp: true,
+            courseUpdates: true,
+            assignmentReminders: true,
+            newMessages: true,
+            promotionalEmails: false,
+            weeklyDigest: false
+        }
+    },
+    phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+            is: /^[+]?[\d\s\-\(\)]+$/ // Basic phone validation
+        }
+    },
+    whatsappNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+            is: /^[+]?[\d\s\-\(\)]+$/ // Basic phone validation
+        }
     }
 }, {
     hooks: {
