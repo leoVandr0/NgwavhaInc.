@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, Check, Trash2, Clock, MessageSquare, BookOpen } from 'lucide-react';
 import { Badge, Button, Divider, Empty, List, Typography } from 'antd';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -8,6 +9,7 @@ const { Text } = Typography;
 const NotificationDropdown = () => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
     const { notifications, unreadCount, markAsRead, deleteNotification } = useNotifications();
 
     useEffect(() => {
@@ -70,7 +72,7 @@ const NotificationDropdown = () => {
         }
     };
 
-    const sortedNotifications = [...notifications].sort((a, b) => 
+    const sortedNotifications = [...notifications].sort((a, b) =>
         new Date(b.createdAt) - new Date(a.createdAt)
     );
 
@@ -126,9 +128,8 @@ const NotificationDropdown = () => {
                                 dataSource={sortedNotifications}
                                 renderItem={(notification) => (
                                     <List.Item
-                                        className={`border-l-4 ${getNotificationColor(notification.type)} ${
-                                            !notification.read ? 'bg-dark-700' : 'bg-transparent'
-                                        } hover:bg-dark-700 transition-colors cursor-pointer`}
+                                        className={`border-l-4 ${getNotificationColor(notification.type)} ${!notification.read ? 'bg-dark-700' : 'bg-transparent'
+                                            } hover:bg-dark-700 transition-colors cursor-pointer`}
                                         onClick={() => {
                                             if (!notification.read) {
                                                 handleMarkAsRead(notification.id);

@@ -14,7 +14,8 @@ class NotificationService {
             this.socket.disconnect();
         }
 
-        this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:8080', {
+        const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+        this.socket = io(serverUrl, {
             auth: {
                 token: localStorage.getItem('token'),
                 userId: userId
@@ -84,7 +85,7 @@ class NotificationService {
             this.reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
             console.log(`🔄 Reconnection attempt ${this.reconnectAttempts} in ${delay}ms`);
-            
+
             setTimeout(() => {
                 this.socket.connect();
             }, delay);
