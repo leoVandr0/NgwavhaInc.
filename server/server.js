@@ -195,7 +195,7 @@ global.broadcastToAdmins = broadcastToAdmins;
 connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
-        
+
         // Run notification preferences migration
         try {
             console.log('🔄 Running notification preferences migration...');
@@ -203,13 +203,9 @@ connectMySQL().then(async (sequelize) => {
             await up();
             console.log('✅ Notification preferences migration completed');
         } catch (migrationError) {
-            if (migrationError.message.includes('Duplicate column name')) {
-                console.log('✅ Notification preferences columns already exist');
-            } else {
-                console.error('❌ Migration failed:', migrationError.message);
-            }
+            console.error('❌ Migration failed:', migrationError.message);
         }
-        
+
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });
