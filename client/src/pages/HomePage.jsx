@@ -9,6 +9,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 const HomePage = () => {
     const { currentUser } = useAuth();
+    
+    // Debug logging
+    console.log('HomePage Debug - Current User:', currentUser);
+    console.log('HomePage Debug - Show Join for Free:', !currentUser);
     const categories = [
         { name: 'Web Development', icon: '💻', courses: 1234 },
         { name: 'Data Science', icon: '📊', courses: 892 },

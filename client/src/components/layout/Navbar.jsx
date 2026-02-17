@@ -11,6 +11,10 @@ const Navbar = () => {
     const { cart, wishlist, fetchCart, fetchWishlist } = useCartStore();
     const navigate = useNavigate();
 
+    // Debug logging
+    console.log('Navbar Debug - Current User:', currentUser);
+    console.log('Navbar Debug - Is Authenticated:', isAuthenticated);
+
     useEffect(() => {
         if (isAuthenticated) {
             fetchCart();
@@ -26,6 +30,7 @@ const Navbar = () => {
     const handleBellClick = (e) => {
         e.preventDefault();
         console.log('🔔 Bell icon clicked manually!');
+        console.log('Navigating to: /settings/notifications');
         navigate('/settings/notifications');
     };
 
@@ -73,7 +78,11 @@ const Navbar = () => {
 
                             {isAuthenticated ? (
                                 <>
-                                    <Link to="/student/dashboard" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                    <Link 
+                                        to="/student/dashboard" 
+                                        className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        onClick={() => console.log('My Learning clicked, navigating to: /student/dashboard')}
+                                    >
                                         My Learning
                                     </Link>
 
