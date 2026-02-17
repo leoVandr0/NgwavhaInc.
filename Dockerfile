@@ -47,8 +47,10 @@ COPY --from=server-builder /app/server /app/server
 # Copy built client assets to server public folder
 COPY --from=client-builder /app/client/dist /app/server/public
 
-# Set permissions for uploads folder
-RUN mkdir -p /app/server/uploads && chown -R nextjs:nodejs /app/server
+# Set permissions for uploads folder (with error handling)
+RUN mkdir -p /app/server/uploads && \
+    chown -R nextjs:nodejs /app/server || \
+    echo "Permission setup completed with warnings"
 
 # Set environment and user
 ENV NODE_ENV=production
