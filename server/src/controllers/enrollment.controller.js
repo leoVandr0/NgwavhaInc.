@@ -19,9 +19,18 @@ export const getMyCourses = async (req, res) => {
             ]
         });
 
+        // If no enrollments found, return empty array
+        if (!enrollments || enrollments.length === 0) {
+            return res.json([]);
+        }
+
         res.json(enrollments);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error in getMyCourses:', error);
+        res.status(500).json({ 
+            message: 'Failed to fetch enrollments',
+            error: error.message 
+        });
     }
 };
 

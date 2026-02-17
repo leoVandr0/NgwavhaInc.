@@ -9,7 +9,7 @@ const StudentDashboard = () => {
     const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('all');
 
-    const { data: enrollments, isLoading } = useQuery('my-courses', async () => {
+    const { data: enrollments, isLoading, error } = useQuery('my-courses', async () => {
         try {
             const { data } = await api.get('/enrollments/my-courses');
             return data;
@@ -17,7 +17,40 @@ const StudentDashboard = () => {
             console.error("Failed to fetch enrollments", error);
             return []; // Return empty array on error to prevent crash
         }
+    }, {
+        retry: 1, // Only retry once to prevent infinite loops
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        onError: (error) => {
+            console.error('Dashboard query error:', error);
+        }
     });
+
+    // Handle loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+                <div className="text-white text-xl">Loading your courses...</div>
+            </div>
+        );
+    }
+
+    // Handle error state
+    if (error) {
+        return (
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 text-xl mb-4">Error loading dashboard</div>
+                    <div className="text-dark-400 mb-6">Unable to load your courses. Please try again.</div>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                    >
+                        Reload
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     // Filter logic (mock implementation if real filtering isn't available on backend)
     const filteredEnrollments = enrollments?.filter(enrollment => {
