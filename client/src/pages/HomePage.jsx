@@ -5,8 +5,10 @@ import { Carousel, Spin } from 'antd';
 import { useQuery } from 'react-query';
 import api from '../services/api';
 import CourseCard from '../components/CourseCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomePage = () => {
+    const { currentUser } = useAuth();
     const categories = [
         { name: 'Web Development', icon: '💻', courses: 1234 },
         { name: 'Data Science', icon: '📊', courses: 892 },
@@ -181,12 +183,14 @@ const HomePage = () => {
                                     Explore Courses
                                     <ArrowRight className="ml-2 h-5 w-5" />
                                 </Link>
-                                <Link
-                                    to="/register"
-                                    className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-dark-800 hover:bg-dark-700 border border-dark-700 transition-colors rounded-lg"
-                                >
-                                    Join for Free
-                                </Link>
+                                {!currentUser && (
+                                    <Link
+                                        to="/register"
+                                        className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-dark-800 hover:bg-dark-700 border border-dark-700 transition-colors rounded-lg"
+                                    >
+                                        Join for Free
+                                    </Link>
+                                )}
                             </div>
                         </div>
 
