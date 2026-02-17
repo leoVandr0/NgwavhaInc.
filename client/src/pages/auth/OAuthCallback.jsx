@@ -8,7 +8,7 @@ import useAuthStore from '../../store/authStore';
 const OAuthCallback = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { currentUser } = useAuth();
+    const { updateUser } = useAuth();
     const authStore = useAuthStore();
 
     useEffect(() => {
@@ -33,6 +33,7 @@ const OAuthCallback = () => {
 
                     // Sync with auth store/context
                     authStore.login(userData, token);
+                    updateUser(userData);
 
                     // Redirect based on role
                     if (userData.role === 'teacher' || userData.role === 'instructor') {

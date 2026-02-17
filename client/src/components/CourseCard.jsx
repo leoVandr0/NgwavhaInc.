@@ -4,13 +4,13 @@ import { Star, Clock, Users, Award, ShoppingCart, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getAvatarUrl, getCourseThumbnail } from '../utils/imageUtils';
 import useCartStore from '../store/cartStore';
-import useAuthStore from '../store/authStore';
+import { useAuth } from '../contexts/AuthContext';
 import { message } from 'antd';
 
 const CourseCard = ({ course, index }) => {
     const [isHovered, setIsHovered] = useState(false);
     const { addToCart, removeFromCart, addToWishlist, removeFromWishlist, isInCart, isInWishlist } = useCartStore();
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated } = useAuth();
 
     const formatPrice = (price) => {
         if (price === 0 || price === '0.00') return 'Free';

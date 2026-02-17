@@ -22,7 +22,7 @@ import {
     Modal
 } from 'antd';
 
-import useAuthStore from '../../store/authStore';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
@@ -33,7 +33,7 @@ const LiveRoom = ({ userRole = 'student' }) => {
     const navigate = useNavigate();
     const { message, modal } = App.useApp();
     const [isLoading, setIsLoading] = useState(true);
-    const { user: authUser } = useAuthStore();
+    const { currentUser: authUser } = useAuth();
     const jitsiContainerRef = useRef(null);
     const apiRef = useRef(null);
 
