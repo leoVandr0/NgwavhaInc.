@@ -1,5 +1,8 @@
-import { Enrollment, Course, User } from '../models';
+import Enrollment from '../models/Enrollment.js';
+import Course from '../models/Course.js';
+import User from '../models/User.js';
 import Activity from '../models/nosql/Activity.js';
+import { Op } from 'sequelize';
 
 // Get student statistics
 const getStudentStats = async (userId) => {
