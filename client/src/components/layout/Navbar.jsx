@@ -73,7 +73,7 @@ const Navbar = () => {
 
                             {isAuthenticated ? (
                                 <>
-                                    <Link to="/my-courses" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                    <Link to="/student/dashboard" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                         My Learning
                                     </Link>
 
@@ -163,7 +163,7 @@ const Navbar = () => {
                         
                         {isAuthenticated ? (
                             <>
-                                <Link to="/my-courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                                <Link to="/student/dashboard" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
                                     My Learning
                                 </Link>
                                 <Link to="/cart" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
