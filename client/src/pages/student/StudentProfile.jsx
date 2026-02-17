@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
     BookOpen,
@@ -15,24 +15,65 @@ import {
 } from 'lucide-react';
 import { Card, Row, Col, Statistic, Progress, Avatar, Button, Badge, Timeline } from 'antd';
 import useStudentData from '../../hooks/useStudentData';
+import activityService from '../../services/activityService';
 
 const StudentProfile = () => {
     const { currentUser } = useAuth();
     const {
         loading,
+        error,
         studentStats,
         enrolledCourses,
         weeklyProgress,
         achievements,
-        recentActivity
+        recentActivity,
+        refreshData
     } = useStudentData();
 
     const [activeTab, setActiveTab] = useState('overview');
 
+    // Track profile view activity
+    useEffect(() => {
+        if (currentUser) {
+            activityService.trackActivity('profile_view', 'user', currentUser.id, {
+                profileViewTime: new Date().toISOString()
+            });
+        }
+    }, [currentUser]);
+
+    // Handle course continue button click
+    const handleContinueCourse = (course) => {
+        activityService.trackCourseView(course.id, course.title);
+        // Navigate to course (you'll need to implement routing)
+        console.log('Navigate to course:', course.id);
+    };
+
+    // Handle refresh data
+    const handleRefresh = () => {
+        refreshData();
+        activityService.trackActivity('profile_refresh', 'user', currentUser.id, {
+            refreshTime: new Date().toISOString()
+        });
+    };
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
                 <div className="text-white text-xl">Loading profile data...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 text-xl mb-4">Error loading profile</div>
+                    <div className="text-dark-400 mb-6">{error}</div>
+                    <Button type="primary" onClick={handleRefresh}>
+                        Try Again
+                    </Button>
+                </div>
             </div>
         );
     }
@@ -259,6 +300,7 @@ const StudentProfile = () => {
                                     type="primary"
                                     className="w-full"
                                     icon={<Play className="w-4 h-4" />}
+                                    onClick={() => handleContinueCourse(course)}
                                 >
                                     Continue Learning
                                 </Button>

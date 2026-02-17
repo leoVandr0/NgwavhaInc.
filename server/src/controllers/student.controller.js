@@ -1,43 +1,71 @@
-import { Enrollment, Course, User, Category } from '../models/index.js';
+import { Enrollment, Course, User } from '../models';
 import Activity from '../models/nosql/Activity.js';
-import { Op } from 'sequelize';
 
 // Get student statistics
-export const getStudentStats = async (userId) => {
+const getStudentStats = async (userId) => {
     try {
         // Get enrolled courses count
         const enrolledCourses = await Enrollment.count({
-            where: { userId }
+            where: { userId, isCompleted: false }
         });
 
-        // Get completed lessons count (stored in Enrollment model)
-        const activeEnrollments = await Enrollment.findAll({
-            where: { userId }
+        // Get completed courses count
+        const completedCourses = await Enrollment.count({
+            where: { userId, isCompleted: true }
         });
 
-        const completedLessons = activeEnrollments.reduce((sum, e) => sum + (e.completedLectures?.length || 0), 0);
+        // Get total learning hours from activity
+        const learningActivities = await Activity.find({
+            userId,
+            action: { $in: ['lesson_complete', 'course_view', 'video_watch'] }
+        });
 
-        // Get certificates count (stored in Enrollment model)
+        // Estimate hours (30 minutes per lesson, 15 minutes per video, 10 minutes per course view)
+        let totalMinutes = 0;
+        learningActivities.forEach(activity => {
+            switch (activity.action) {
+                case 'lesson_complete':
+                    totalMinutes += 30;
+                    break;
+                case 'video_watch':
+                    totalMinutes += 15;
+                    break;
+                case 'course_view':
+                    totalMinutes += 10;
+                    break;
+            }
+        });
+
+        const hoursLearned = Math.floor(totalMinutes / 60);
+
+        // Get certificates count (completed courses with certificates)
         const certificates = await Enrollment.count({
-            where: {
-                userId,
+            where: { 
+                userId, 
                 isCompleted: true,
                 certificateUrl: { [Op.ne]: null }
             }
         });
 
-        // Calculate learning streak (simplified - in real app would track daily activity)
+        // Calculate learning streak based on daily activity
         const learningStreak = await calculateLearningStreak(userId);
 
-        // Calculate average progress
-        const averageProgress = await calculateAverageProgress(userId);
+        // Calculate average progress across all enrollments
+        const allEnrollments = await Enrollment.findAll({
+            where: { userId },
+            attributes: ['progress']
+        });
+
+        const averageProgress = allEnrollments.length > 0 
+            ? Math.floor(allEnrollments.reduce((sum, enrollment) => sum + enrollment.progress, 0) / allEnrollments.length)
+            : 0;
 
         return {
             enrolledCourses,
-            hoursLearned: Math.floor(completedLessons * 0.5), // Estimate: 30 min per lesson
+            completedCourses,
+            hoursLearned,
             certificates,
             learningStreak,
-            completedLessons,
             averageProgress
         };
     } catch (error) {
@@ -47,32 +75,37 @@ export const getStudentStats = async (userId) => {
 };
 
 // Get enrolled courses
-export const getStudentCourses = async (userId) => {
+const getStudentCourses = async (userId) => {
     try {
         const enrollments = await Enrollment.findAll({
             where: { userId },
             include: [
                 {
                     model: Course,
-                    as: 'course',
-                    include: [{ model: User, as: 'instructor', attributes: ['name'] }]
+                    as: 'course'
                 }
             ],
             order: [['lastAccessedAt', 'DESC']],
             limit: 10
         });
 
-        return enrollments.map(enrollment => ({
-            id: enrollment.course.id,
-            title: enrollment.course.title,
-            instructor: enrollment.course.instructor?.name || 'Instructor',
-            timeAgo: getTimeAgo(enrollment.lastAccessedAt || enrollment.createdAt),
-            progress: enrollment.progress || 0,
-            lessons: `${enrollment.completedLectures?.length || 0}/${enrollment.course.totalLectures || 0}`,
-            thumbnail: enrollment.course.thumbnail || 'https://via.placeholder.com/300x200',
-            lastAccessed: enrollment.lastAccessedAt || enrollment.createdAt,
-            status: enrollment.isCompleted ? 'completed' : 'active'
-        }));
+        return enrollments.map(enrollment => {
+            const course = enrollment.course;
+            const totalLectures = course.lectures ? course.lectures.length : 0;
+            const completedLectures = enrollment.completedLectures ? enrollment.completedLectures.length : 0;
+
+            return {
+                id: course.id,
+                title: course.title,
+                instructor: course.instructor || 'Instructor',
+                timeAgo: getTimeAgo(enrollment.lastAccessedAt),
+                progress: Math.floor(enrollment.progress || 0),
+                lessons: `${completedLectures}/${totalLectures}`,
+                thumbnail: course.thumbnail || 'https://via.placeholder.com/300x200',
+                lastAccessed: enrollment.lastAccessedAt,
+                status: enrollment.isCompleted ? 'completed' : 'active'
+            };
+        });
     } catch (error) {
         console.error('Error getting student courses:', error);
         throw error;
@@ -80,17 +113,53 @@ export const getStudentCourses = async (userId) => {
 };
 
 // Get weekly progress
-export const getStudentProgress = async (userId) => {
+const getStudentProgress = async (userId) => {
     try {
-        // Since we don't have a specific Progress model for daily history, 
-        // we'll return a simplified or mock structure for the UI to prevent crashes,
-        // or base it on recent Enrollment updates if possible.
-        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        // Get progress for the last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+        const activities = await Activity.find({
+            userId,
+            timestamp: { $gte: sevenDaysAgo },
+            action: { $in: ['lesson_complete', 'video_watch', 'course_view'] }
+        }).sort({ timestamp: 1 });
+
+        // Group by day
+        const dailyProgress = {};
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        // Initialize all days with 0 hours
+        days.forEach(day => {
+            dailyProgress[day] = { hours: 0, lessons: 0 };
+        });
+
+        // Calculate hours per day
+        activities.forEach(activity => {
+            const dayName = days[activity.timestamp.getDay()];
+            let minutes = 0;
+            
+            switch (activity.action) {
+                case 'lesson_complete':
+                    minutes = 30;
+                    break;
+                case 'video_watch':
+                    minutes = 15;
+                    break;
+                case 'course_view':
+                    minutes = 10;
+                    break;
+            }
+            
+            dailyProgress[dayName].hours += minutes / 60;
+            dailyProgress[dayName].lessons += 1;
+        });
+
+        // Convert to array format
         return days.map(day => ({
             day,
-            hours: 0,
-            height: '10%',
+            hours: Math.round(dailyProgress[day].hours * 10) / 10,
+            height: `${Math.min(100, dailyProgress[day].hours * 25)}%`,
             date: new Date().toISOString()
         }));
     } catch (error) {
@@ -100,24 +169,85 @@ export const getStudentProgress = async (userId) => {
 };
 
 // Get achievements
-export const getStudentAchievements = async (userId) => {
+const getStudentAchievements = async (userId) => {
     try {
-        // Using successfully completed enrollments as achievements for now
-        const completedEnrollments = await Enrollment.findAll({
-            where: { userId, isCompleted: true },
-            include: [{ model: Course, as: 'course' }],
-            order: [['completedAt', 'DESC']],
-            limit: 10
-        });
+        // Generate achievements based on actual student activity
+        const achievements = [];
+        
+        // Get student stats for achievement calculation
+        const stats = await getStudentStats(userId);
+        
+        // Course completion achievements
+        if (stats.completedCourses >= 1) {
+            achievements.push({
+                id: 'first_course',
+                title: 'First Course Completed',
+                description: `Completed your first course`,
+                date: 'Earned recently',
+                icon: '🎯',
+                type: 'course'
+            });
+        }
+        
+        if (stats.completedCourses >= 5) {
+            achievements.push({
+                id: 'course_master',
+                title: 'Course Master',
+                description: `Completed ${stats.completedCourses} courses`,
+                date: 'Earned recently',
+                icon: '🏆',
+                type: 'course'
+            });
+        }
+        
+        // Learning streak achievements
+        if (stats.learningStreak >= 7) {
+            achievements.push({
+                id: 'week_streak',
+                title: 'Week Warrior',
+                description: '7 days learning streak',
+                date: 'Earned recently',
+                icon: '🔥',
+                type: 'streak'
+            });
+        }
+        
+        if (stats.learningStreak >= 30) {
+            achievements.push({
+                id: 'month_streak',
+                title: 'Monthly Champion',
+                description: '30 days learning streak',
+                date: 'Earned recently',
+                icon: '💎',
+                type: 'streak'
+            });
+        }
+        
+        // Hours learned achievements
+        if (stats.hoursLearned >= 10) {
+            achievements.push({
+                id: 'ten_hours',
+                title: 'Dedicated Learner',
+                description: `Learned for ${stats.hoursLearned} hours`,
+                date: 'Earned recently',
+                icon: '⏰',
+                type: 'time'
+            });
+        }
+        
+        // Certificate achievements
+        if (stats.certificates >= 1) {
+            achievements.push({
+                id: 'first_cert',
+                title: 'Certificate Earner',
+                description: `Earned your first certificate`,
+                date: 'Earned recently',
+                icon: '📜',
+                type: 'certificate'
+            });
+        }
 
-        return completedEnrollments.map(enrollment => ({
-            id: enrollment.id,
-            title: `Completed ${enrollment.course.title}`,
-            description: `Successfully finished all lessons in ${enrollment.course.title}`,
-            date: `Earned ${new Date(enrollment.completedAt).toLocaleDateString()}`,
-            icon: '🎓',
-            type: 'certificate'
-        }));
+        return achievements;
     } catch (error) {
         console.error('Error getting achievements:', error);
         throw error;
@@ -125,57 +255,109 @@ export const getStudentAchievements = async (userId) => {
 };
 
 // Get recent activity
-export const getStudentActivity = async (userId) => {
+const getStudentActivity = async (userId) => {
     try {
-        // Fetch from MongoDB Activity model
-        const recentActivities = await Activity.find({ userId })
-            .sort({ timestamp: -1 })
-            .limit(10)
-            .lean();
+        // Get recent activities from MongoDB
+        const activities = await Activity.find({
+            userId
+        })
+        .sort({ timestamp: -1 })
+        .limit(20);
 
-        return recentActivities.map(activity => ({
-            id: activity._id,
-            type: activity.action,
-            title: activity.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            course: activity.details?.courseTitle || 'Course',
-            time: getTimeAgo(activity.timestamp),
-            icon: activity.action.includes('complete') ? '✅' : '📚'
-        }));
+        const formattedActivities = [];
+
+        activities.forEach(activity => {
+            let activityData = {
+                id: activity._id,
+                time: getTimeAgo(activity.timestamp),
+                icon: getActivityIcon(activity.action)
+            };
+
+            switch (activity.action) {
+                case 'lesson_complete':
+                    activityData.type = 'lesson_completed';
+                    activityData.title = `Completed: ${activity.details.lessonTitle || 'Lesson'}`;
+                    activityData.course = activity.details.courseTitle || 'Course';
+                    break;
+                    
+                case 'course_enroll':
+                    activityData.type = 'course_enrolled';
+                    activityData.title = `Enrolled: ${activity.details.courseTitle || 'Course'}`;
+                    activityData.course = activity.details.courseTitle || 'Course';
+                    break;
+                    
+                case 'login':
+                    activityData.type = 'login';
+                    activityData.title = 'Logged in to platform';
+                    break;
+                    
+                case 'course_view':
+                    activityData.type = 'course_viewed';
+                    activityData.title = `Viewed: ${activity.details.courseTitle || 'Course'}`;
+                    activityData.course = activity.details.courseTitle || 'Course';
+                    break;
+                    
+                case 'video_watch':
+                    activityData.type = 'video_watched';
+                    activityData.title = `Watched: ${activity.details.videoTitle || 'Video'}`;
+                    activityData.course = activity.details.courseTitle || 'Course';
+                    break;
+                    
+                default:
+                    activityData.type = 'general';
+                    activityData.title = activity.action.replace('_', ' ').charAt(0).toUpperCase() + activity.action.slice(1);
+            }
+
+            formattedActivities.push(activityData);
+        });
+
+        return formattedActivities;
     } catch (error) {
         console.error('Error getting student activity:', error);
-        // Fallback to empty to prevent UI crash
-        return [];
+        throw error;
     }
 };
 
-// Helper functions (kept as local functions, not exported)
+// Helper functions
 const calculateLearningStreak = async (userId) => {
     try {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const recentActivity = await Activity.countDocuments({
+        const activities = await Activity.find({
             userId,
-            timestamp: { $gte: thirtyDaysAgo }
+            timestamp: { $gte: thirtyDaysAgo },
+            action: { $in: ['lesson_complete', 'video_watch', 'course_view'] }
         });
 
-        return Math.min(45, Math.floor(recentActivity / 2));
-    } catch (error) {
-        return 0;
-    }
-};
+        if (activities.length === 0) return 0;
 
-const calculateAverageProgress = async (userId) => {
-    try {
-        const enrollments = await Enrollment.findAll({
-            where: { userId }
+        // Group activities by day
+        const daysWithActivity = new Set();
+        activities.forEach(activity => {
+            const dayKey = activity.timestamp.toISOString().split('T')[0];
+            daysWithActivity.add(dayKey);
         });
 
-        if (enrollments.length === 0) return 0;
+        // Calculate consecutive days from today backwards
+        let streak = 0;
+        const today = new Date();
+        
+        for (let i = 0; i < 30; i++) {
+            const checkDate = new Date(today);
+            checkDate.setDate(checkDate.getDate() - i);
+            const dayKey = checkDate.toISOString().split('T')[0];
+            
+            if (daysWithActivity.has(dayKey)) {
+                streak++;
+            } else if (i > 0) {
+                break; // Break if we miss a day (but allow today to be missed)
+            }
+        }
 
-        const totalProgress = enrollments.reduce((sum, e) => sum + (e.progress || 0), 0);
-        return Math.floor(totalProgress / enrollments.length);
+        return streak;
     } catch (error) {
+        console.error('Error calculating learning streak:', error);
         return 0;
     }
 };
@@ -193,3 +375,49 @@ const getTimeAgo = (date) => {
     return 'Just now';
 };
 
+const getActivityIcon = (action) => {
+    const icons = {
+        'lesson_complete': '✅',
+        'course_enroll': '📚',
+        'login': '🔑',
+        'course_view': '👁️',
+        'video_watch': '🎥',
+        'assignment_submit': '📝',
+        'quiz_complete': '🧪',
+        'certificate_earned': '🏆'
+    };
+    return icons[action] || '📌';
+};
+
+// Batch create activities for real-time tracking
+const batchCreateActivities = async (userId, activities) => {
+    try {
+        const activityDocuments = activities.map(activity => ({
+            userId,
+            action: activity.action,
+            resourceType: activity.resourceType,
+            resourceId: activity.resourceId,
+            details: activity.details,
+            timestamp: activity.details.timestamp ? new Date(activity.details.timestamp) : new Date(),
+            ipAddress: activity.details.ipAddress || null,
+            userAgent: activity.details.userAgent || null
+        }));
+
+        // Insert all activities in bulk
+        await Activity.insertMany(activityDocuments);
+        
+        console.log(`Recorded ${activityDocuments.length} activities for user ${userId}`);
+    } catch (error) {
+        console.error('Error batch creating activities:', error);
+        throw error;
+    }
+};
+
+export {
+    getStudentStats,
+    getStudentCourses,
+    getStudentProgress,
+    getStudentAchievements,
+    getStudentActivity,
+    batchCreateActivities
+};
