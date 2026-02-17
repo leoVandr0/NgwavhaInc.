@@ -67,7 +67,9 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     updateUser,
-    loading
+    loading,
+    // Expose a simple boolean for components that check auth state
+    isAuthenticated: !!currentUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

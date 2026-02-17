@@ -6,7 +6,7 @@ import { Star, Clock, Users, Globe, Award, Play, CheckCircle, X, Heart, Shopping
 import { message, Modal } from 'antd';
 import api from '../../services/api';
 import { getImageUrl, getCourseThumbnail, getAvatarUrl } from '../../utils/imageUtils';
-import useAuthStore from '../../store/authStore';
+import { useAuth } from '../../contexts/AuthContext';
 import useCartStore from '../../store/cartStore';
 import PaymentCheckoutModal from '../../components/PaymentCheckoutModal';
 
@@ -74,7 +74,7 @@ const CourseDetailsPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { isAuthenticated, user } = useAuthStore();
+    const { isAuthenticated, currentUser } = useAuth();
     const { addToCart, addToWishlist, removeFromWishlist, isInCart, isInWishlist } = useCartStore();
     const [actionLoading, setActionLoading] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -500,7 +500,7 @@ const CourseDetailsPage = () => {
                 onClose={() => setShowPaymentModal(false)}
                 course={course}
                 onPaymentSuccess={handlePaymentSuccess}
-                user={user}
+                user={currentUser}
             />
         </div>
     );

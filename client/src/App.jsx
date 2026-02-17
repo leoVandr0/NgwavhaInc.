@@ -197,7 +197,7 @@ const App = () => {
                 path="/settings/notifications"
                 element={
                   <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
-                    <TestNotificationPage />
+                    <NotificationSettings />
                   </ProtectedRoute>
                 }
               />
