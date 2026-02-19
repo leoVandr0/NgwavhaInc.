@@ -40,6 +40,39 @@ const Course = sequelize.define('Course', {
         type: DataTypes.STRING,
         allowNull: true
     },
+    // Preview video metadata for admin review
+    previewVideoPath: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    previewVideoDuration: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    previewStatus: {
+        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        defaultValue: 'pending'
+    },
+    previewUploadedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    previewUploadedBy: {
+        type: DataTypes.UUID,
+        allowNull: true
+    },
+    previewApprovedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    previewApprovedBy: {
+        type: DataTypes.UUID,
+        allowNull: true
+    },
+    previewRejectReason: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     level: {
         type: DataTypes.ENUM('beginner', 'intermediate', 'expert', 'all'),
         defaultValue: 'all'

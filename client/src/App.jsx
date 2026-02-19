@@ -32,6 +32,7 @@ import TermsPage from './pages/legal/TermsPage';
 import CookiesPage from './pages/legal/CookiesPage';
 import CookieConsent from './components/CookieConsent';
 import AdminLayout from './pages/admin/AdminLayout';
+import AdminCoursePreviews from './pages/admin/AdminCoursePreviews.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import NotificationSettings from './pages/settings/NotificationSettings';
@@ -138,6 +139,7 @@ const App = () => {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="course-previews" element={<AdminCoursePreviews />} />
               </Route>
 
               <Route

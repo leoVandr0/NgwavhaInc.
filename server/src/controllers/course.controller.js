@@ -429,52 +429,54 @@ export const createCourse = async (req, res) => {
 // @route   PUT /api/courses/:id
 // @access  Private/Instructor
 export const updateCourse = async (req, res) => {
-    try {
-        const course = await Course.findByPk(req.params.id);
-
-        if (course) {
-            if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
-                return res.status(403).json({ message: 'Not authorized to update this course' });
-            }
-
-            course.title = req.body.title || course.title;
-            course.description = req.body.description || course.description;
-            course.price = req.body.price || course.price;
-            course.categoryId = req.body.categoryId || course.categoryId;
-            course.level = req.body.level || course.level;
-            course.status = req.body.status || course.status;
-            if (req.body.thumbnail) {
-                course.thumbnail = req.body.thumbnail;
-            }
-
-            if (req.body.status === 'published' && !course.publishedAt) {
-                course.publishedAt = new Date();
-            }
-
-            const updatedCourse = await course.save();
-
-            // Broadcast real-time update to admin dashboard
-            if (global.broadcastToAdmins) {
-                global.broadcastToAdmins('course-updated', {
-                    type: 'course_updated',
-                    course: {
-                        id: course.id,
-                        title: course.title,
-                        instructorId: course.instructorId,
-                        status: course.status,
-                        changes: Object.keys(req.body).filter(k => k !== 'id' && k !== 'createdAt')
-                    },
-                    message: `Course updated: ${course.title}`
-                });
-            }
-
-            res.json(updatedCourse);
-        } else {
-            res.status(404).json({ message: 'Course not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    const course = await Course.findByPk(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
     }
+    // Guard: only admin can update unless preview approved
+    if (req.user?.role !== 'admin' && course.previewStatus && course.previewStatus !== 'approved') {
+      return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before updating content.' });
+    }
+
+    // Authorization check
+    if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this course' });
+    }
+
+    // Apply updates
+    if (req.body.title) course.title = req.body.title;
+    if (req.body.description) course.description = req.body.description;
+    if (req.body.price != null) course.price = req.body.price;
+    if (req.body.categoryId) course.categoryId = req.body.categoryId;
+    if (req.body.level) course.level = req.body.level;
+    if (req.body.thumbnail) course.thumbnail = req.body.thumbnail;
+    if (req.body.status) {
+      course.status = req.body.status;
+      if (req.body.status === 'published' && !course.publishedAt) {
+        course.publishedAt = new Date();
+      }
+    }
+
+    const updatedCourse = await course.save();
+
+    if (global.broadcastToAdmins) {
+      global.broadcastToAdmins('course-updated', {
+        type: 'course_updated',
+        course: {
+          id: updatedCourse.id,
+          title: updatedCourse.title,
+          instructorId: updatedCourse.instructorId,
+          status: updatedCourse.status
+        },
+        message: `Course updated: ${updatedCourse.title}`
+      });
+    }
+
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // @desc    Add section to course content
@@ -486,6 +488,14 @@ export const addSection = async (req, res) => {
 
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Block content changes if preview not approved yet
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            // Non-admins cannot modify until preview is approved
+            if (course.previewStatus && course.previewStatus !== 'approved') {
+                return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before adding content.' });
+            }
         }
 
         if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
@@ -519,6 +529,13 @@ export const addLecture = async (req, res) => {
 
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Guard preview status before adding lectures
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            if (course.previewStatus && course.previewStatus !== 'approved') {
+                return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before adding content.' });
+            }
         }
 
         if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
@@ -627,6 +644,98 @@ export const deleteLecture = async (req, res) => {
     }
 };
 
+// @desc    Upload course preview video for admin review
+// @route   POST /api/courses/:id/preview
+// @access  Private/Instructor (must be course owner)
+export const uploadCoursePreview = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to upload preview for this course' });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No preview video uploaded' });
+        }
+
+        // Determine path to uploaded preview
+        const isR2 = !!req.file.key;
+        const videoPath = isR2 && (process.env.R2_PUBLIC_URL || '')
+            ? `${process.env.R2_PUBLIC_URL}/${req.file.key}`
+            : `/uploads/${req.file.filename}`;
+
+        // Optional duration in seconds
+        let duration = 0;
+        if (req.body.duration) {
+            duration = Number(req.body.duration);
+            if (!Number.isFinite(duration) || duration <= 0) {
+                return res.status(400).json({ message: 'Invalid duration value' });
+            }
+            if (duration > 300) {
+                return res.status(400).json({ message: 'Preview duration must be 300 seconds (5 minutes) or less' });
+            }
+        }
+
+        course.previewVideoPath = videoPath;
+        course.previewVideoDuration = duration;
+        course.previewStatus = 'pending';
+        course.previewUploadedAt = new Date();
+        course.previewUploadedBy = req.user.id;
+        await course.save();
+
+        res.json({ success: true, courseId: course.id, preview: { path: videoPath, duration, status: 'pending' } });
+    } catch (error) {
+        res.status(500).json({ message: error.message, error: error.stack });
+    }
+};
+
+// @desc    Approve course preview
+// @route   POST /api/admin/courses/:courseId/preview/approve
+// @access  Private (Admin)
+export const approvePreview = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const course = await Course.findByPk(courseId);
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+        if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Not authorized' });
+
+        course.previewStatus = 'approved';
+        course.previewApprovedAt = new Date();
+        course.previewApprovedBy = req.user.id;
+        await course.save();
+
+        res.json({ success: true, message: 'Preview approved', courseId: course.id });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Reject course preview
+// @route   POST /api/admin/courses/:courseId/preview/reject
+// @access  Private (Admin)
+export const rejectPreview = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { reason } = req.body;
+        const course = await Course.findByPk(courseId);
+        if (!course) return res.status(404).json({ message: 'Course not found' });
+        if (req.user?.role !== 'admin') return res.status(403).json({ message: 'Not authorized' });
+
+        course.previewStatus = 'rejected';
+        course.previewRejectedAt = new Date();
+        course.previewRejectReason = reason || 'Not specified';
+        await course.save();
+
+        res.json({ success: true, message: 'Preview rejected', courseId: course.id, reason });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Delete a course
 // @route   DELETE /api/courses/:id
 // @access  Private/Instructor
@@ -636,6 +745,11 @@ export const deleteCourse = async (req, res) => {
 
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
+        }
+
+        // Global guard: only admin can delete unless preview approved
+        if (req.user?.role !== 'admin' && course.previewStatus && course.previewStatus !== 'approved') {
+            return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before deleting course.' });
         }
 
         if (course.instructorId !== req.user.id && req.user.role !== 'admin') {

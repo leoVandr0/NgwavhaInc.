@@ -494,6 +494,80 @@ const formatTimeAgo = (date) => {
     return `${days} days ago`;
 };
 
+// @desc Get pending course previews
+// @route GET /api/admin/courses/previews/pending
+export const getPendingCoursePreviews = async (req, res) => {
+  try {
+    const previews = await Course.findAll({
+      where: { previewStatus: 'pending' },
+      attributes: ['id', 'title', 'previewVideoDuration', 'previewUploadedAt', 'previewUploadedBy'],
+      include: [{ model: User, as: 'instructor', attributes: ['id', 'name', 'email'] }]
+    });
+    res.json({ success: true, data: previews });
+  } catch (error) {
+    console.error('Get pending previews error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch pending previews', error: error.message });
+  }
+};
+
+// @desc Approve course preview
+// @route POST /api/admin/courses/:courseId/preview/approve
+export const approveCoursePreview = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findByPk(courseId);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    if (req.user?.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
+
+    course.previewStatus = 'approved';
+    course.previewApprovedAt = new Date();
+    course.previewApprovedBy = req.user.id;
+    await course.save();
+
+    if (global.broadcastToAdmins) {
+      global.broadcastToAdmins('preview-approved', {
+        type: 'course_preview_approved',
+        course: { id: course.id, title: course.title },
+        message: `Course preview approved: ${course.title}`
+      });
+    }
+
+    res.json({ success: true, message: 'Preview approved', courseId: course.id });
+  } catch (error) {
+    console.error('Approve preview error:', error);
+    res.status(500).json({ success: false, message: 'Failed to approve preview', error: error.message });
+  }
+};
+
+// @desc Reject course preview
+// @route POST /api/admin/courses/:courseId/preview/reject
+export const rejectPreview = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { reason } = req.body;
+    const course = await Course.findByPk(courseId);
+    if (!course) return res.status(404).json({ success: false, message: 'Course not found' });
+    if (req.user?.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
+
+    course.previewStatus = 'rejected';
+    course.previewRejectReason = reason || 'No reason provided';
+    course.previewUploadedAt = new Date();
+    await course.save();
+
+    if (global.broadcastToAdmins) {
+      global.broadcastToAdmins('preview-rejected', {
+        type: 'course_preview_rejected',
+        course: { id: course.id, title: course.title },
+        reason: reason || 'No reason provided'
+      });
+    }
+
+    res.json({ success: true, message: 'Preview rejected', courseId: course.id, reason });
+  } catch (error) {
+    console.error('Reject preview error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reject preview', error: error.message });
+  }
+};
 export default {
     getDashboardStats,
     getAllUsers,
@@ -501,5 +575,8 @@ export default {
     declineTeacher,
     deleteUser,
     getUserDetails,
-    getRealTimeActivity
+    getRealTimeActivity,
+    getPendingCoursePreviews,
+    approveCoursePreview,
+    rejectPreview
 };
