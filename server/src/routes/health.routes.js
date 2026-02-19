@@ -1,20 +1,15 @@
-import express from 'express';
-import {
-    basicHealthCheck,
-    databaseHealthCheck,
-    authHealthCheck,
-    paymentsHealthCheck,
-    uploadsHealthCheck,
-    fullHealthCheck
-} from '../controllers/health.controller.js';
+import express from 'express'
+import sequelize from '../config/mysql.js'
 
-const router = express.Router();
+const router = express.Router()
 
-router.get('/', basicHealthCheck);
-router.get('/database', databaseHealthCheck);
-router.get('/auth', authHealthCheck);
-router.get('/payments', paymentsHealthCheck);
-router.get('/uploads', uploadsHealthCheck);
-router.get('/full', fullHealthCheck);
+router.get('/health', async (req, res) => {
+  try {
+    await sequelize.authenticate()
+    res.json({ ok: true, status: 'db_connected' })
+  } catch (err) {
+    res.status(500).json({ ok: false, status: 'db_error', error: err?.message, stack: err?.stack })
+  }
+})
 
-export default router;
+export default router

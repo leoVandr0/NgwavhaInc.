@@ -640,7 +640,11 @@ export const deleteLecture = async (req, res) => {
 
         res.json(content);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Failed to load courses (getCourses):', error?.stack || error);
+        res.status(500).json({ 
+            message: 'Failed to load courses',
+            error: error?.message,
+        });
     }
 };
 

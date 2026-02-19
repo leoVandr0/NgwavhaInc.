@@ -1,5 +1,6 @@
 // server.js
 import express from 'express';
+import healthRoutes from './src/routes/health.routes.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -47,6 +48,10 @@ import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
 
 const app = express();
+// Health check endpoint
+if (typeof app.use === 'function') {
+  app.use('/health', healthRoutes);
+}
 const PORT = process.env.PORT || 8080;
 
 // Create HTTP server and Socket.IO instance
