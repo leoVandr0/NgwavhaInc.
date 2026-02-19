@@ -73,7 +73,7 @@ const CreateCourse = () => {
         setLoading(true);
 
         try {
-            let thumbnailPath = null;
+            let thumbnailPath = '/uploads/default-course.jpg';
 
             // Upload thumbnail if selected
             if (formData.thumbnailFile) {
@@ -82,20 +82,35 @@ const CreateCourse = () => {
                 formDataUpload.append('thumbnail', formData.thumbnailFile);
 
                 try {
+                    console.log('Uploading thumbnail...', formData.thumbnailFile.name);
+                    
                     const { data: uploadData } = await api.post('/upload/course-thumbnail', formDataUpload, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
-                    thumbnailPath = uploadData.filePath;
+                    
+                    console.log('Upload response:', uploadData);
+                    
+                    if (uploadData.filePath) {
+                        thumbnailPath = uploadData.filePath;
+                    }
+                    
+                    message.success('Thumbnail uploaded successfully');
                 } catch (uploadError) {
                     console.error('Thumbnail upload error:', uploadError);
-                    message.warning('Failed to upload thumbnail, continuing without it');
+                    const errorMsg = uploadError.response?.data?.message || uploadError.message || 'Unknown upload error';
+                    message.error(`Failed to upload thumbnail: ${errorMsg}`);
+                    setLoading(false);
+                    setUploading(false);
+                    return; // Don't continue if thumbnail upload fails
                 } finally {
                     setUploading(false);
                 }
             }
 
+            console.log('Creating course with thumbnail:', thumbnailPath);
+            
             const { data } = await api.post('/courses', {
                 title: formData.title,
                 description: formData.description,
@@ -108,8 +123,9 @@ const CreateCourse = () => {
             message.success('Course created successfully!');
             navigate('/teacher/courses');
         } catch (error) {
-            console.error(error);
-            message.error(error.response?.data?.message || 'Failed to create course');
+            console.error('Course creation error:', error);
+            const errorMsg = error.response?.data?.message || error.message || 'Failed to create course';
+            message.error(errorMsg);
         } finally {
             setLoading(false);
         }

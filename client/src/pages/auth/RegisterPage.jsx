@@ -92,16 +92,19 @@ const RegisterPage = () => {
                 notificationPreferences: submissionData.notificationPreferences
             });
 
-            // Then log them in
+            // Show specific message for instructors
+            if (submissionData.role === 'instructor') {
+                message.success('Your instructor account has been created! Please wait for admin approval before you can log in and create courses.');
+                navigate('/login');
+                return;
+            }
+
+            // For students, log them in automatically
             const userData = await login(submissionData.email, submissionData.password);
             message.success('Account created successfully! Welcome to Ngwavha.');
 
-            // Navigate based on user role
-            if (userData.role === 'teacher' || userData.role === 'instructor') {
-                navigate('/teacher/dashboard');
-            } else {
-                navigate('/student/dashboard');
-            }
+            // Navigate to student dashboard
+            navigate('/student/dashboard');
         } catch (error) {
             console.error('Registration error:', error);
             message.error(error.response?.data?.message || 'Registration failed. Please try again.');
@@ -194,6 +197,17 @@ const RegisterPage = () => {
                                         <option value="instructor">I want to Teach (Instructor)</option>
                                     </select>
                                 </div>
+                                {formData.role === 'instructor' && (
+                                    <div className="mt-2 p-3 bg-orange-500/10 border border-orange-500/30 rounded-md">
+                                        <div className="flex items-start gap-2">
+                                            <AlertTriangle size={16} className="text-orange-400 flex-shrink-0 mt-0.5" />
+                                            <p className="text-xs text-orange-300">
+                                                Instructor accounts require admin approval before you can log in and create courses. 
+                                                You'll receive a notification once your account is approved.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div>

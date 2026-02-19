@@ -369,10 +369,18 @@ export const getCourseBySlug = async (req, res) => {
 
 // @desc    Create a course
 // @route   POST /api/courses
-// @access  Private/Instructor
+// @access  Private/Instructor (must be approved)
 export const createCourse = async (req, res) => {
     try {
         const { title, description, price, categoryId, level, thumbnail } = req.body;
+
+        // Check if instructor is approved (only for instructors, not admins)
+        if (req.user.role === 'instructor' && !req.user.isApproved) {
+            return res.status(403).json({ 
+                message: 'Your instructor account is pending approval. Please wait for admin to approve your account before creating courses.',
+                code: 'INSTRUCTOR_NOT_APPROVED'
+            });
+        }
 
         const course = await Course.create({
             title,
@@ -444,6 +452,22 @@ export const updateCourse = async (req, res) => {
             }
 
             const updatedCourse = await course.save();
+
+            // Broadcast real-time update to admin dashboard
+            if (global.broadcastToAdmins) {
+                global.broadcastToAdmins('course-updated', {
+                    type: 'course_updated',
+                    course: {
+                        id: course.id,
+                        title: course.title,
+                        instructorId: course.instructorId,
+                        status: course.status,
+                        changes: Object.keys(req.body).filter(k => k !== 'id' && k !== 'createdAt')
+                    },
+                    message: `Course updated: ${course.title}`
+                });
+            }
+
             res.json(updatedCourse);
         } else {
             res.status(404).json({ message: 'Course not found' });
@@ -598,6 +622,49 @@ export const deleteLecture = async (req, res) => {
         await course.save();
 
         res.json(content);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete a course
+// @route   DELETE /api/courses/:id
+// @access  Private/Instructor
+export const deleteCourse = async (req, res) => {
+    try {
+        const course = await Course.findByPk(req.params.id);
+
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to delete this course' });
+        }
+
+        const courseTitle = course.title;
+        const courseId = course.id;
+
+        // Delete MongoDB content
+        await CourseContent.deleteOne({ courseId: course.id });
+
+        // Delete the course
+        await course.destroy();
+
+        // Broadcast real-time update to admin dashboard
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('course-deleted', {
+                type: 'course_deleted',
+                course: {
+                    id: courseId,
+                    title: courseTitle,
+                    instructorId: course.instructorId
+                },
+                message: `Course deleted: ${courseTitle}`
+            });
+        }
+
+        res.json({ message: 'Course deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

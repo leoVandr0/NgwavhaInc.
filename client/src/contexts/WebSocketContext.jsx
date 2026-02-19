@@ -84,6 +84,36 @@ export const WebSocketProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('course-created', { detail: data }));
         });
 
+        newSocket.on('course-updated', (data) => {
+            console.log('Course updated event:', data);
+            window.dispatchEvent(new CustomEvent('course-updated', { detail: data }));
+        });
+
+        newSocket.on('course-deleted', (data) => {
+            console.log('Course deleted event:', data);
+            window.dispatchEvent(new CustomEvent('course-deleted', { detail: data }));
+        });
+
+        newSocket.on('enrollment-created', (data) => {
+            console.log('Enrollment created event:', data);
+            window.dispatchEvent(new CustomEvent('enrollment-created', { detail: data }));
+        });
+
+        newSocket.on('enrollment-removed', (data) => {
+            console.log('Enrollment removed event:', data);
+            window.dispatchEvent(new CustomEvent('enrollment-removed', { detail: data }));
+        });
+
+        newSocket.on('teacher-approved', (data) => {
+            console.log('Teacher approved event:', data);
+            window.dispatchEvent(new CustomEvent('teacher-approved', { detail: data }));
+        });
+
+        newSocket.on('teacher-declined', (data) => {
+            console.log('Teacher declined event:', data);
+            window.dispatchEvent(new CustomEvent('teacher-declined', { detail: data }));
+        });
+
         newSocket.on('stats-update', (data) => {
             console.log('Stats update:', data);
             // Handle general stats updates

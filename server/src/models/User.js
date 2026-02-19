@@ -69,6 +69,21 @@ const User = sequelize.define('User', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    isApproved: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        comment: 'For instructors - requires admin approval before they can create courses'
+    },
+    approvedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: 'When instructor was approved by admin'
+    },
+    approvedBy: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: 'Admin who approved the instructor'
+    },
     resetPasswordToken: {
         type: DataTypes.STRING,
         allowNull: true

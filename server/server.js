@@ -206,6 +206,16 @@ connectMySQL().then(async (sequelize) => {
             console.error('❌ Migration failed:', migrationError.message);
         }
 
+        // Run instructor approval migration
+        try {
+            console.log('🔄 Running instructor approval migration...');
+            const { up } = await import('./src/migrations/add-instructor-approval.js');
+            await up();
+            console.log('✅ Instructor approval migration completed');
+        } catch (migrationError) {
+            console.error('❌ Instructor approval migration failed:', migrationError.message);
+        }
+
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });

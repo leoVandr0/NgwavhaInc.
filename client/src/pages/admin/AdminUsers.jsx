@@ -39,7 +39,7 @@ const mapUserToRow = (u) => ({
     email: u.email,
     role: u.role === 'instructor' ? 'teacher' : u.role,
     status: u.role === 'instructor'
-        ? (u.isVerified ? 'approved' : 'pending')
+        ? (u.isApproved ? 'approved' : 'pending')
         : 'active',
     avatar: u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name)}`,
     joinDate: u.createdAt ? format(new Date(u.createdAt), 'yyyy-MM-dd') : '-',
@@ -50,7 +50,8 @@ const mapUserToRow = (u) => ({
     bio: u.bio,
     skills: typeof u.skills === 'string' ? (u.skills || '').split(',').map(s => s.trim()).filter(Boolean) : (u.skills || []),
     certifications: typeof u.certifications === 'string' ? (u.certifications || '').split(',').map(s => s.trim()).filter(Boolean) : (u.certifications || []),
-    isVerified: !!u.isVerified
+    isVerified: !!u.isVerified,
+    isApproved: !!u.isApproved
 });
 
 const AdminUsers = () => {
@@ -119,8 +120,36 @@ const AdminUsers = () => {
             setPagination(prev => ({ ...prev, total: (prev.total || 0) + 1 }));
             message.success(`${row.name} just registered as ${row.role}`);
         };
+
+        const handleTeacherApproved = (e) => {
+            const data = e.detail || e;
+            const u = data.user;
+            if (!u?.id) return;
+            setUsers(prev => prev.map(user =>
+                user.id === u.id ? { ...user, status: 'approved', isApproved: true, isVerified: true } : user
+            ));
+            message.success(`Instructor ${u.name} has been approved`);
+        };
+
+        const handleTeacherDeclined = (e) => {
+            const data = e.detail || e;
+            const u = data.user;
+            if (!u?.id) return;
+            setUsers(prev => prev.map(user =>
+                user.id === u.id ? { ...user, status: 'declined', isApproved: false } : user
+            ));
+            message.warning(`Instructor application for ${u.name} has been declined`);
+        };
+
         window.addEventListener('user-registered', handleUserRegistered);
-        return () => window.removeEventListener('user-registered', handleUserRegistered);
+        window.addEventListener('teacher-approved', handleTeacherApproved);
+        window.addEventListener('teacher-declined', handleTeacherDeclined);
+        
+        return () => {
+            window.removeEventListener('user-registered', handleUserRegistered);
+            window.removeEventListener('teacher-approved', handleTeacherApproved);
+            window.removeEventListener('teacher-declined', handleTeacherDeclined);
+        };
     }, []);
 
     // Filter users based on search and filters
@@ -137,7 +166,7 @@ const AdminUsers = () => {
         try {
             await api.put(`/admin/users/${userId}/approve`);
             setUsers(prev => prev.map(user =>
-                user.id === userId ? { ...user, status: 'approved', isVerified: true } : user
+                user.id === userId ? { ...user, status: 'approved', isVerified: true, isApproved: true } : user
             ));
             message.success('Teacher approved successfully');
             setActionModal(null);

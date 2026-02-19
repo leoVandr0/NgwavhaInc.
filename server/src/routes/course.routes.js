@@ -4,6 +4,7 @@ import {
     getCourseBySlug,
     createCourse,
     updateCourse,
+    deleteCourse,
     addSection,
     addLecture,
     deleteSection,
@@ -31,7 +32,8 @@ router.route('/:slug')
     .get(getCourseBySlug);
 
 router.route('/:id')
-    .put(protect, authorize('instructor', 'admin'), updateCourse);
+    .put(protect, authorize('instructor', 'admin'), updateCourse)
+    .delete(protect, authorize('instructor', 'admin'), deleteCourse);
 
 router.route('/:id/content')
     .get(protect, authorize('instructor', 'admin'), getCourseContent);

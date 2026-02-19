@@ -15,7 +15,7 @@ export const getDashboardStats = async (req, res) => {
         const pendingTeachers = await User.count({ 
             where: { 
                 role: 'instructor',
-                isVerified: false 
+                isApproved: false 
             } 
         });
         const activeUsers = await User.count({
@@ -127,10 +127,10 @@ export const getAllUsers = async (req, res) => {
 
         if (status && status !== 'all') {
             if (status === 'pending') {
-                whereClause.isVerified = false;
+                whereClause.isApproved = false;
                 whereClause.role = 'instructor';
             } else if (status === 'approved') {
-                whereClause.isVerified = true;
+                whereClause.isApproved = true;
                 whereClause.role = 'instructor';
             } else if (status === 'active') {
                 whereClause.lastLogin = {
@@ -217,11 +217,30 @@ export const approveTeacher = async (req, res) => {
             });
         }
 
-        // Approve teacher
+        // Approve teacher - set both isVerified and isApproved
         await user.update({
             isVerified: true,
-            verifiedAt: new Date()
+            isApproved: true,
+            verifiedAt: new Date(),
+            approvedAt: new Date(),
+            approvedBy: req.user.id
         });
+
+        // Broadcast teacher approval to all connected admins
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('teacher-approved', {
+                type: 'teacher_approval',
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isApproved: true,
+                    approvedAt: new Date()
+                },
+                message: `Instructor approved: ${user.name}`
+            });
+        }
 
         res.json({
             success: true,
@@ -268,10 +287,28 @@ export const declineTeacher = async (req, res) => {
         // Decline teacher (delete or mark as declined)
         await user.update({
             isVerified: false,
+            isApproved: false,
             status: 'declined',
             declinedAt: new Date(),
             declineReason: reason || 'Application does not meet requirements'
         });
+
+        // Broadcast teacher decline to all connected admins
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('teacher-declined', {
+                type: 'teacher_declined',
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    isApproved: false,
+                    declinedAt: new Date(),
+                    reason: reason || 'Application does not meet requirements'
+                },
+                message: `Instructor application declined: ${user.name}`
+            });
+        }
 
         res.json({
             success: true,

@@ -204,6 +204,27 @@ export const enrollInCourse = async (req, res) => {
         course.enrollmentsCount += 1;
         await course.save();
 
+        // Get user info for broadcasting
+        const user = await User.findByPk(req.user.id);
+
+        // Broadcast real-time update to admin dashboard
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('enrollment-created', {
+                type: 'new_enrollment',
+                enrollment: {
+                    id: enrollment.id,
+                    userId: req.user.id,
+                    userName: user?.name || 'Unknown',
+                    userEmail: user?.email || 'Unknown',
+                    courseId: course.id,
+                    courseTitle: course.title,
+                    pricePaid: enrollment.pricePaid,
+                    createdAt: enrollment.createdAt
+                },
+                message: `Student enrolled in course: ${user?.name || 'Unknown'} enrolled in ${course.title}`
+            });
+        }
+
         logger.track({
             userId: req.user.id,
             action: 'enroll',
@@ -242,6 +263,25 @@ export const unenrollFromCourse = async (req, res) => {
         if (course) {
             course.enrollmentsCount = Math.max(0, course.enrollmentsCount - 1);
             await course.save();
+
+            // Get user info for broadcasting
+            const user = await User.findByPk(req.user.id);
+
+            // Broadcast real-time update to admin dashboard
+            if (global.broadcastToAdmins) {
+                global.broadcastToAdmins('enrollment-removed', {
+                    type: 'enrollment_removed',
+                    enrollment: {
+                        userId: req.user.id,
+                        userName: user?.name || 'Unknown',
+                        userEmail: user?.email || 'Unknown',
+                        courseId: course.id,
+                        courseTitle: course.title,
+                        removedAt: new Date()
+                    },
+                    message: `Student unenrolled from course: ${user?.name || 'Unknown'} unenrolled from ${course.title}`
+                });
+            }
         }
 
         res.json({ message: 'Successfully unenrolled from course' });

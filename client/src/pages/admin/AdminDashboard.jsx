@@ -70,7 +70,7 @@ const AdminDashboard = () => {
                 totalUsers: prev.totalUsers + 1,
                 totalTeachers: type === 'new_teacher' ? prev.totalTeachers + 1 : prev.totalTeachers,
                 totalStudents: type === 'new_student' ? prev.totalStudents + 1 : prev.totalStudents,
-                pendingTeachers: type === 'new_teacher' && !u?.isVerified
+                pendingTeachers: type === 'new_teacher' && !u?.isApproved
                     ? prev.pendingTeachers + 1
                     : prev.pendingTeachers
             }));
@@ -78,22 +78,117 @@ const AdminDashboard = () => {
                 id: u?.id || Date.now(),
                 type: type === 'new_teacher' ? 'new_teacher' : 'new_student',
                 user: u?.name || 'New user',
-                action: type === 'new_teacher' ? 'Registered as teacher' : 'Registered as student',
+                action: type === 'new_teacher' ? 'Registered as teacher (pending approval)' : 'Registered as student',
                 time: 'Just now',
-                status: u?.isVerified ? 'success' : (type === 'new_teacher' ? 'pending' : 'success')
+                status: u?.isApproved ? 'success' : (type === 'new_teacher' ? 'pending' : 'success')
             }, ...prev.slice(0, 19)]);
         };
 
         const handleCourseCreated = (e) => {
             const data = e.detail || e;
             setStats(prev => ({ ...prev, totalCourses: prev.totalCourses + 1 }));
+            setRecentActivity(prev => [{
+                id: data?.course?.id || Date.now(),
+                type: 'course_creation',
+                user: data?.course?.instructorId || 'Instructor',
+                action: `New course created: ${data?.course?.title || 'Untitled'}`,
+                time: 'Just now',
+                status: 'success'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleCourseUpdated = (e) => {
+            const data = e.detail || e;
+            setRecentActivity(prev => [{
+                id: data?.course?.id || Date.now(),
+                type: 'course_update',
+                user: data?.course?.instructorId || 'Instructor',
+                action: `Course updated: ${data?.course?.title || 'Untitled'}`,
+                time: 'Just now',
+                status: 'success'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleCourseDeleted = (e) => {
+            const data = e.detail || e;
+            setStats(prev => ({ ...prev, totalCourses: Math.max(0, prev.totalCourses - 1) }));
+            setRecentActivity(prev => [{
+                id: data?.course?.id || Date.now(),
+                type: 'course_deletion',
+                user: data?.course?.instructorId || 'Instructor',
+                action: `Course deleted: ${data?.course?.title || 'Untitled'}`,
+                time: 'Just now',
+                status: 'declined'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleEnrollmentCreated = (e) => {
+            const data = e.detail || e;
+            setRecentActivity(prev => [{
+                id: data?.enrollment?.id || Date.now(),
+                type: 'enrollment',
+                user: data?.enrollment?.userName || 'Student',
+                action: `Student enrolled: ${data?.enrollment?.userName} enrolled in "${data?.enrollment?.courseTitle}"`,
+                time: 'Just now',
+                status: 'success'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleEnrollmentRemoved = (e) => {
+            const data = e.detail || e;
+            setRecentActivity(prev => [{
+                id: data?.enrollment?.userId || Date.now(),
+                type: 'enrollment',
+                user: data?.enrollment?.userName || 'Student',
+                action: `Student unenrolled: ${data?.enrollment?.userName} left "${data?.enrollment?.courseTitle}"`,
+                time: 'Just now',
+                status: 'declined'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleTeacherApproved = (e) => {
+            const data = e.detail || e;
+            setStats(prev => ({ ...prev, pendingTeachers: Math.max(0, prev.pendingTeachers - 1) }));
+            setRecentActivity(prev => [{
+                id: data?.user?.id || Date.now(),
+                type: 'teacher_approval',
+                user: data?.user?.name || 'Instructor',
+                action: `Instructor approved: ${data?.user?.name}`,
+                time: 'Just now',
+                status: 'success'
+            }, ...prev.slice(0, 19)]);
+        };
+
+        const handleTeacherDeclined = (e) => {
+            const data = e.detail || e;
+            setRecentActivity(prev => [{
+                id: data?.user?.id || Date.now(),
+                type: 'teacher_declined',
+                user: data?.user?.name || 'Instructor',
+                action: `Instructor application declined: ${data?.user?.name}`,
+                time: 'Just now',
+                status: 'declined'
+            }, ...prev.slice(0, 19)]);
         };
 
         window.addEventListener('user-registered', handleUserRegistered);
         window.addEventListener('course-created', handleCourseCreated);
+        window.addEventListener('course-updated', handleCourseUpdated);
+        window.addEventListener('course-deleted', handleCourseDeleted);
+        window.addEventListener('enrollment-created', handleEnrollmentCreated);
+        window.addEventListener('enrollment-removed', handleEnrollmentRemoved);
+        window.addEventListener('teacher-approved', handleTeacherApproved);
+        window.addEventListener('teacher-declined', handleTeacherDeclined);
+
         return () => {
             window.removeEventListener('user-registered', handleUserRegistered);
             window.removeEventListener('course-created', handleCourseCreated);
+            window.removeEventListener('course-updated', handleCourseUpdated);
+            window.removeEventListener('course-deleted', handleCourseDeleted);
+            window.removeEventListener('enrollment-created', handleEnrollmentCreated);
+            window.removeEventListener('enrollment-removed', handleEnrollmentRemoved);
+            window.removeEventListener('teacher-approved', handleTeacherApproved);
+            window.removeEventListener('teacher-declined', handleTeacherDeclined);
         };
     }, []);
 
@@ -142,9 +237,20 @@ const AdminDashboard = () => {
 
     const getActivityIcon = (type) => {
         switch (type) {
-            case 'teacher_approval': return <UserPlus size={16} />;
-            case 'new_user': return <UserPlus size={16} />;
-            case 'course_creation': return <BookOpen size={16} />;
+            case 'teacher_approval': 
+            case 'teacher_approved': 
+                return <UserPlus size={16} />;
+            case 'teacher_declined':
+                return <AlertTriangle size={16} />;
+            case 'new_teacher': 
+            case 'new_student': 
+                return <UserPlus size={16} />;
+            case 'course_creation': 
+            case 'course_update':
+            case 'course_deletion':
+                return <BookOpen size={16} />;
+            case 'enrollment':
+                return <GraduationCap size={16} />;
             case 'payment': return <DollarSign size={16} />;
             default: return <Activity size={16} />;
         }
@@ -161,9 +267,23 @@ const AdminDashboard = () => {
 
     const getActivityColor = (type) => {
         switch (type) {
-            case 'teacher_approval': return 'orange';
-            case 'new_user': return 'green';
-            case 'course_creation': return 'blue';
+            case 'teacher_approval': 
+            case 'teacher_approved':
+                return 'orange';
+            case 'teacher_declined':
+                return 'red';
+            case 'new_teacher': 
+                return 'purple';
+            case 'new_student': 
+                return 'green';
+            case 'course_creation': 
+                return 'blue';
+            case 'course_update':
+                return 'cyan';
+            case 'course_deletion':
+                return 'red';
+            case 'enrollment':
+                return 'geekblue';
             case 'payment': return 'purple';
             default: return 'gray';
         }

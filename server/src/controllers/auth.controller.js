@@ -1,4 +1,4 @@
-﻿// src/controllers/auth.controller.js
+// src/controllers/auth.controller.js
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
@@ -57,11 +57,15 @@ export const registerUser = async (req, res) => {
         }
 
         // Prepare user data with notification preferences
+        // For instructors, require admin approval before they can create courses
+        const isInstructor = (role || 'student') === 'instructor';
         const userData = {
             name,
             email: normalizedEmail,
             password,
             role: role || 'student',
+            isVerified: !isInstructor, // Students are verified by default, instructors need approval
+            isApproved: !isInstructor, // Students are approved by default, instructors need admin approval
             notificationPreferences: notificationPreferences || {
                 email: true,
                 whatsapp: false,
@@ -111,10 +115,13 @@ export const registerUser = async (req, res) => {
                         email: user.email,
                         role: user.role,
                         isVerified: user.isVerified || false,
+                        isApproved: user.isApproved || false,
                         createdAt: user.createdAt,
                         notificationPreferences: user.notificationPreferences
                     },
-                    message: `New ${user.role} registered: ${user.name}`
+                    message: user.role === 'instructor' 
+                        ? `New instructor registered: ${user.name} - Requires admin approval`
+                        : `New student registered: ${user.name}`
                 });
             }
         } catch (postRegError) {
@@ -185,6 +192,15 @@ export const loginUser = async (req, res) => {
         if (!isMatch) {
             console.log('Login failed: Password mismatch for user:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
+        }
+
+        // Check if instructor is approved (only block for instructors who haven't been approved)
+        if (user.role === 'instructor' && !user.isApproved) {
+            console.log('Login blocked: Instructor not approved:', normalizedEmail);
+            return res.status(403).json({ 
+                message: 'Your instructor account is pending approval. Please wait for admin to approve your account.',
+                code: 'INSTRUCTOR_NOT_APPROVED'
+            });
         }
 
         // Generate token
