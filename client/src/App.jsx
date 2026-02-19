@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
@@ -84,6 +85,7 @@ const App = () => {
       <WebSocketProvider>
         <AuthProvider>
           <AntApp>
+            <ErrorBoundary>
             <CookieConsent />
             <Routes>
               {/* Public Routes with Navbar and Footer */}
@@ -207,6 +209,7 @@ const App = () => {
               {/* Catch all - Redirect to Home */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </ErrorBoundary>
           </AntApp>
         </AuthProvider>
       </WebSocketProvider>
