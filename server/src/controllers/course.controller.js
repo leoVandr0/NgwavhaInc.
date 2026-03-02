@@ -48,40 +48,62 @@ export const getCourses = async (req, res) => {
             order: [['createdAt', 'DESC']],
         });
 
-        // Add ratings and enrollment counts to each course
-        const coursesWithStats = await Promise.all(courses.map(async (course) => {
-            const courseData = course.toJSON();
+        // Add ratings and enrollment counts to each course with defensive guards
+        const coursesWithStats = await Promise.all(
+            courses.map(async (course) => {
+                const courseData = course.toJSON();
+                let enrollmentCount = 0;
+                let averageRating = '0.0';
+                let ratingsCount = 0;
+                let isLive = false;
 
-            // Get enrollment count
-            const enrollmentCount = await Enrollment.count({
-                where: { courseId: course.id }
-            });
-
-            // Get rating statistics
-            const ratingStats = await Review.findOne({
-                where: { courseId: course.id },
-                attributes: [
-                    [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
-                    [sequelize.fn('COUNT', sequelize.col('id')), 'ratingsCount']
-                ]
-            });
-
-            // Check if there's an active live session
-            const activeLiveSession = await LiveSession.findOne({
-                where: {
-                    courseId: course.id,
-                    status: 'live'
+                // Enrollment count
+                try {
+                    enrollmentCount = await Enrollment.count({ where: { courseId: course.id } });
+                } catch (e) {
+                    enrollmentCount = 0;
+                    console.error('Error loading enrollment count for course', course.id, e?.stack || e);
                 }
-            });
 
-            return {
-                ...courseData,
-                enrollmentsCount: enrollmentCount,
-                averageRating: ratingStats?.dataValues?.averageRating ? parseFloat(ratingStats.dataValues.averageRating).toFixed(1) : '0.0',
-                ratingsCount: ratingStats?.dataValues?.ratingsCount || 0,
-                isLive: !!activeLiveSession
-            };
-        }));
+                // Rating stats
+                try {
+                    const ratingStats = await Review.findOne({
+                        where: { courseId: course.id },
+                        attributes: [
+                            [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
+                            [sequelize.fn('COUNT', sequelize.col('id')), 'ratingsCount']
+                        ]
+                    });
+                    if (ratingStats?.dataValues) {
+                        averageRating = ratingStats.dataValues.averageRating
+                            ? parseFloat(ratingStats.dataValues.averageRating).toFixed(1)
+                            : '0.0';
+                        ratingsCount = ratingStats.dataValues.ratingsCount || 0;
+                    }
+                } catch (e) {
+                    averageRating = '0.0';
+                    ratingsCount = 0;
+                    console.error('Error loading rating stats for course', course.id, e?.stack || e);
+                }
+
+                // Live status
+                try {
+                    const activeLiveSession = await LiveSession.findOne({ where: { courseId: course.id, status: 'live' } });
+                    isLive = !!activeLiveSession;
+                } catch (e) {
+                    isLive = false;
+                    console.error('Error checking live status for course', course.id, e?.stack || e);
+                }
+
+                return {
+                    ...courseData,
+                    enrollmentsCount: enrollmentCount,
+                    averageRating,
+                    ratingsCount,
+                    isLive
+                };
+            })
+        );
 
         res.json({ courses: coursesWithStats, page, pages: Math.ceil(count / pageSize) });
     } catch (error) {
@@ -640,11 +662,9 @@ export const deleteLecture = async (req, res) => {
 
         res.json(content);
     } catch (error) {
-        console.error('Failed to load courses (getCourses):', error?.stack || error);
-        res.status(500).json({ 
-            message: 'Failed to load courses',
-            error: error?.message,
-        });
+        // Propagate to upper-level error boundary; keep a friendly message
+        console.error('Error in deleteLecture handler:', error?.stack || error);
+        res.status(500).json({ message: error?.message || 'Internal server error' });
     }
 };
 
@@ -714,7 +734,9 @@ export const approvePreview = async (req, res) => {
 
         res.json({ success: true, message: 'Preview approved', courseId: course.id });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Failed to load courses (getCourses):', error?.stack || error);
+        // Return a stable payload to prevent UI from crashing
+        res.json({ courses: [], page: page || 1, pages: 0, error: 'Failed to load courses' });
     }
 };
 

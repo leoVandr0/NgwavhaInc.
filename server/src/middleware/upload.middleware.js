@@ -86,15 +86,15 @@ export const uploadToR2 = async (file) => {
 
 // Export config
 export const r2Config = {
-    bucketName: process.env.R2_BUCKET_NAME || 'ngwavha',
-    publicDomain: process.env.R2_PUBLIC_URL || '',
+    bucketName: process.env.CLOUDFLARE_R2_BUCKET || 'ngwavha',
+    publicDomain: process.env.CLOUDFLARE_R2_ENDPOINT || '',
 };
 
 // R2 status for runtime checks via status endpoint
 export const r2Status = {
   ready: false,
-  bucketName: process.env.R2_BUCKET_NAME || 'ngwavha',
-  publicDomain: process.env.R2_PUBLIC_URL || '',
+  bucketName: process.env.CLOUDFLARE_R2_BUCKET || 'ngwavha',
+  publicDomain: process.env.CLOUDFLARE_R2_ENDPOINT || '',
   lastError: null
 };
 
@@ -104,25 +104,26 @@ export let r2Upload = multer({ storage: localStorage, fileFilter: fileFilter, li
 // Try to initialize Cloudflare R2 uploader and swap in if configured
 const initializeR2Uploader = async () => {
   try {
-    const hasR2 = process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET_NAME;
+    const hasR2 = process.env.CLOUDFLARE_R2_ENDPOINT && process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY && process.env.CLOUDFLARE_R2_BUCKET;
     if (!hasR2) {
-      console.warn('⚠️ R2 environment variables missing. Using local uploads for now.');
+      console.warn('⚠️ Cloudflare R2 environment variables missing. Using local uploads for now.');
       return;
     }
+
     const { S3Client } = await import('@aws-sdk/client-s3');
     const multerS3Module = await import('multer-s3');
     const multerS3 = multerS3Module.default;
 
     const s3 = new S3Client({
       region: 'auto',
-      endpoint: process.env.R2_ENDPOINT,
+      endpoint: process.env.CLOUDFLARE_R2_ENDPOINT,
       credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+        accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
       }
     });
 
-    const bucketName = process.env.R2_BUCKET_NAME || 'ngwavha';
+    const bucketName = process.env.CLOUDFLARE_R2_BUCKET || 'ngwavha';
     const storageR2 = multerS3({
       s3,
       bucket: bucketName,
@@ -138,12 +139,8 @@ const initializeR2Uploader = async () => {
     // Update runtime status
     r2Status.ready = true;
     r2Status.bucketName = bucketName;
-    r2Status.publicDomain = process.env.R2_PUBLIC_URL || '';
+    r2Status.publicDomain = process.env.CLOUDFLARE_R2_ENDPOINT || '';
     r2Status.lastError = null;
-    // Update runtime status
-    r2Status.ready = true;
-    r2Status.bucketName = bucketName;
-    r2Status.publicDomain = process.env.R2_PUBLIC_URL || '';
     console.log('✅ Cloudflare R2 uploader initialized and active');
     } catch (e) {
     console.warn('⚠️ Could not initialize R2 uploader:', e?.message);

@@ -8,10 +8,11 @@ const router = express.Router();
 router.get('/', protect, async (req, res) => {
     try {
         const notifications = await getUserNotifications(req.user.id);
+        const safeNotifications = Array.isArray(notifications) ? notifications : [];
         res.json({
             success: true,
-            data: notifications,
-            count: notifications.length
+            data: safeNotifications,
+            count: safeNotifications.length
         });
     } catch (error) {
         console.error('Error fetching notifications:', error);

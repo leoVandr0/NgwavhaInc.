@@ -33,6 +33,9 @@ import TermsPage from './pages/legal/TermsPage';
 import CookiesPage from './pages/legal/CookiesPage';
 import CookieConsent from './components/CookieConsent';
 import AdminLayout from './pages/admin/AdminLayout';
+import About from './pages/About.jsx';
+import Contact from './pages/Contact.jsx';
+import HelpCenter from './pages/HelpCenter.jsx';
 import AdminCoursePreviews from './pages/admin/AdminCoursePreviews.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -111,6 +114,9 @@ const App = () => {
                   }
                 />
               </Route>
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/help" element={<HelpCenter />} />
 
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

@@ -27,10 +27,8 @@ export const getMyCourses = async (req, res) => {
         res.json(enrollments);
     } catch (error) {
         console.error('Error in getMyCourses:', error);
-        res.status(500).json({ 
-            message: 'Failed to fetch enrollments',
-            error: error.message 
-        });
+        // Return a safe, empty array to keep UI stable even if backend fails
+        res.status(500).json({ enrollments: [], message: 'Failed to fetch enrollments', error: error?.message });
     }
 };
 
