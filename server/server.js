@@ -35,6 +35,7 @@ console.log('🔍 End Environment Debug\n');
 import authRoutes from './src/routes/auth.routes.js';
 import courseRoutes from './src/routes/course.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
+import instructorRoutes from './src/routes/instructor.routes.js';
 import liveSessionRoutes from './src/routes/liveSession.routes.js';
 import assignmentRoutes from './src/routes/assignment.routes.js';
 import cartRoutes from './src/routes/cart.routes.js';
@@ -117,6 +118,7 @@ app.use('/uploads', express.static(path.join(__dirname, uploadPath), {
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/instructors', instructorRoutes);
 app.use('/api/live-sessions', liveSessionRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/cart', cartRoutes);
