@@ -1,4 +1,8 @@
-import { User, Course, Review, Enrollment, Category } from '../models/index.js';
+import { User } from '../models/User.js';
+import { Course } from '../models/Course.js';
+import { Review } from '../models/Review.js';
+import { Enrollment } from '../models/Enrollment.js';
+import Category from '../models/Category.js';
 import { Op } from 'sequelize';
 
 // @desc    Get public instructors list with filtering and sorting

@@ -1,4 +1,4 @@
-import { Category } from '../models/index.js';
+import Category from '../models/Category.js';
 import slug from 'slug';
 
 // @desc    Get all categories

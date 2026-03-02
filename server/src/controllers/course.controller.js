@@ -1,4 +1,9 @@
-import { Course, User, Category, Enrollment, Review, LiveSession } from '../models/index.js';
+import { Course } from '../models/Course.js';
+import { User } from '../models/User.js';
+import { Category } from '../models/Category.js';
+import { Enrollment } from '../models/Enrollment.js';
+import { Review } from '../models/Review.js';
+import { LiveSession } from '../models/LiveSession.js';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
