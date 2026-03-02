@@ -1,4 +1,9 @@
-import { Enrollment, Course, User, Category, Review, LiveSession } from '../models/index.js';
+import { Enrollment } from '../models/Enrollment.js';
+import { Course } from '../models/Course.js';
+import { User } from '../models/User.js';
+import { Category } from '../models/Category.js';
+import { Review } from '../models/Review.js';
+import { LiveSession } from '../models/LiveSession.js';
 import CourseContent from '../models/nosql/CourseContent.js';
 import sequelize from '../config/mysql.js';
 import logger from '../utils/dbLogger.js';
@@ -27,8 +32,10 @@ export const getMyCourses = async (req, res) => {
         res.json(enrollments);
     } catch (error) {
         console.error('Error in getMyCourses:', error);
+        console.error('Stack:', error.stack);
+        
         // Return a safe, empty array to keep UI stable even if backend fails
-        res.status(500).json({ enrollments: [], message: 'Failed to fetch enrollments', error: error?.message });
+        res.status(500).json([]);
     }
 };
 
