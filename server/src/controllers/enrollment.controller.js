@@ -1,9 +1,9 @@
-import { Enrollment } from '../models/Enrollment.js';
-import { Course } from '../models/Course.js';
-import { User } from '../models/User.js';
+import Enrollment from '../models/Enrollment.js';
+import  Course  from '../models/Course.js';
+import  User from '../models/User.js';
 import Category from '../models/Category.js';
-import { Review } from '../models/Review.js';
-import { LiveSession } from '../models/LiveSession.js';
+import  Review  from '../models/Review.js';
+import  LiveSession  from '../models/LiveSession.js';
 import CourseContent from '../models/nosql/CourseContent.js';
 import sequelize from '../config/mysql.js';
 import logger from '../utils/dbLogger.js';
