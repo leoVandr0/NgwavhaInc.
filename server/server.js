@@ -163,7 +163,9 @@ app.post('/create-railway-admin', async (req, res) => {
         // Import required modules
         const bcrypt = require('bcryptjs');
         const { v4: uuidv4 } = require('uuid');
-        const User = await import('./src/models/User.js').then(m => m.default);
+        
+        // Import User model properly
+        const { default: User } = await import('./src/models/User.js');
         
         // Check if admin already exists
         const existingAdmin = await User.findOne({ where: { email: 'admin@ngwavha.com' } });
@@ -209,9 +211,11 @@ app.post('/create-railway-admin', async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Error creating Railway admin:', error);
+        console.error('❌ Stack trace:', error.stack);
         res.status(500).json({ 
             error: 'Failed to create admin account',
-            details: error.message 
+            details: error.message,
+            stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
         });
     }
 });
