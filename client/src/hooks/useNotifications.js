@@ -18,10 +18,13 @@ const useNotifications = () => {
         try {
             setLoading(true);
             const response = await api.get('/notifications');
-            if (response.data) {
+            if (response.data && Array.isArray(response.data)) {
                 setNotifications(response.data);
                 const unread = response.data.filter(n => !n.read).length;
                 setUnreadCount(unread);
+            } else {
+                console.error('Invalid notifications data:', response.data);
+                setNotifications([]);
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
