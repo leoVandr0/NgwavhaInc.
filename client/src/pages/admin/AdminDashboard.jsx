@@ -86,7 +86,6 @@ const AdminDashboard = () => {
 
     const [dateRange, setDateRange] = useState(null);
     const { currentUser } = useAuth();
-    }, [connected, currentUser?.id, currentUser?.role, joinAdminDashboard]);
 
     // Listen for real-time user registration (teacher or student)
     useEffect(() => {
