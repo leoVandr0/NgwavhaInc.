@@ -30,11 +30,12 @@ async function createAdmin() {
 
         // Insert admin user
         const insertQuery = `
-            INSERT INTO users (id, name, email, password, role, is_verified, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (id, name, email, password, role, is_verified, is_approved, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
             password = VALUES(password), 
-            is_verified = VALUES(is_verified)
+            is_verified = VALUES(is_verified),
+            is_approved = VALUES(is_approved)
         `;
 
         await connection.execute(insertQuery, [
@@ -43,7 +44,8 @@ async function createAdmin() {
             'admin@ngwavha.com',
             hashedPassword,
             'admin',
-            1,
+            1, // is_verified = true
+            1, // is_approved = true (FIXED: was missing)
             new Date(),
             new Date()
         ]);
