@@ -47,6 +47,7 @@ import notificationRoutes from './src/routes/notification.routes.js';
 import studentRoutes from './src/routes/student.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
 import configurePassport from './src/config/passport.js';
+import realtimeService from './src/services/realtime.service.js';
 
 const app = express();
 // Health check endpoint
@@ -197,6 +198,9 @@ const broadcastToAdmins = (event, data) => {
 
 // Make broadcast function available globally
 global.broadcastToAdmins = broadcastToAdmins;
+
+// Initialize real-time service
+realtimeService.initialize(server);
 
 // Database connections (non-blocking)
 connectMySQL().then(async (sequelize) => {

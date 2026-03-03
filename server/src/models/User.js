@@ -84,6 +84,26 @@ const User = sequelize.define('User', {
         allowNull: true,
         comment: 'Admin who approved the instructor'
     },
+    isRejected: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        comment: 'For instructors - marked as rejected by admin'
+    },
+    rejectedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        comment: 'When instructor was rejected by admin'
+    },
+    rejectedBy: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        comment: 'Admin who rejected the instructor'
+    },
+    rejectionReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Reason for rejecting instructor application'
+    },
     resetPasswordToken: {
         type: DataTypes.STRING,
         allowNull: true

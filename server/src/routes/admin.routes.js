@@ -9,7 +9,11 @@ import {
     getRealTimeActivity,
     approveCoursePreview,
     rejectCoursePreview,
-    getPendingCoursePreviews
+    getPendingCoursePreviews,
+    getTeachers,
+    approveInstructor,
+    rejectInstructor,
+    getRealTimeUpdates
 } from '../controllers/admin.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
@@ -21,7 +25,13 @@ router.use(authorize('admin'));
 
 // Dashboard routes
 router.get('/dashboard', getDashboardStats);
+router.get('/dashboard/realtime', getRealTimeUpdates);
 router.get('/activity', getRealTimeActivity);
+
+// Teacher management routes
+router.get('/teachers', getTeachers);
+router.put('/teachers/:teacherId/approve', approveInstructor);
+router.put('/teachers/:teacherId/reject', rejectInstructor);
 
 // Preview approvals for courses
 router.get('/courses/previews/pending', getPendingCoursePreviews);

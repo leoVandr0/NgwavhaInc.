@@ -550,24 +550,262 @@ export const rejectPreview = async (req, res) => {
     if (req.user?.role !== 'admin') return res.status(403).json({ success: false, message: 'Not authorized' });
 
     course.previewStatus = 'rejected';
-    course.previewRejectReason = reason || 'No reason provided';
-    course.previewUploadedAt = new Date();
+    course.previewRejectReason = reason;
     await course.save();
 
     if (global.broadcastToAdmins) {
       global.broadcastToAdmins('preview-rejected', {
         type: 'course_preview_rejected',
         course: { id: course.id, title: course.title },
-        reason: reason || 'No reason provided'
+        reason,
+        message: `Course preview rejected: ${course.title}`
       });
     }
 
-    res.json({ success: true, message: 'Preview rejected', courseId: course.id, reason });
+    res.json({ success: true, message: 'Preview rejected', courseId: course.id });
   } catch (error) {
     console.error('Reject preview error:', error);
     res.status(500).json({ success: false, message: 'Failed to reject preview', error: error.message });
   }
 };
+
+// @desc Get all teachers with filtering and pagination
+// @route GET /api/admin/teachers
+// @access Private (Admin only)
+export const getTeachers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', status = 'all' } = req.query;
+    const offset = (page - 1) * limit;
+
+    const whereClause = { role: 'instructor' };
+    
+    if (search) {
+      whereClause[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    if (status !== 'all') {
+      if (status === 'pending') {
+        whereClause.isApproved = false;
+      } else if (status === 'approved') {
+        whereClause.isApproved = true;
+      } else if (status === 'rejected') {
+        whereClause.isRejected = true;
+      }
+    }
+
+    const { count, rows: teachers } = await User.findAndCountAll({
+      where: whereClause,
+      attributes: [
+        'id', 'name', 'email', 'role', 'isApproved', 'isRejected', 
+        'createdAt', 'avatar', 'bio', 'headline'
+      ],
+      include: [
+        {
+          model: Course,
+          as: 'courses',
+          attributes: ['id'],
+          required: false
+        }
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['createdAt', 'DESC']]
+    });
+
+    const teachersWithStats = teachers.map(teacher => ({
+      ...teacher.toJSON(),
+      courses_count: teacher.courses ? teacher.courses.length : 0,
+      students_count: Math.floor(Math.random() * 100), // Mock data - in real app, sum from enrollments
+    }));
+
+    res.json({
+      success: true,
+      data: teachersWithStats,
+      pagination: {
+        total: count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get teachers error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch teachers', error: error.message });
+  }
+};
+
+// @desc Approve instructor
+// @route PUT /api/admin/teachers/:teacherId/approve
+// @access Private (Admin only)
+export const approveInstructor = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const instructor = await User.findByPk(teacherId);
+    if (!instructor || instructor.role !== 'instructor') {
+      return res.status(404).json({ success: false, message: 'Instructor not found' });
+    }
+
+    instructor.isApproved = true;
+    instructor.isRejected = false;
+    instructor.approvedAt = new Date();
+    instructor.approvedBy = req.user.id;
+    await instructor.save();
+
+    // Broadcast real-time update to all admin clients
+    if (global.broadcastToAdmins) {
+      global.broadcastToAdmins('instructor-approved', {
+        type: 'instructor_approved',
+        instructor: {
+          id: instructor.id,
+          name: instructor.name,
+          email: instructor.email
+        },
+        approvedBy: req.user.name,
+        message: `Instructor ${instructor.name} has been approved`
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Instructor approved successfully',
+      instructor: {
+        id: instructor.id,
+        name: instructor.name,
+        email: instructor.email,
+        isApproved: true
+      }
+    });
+  } catch (error) {
+    console.error('Approve instructor error:', error);
+    res.status(500).json({ success: false, message: 'Failed to approve instructor', error: error.message });
+  }
+};
+
+// @desc Reject instructor
+// @route PUT /api/admin/teachers/:teacherId/reject
+// @access Private (Admin only)
+export const rejectInstructor = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { reason } = req.body;
+    
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const instructor = await User.findByPk(teacherId);
+    if (!instructor || instructor.role !== 'instructor') {
+      return res.status(404).json({ success: false, message: 'Instructor not found' });
+    }
+
+    instructor.isApproved = false;
+    instructor.isRejected = true;
+    instructor.rejectedAt = new Date();
+    instructor.rejectedBy = req.user.id;
+    instructor.rejectionReason = reason;
+    await instructor.save();
+
+    // Broadcast real-time update to all admin clients
+    if (global.broadcastToAdmins) {
+      global.broadcastToAdmins('instructor-rejected', {
+        type: 'instructor_rejected',
+        instructor: {
+          id: instructor.id,
+          name: instructor.name,
+          email: instructor.email
+        },
+        rejectedBy: req.user.name,
+        reason,
+        message: `Instructor ${instructor.name} has been rejected`
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Instructor rejected successfully',
+      instructor: {
+        id: instructor.id,
+        name: instructor.name,
+        email: instructor.email,
+        isRejected: true
+      }
+    });
+  } catch (error) {
+    console.error('Reject instructor error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reject instructor', error: error.message });
+  }
+};
+
+// @desc Get real-time dashboard updates
+// @route GET /api/admin/dashboard/realtime
+// @access Private (Admin only)
+export const getRealTimeUpdates = async (req, res) => {
+  try {
+    // Get latest statistics
+    const totalUsers = await User.count();
+    const pendingTeachers = await User.count({ 
+      where: { 
+        role: 'instructor',
+        isApproved: false 
+      } 
+    });
+    const totalCourses = await Course.count();
+    
+    // Get recent activity (last 5 items)
+    const recentActivity = await User.findAll({
+      limit: 5,
+      order: [['createdAt', 'DESC']],
+      attributes: ['id', 'name', 'email', 'role', 'createdAt', 'isApproved']
+    });
+
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          totalUsers,
+          pendingTeachers,
+          totalCourses
+        },
+        recentActivity: recentActivity.map(user => ({
+          id: user.id,
+          type: user.role === 'instructor' && !user.isApproved ? 'teacher_approval' : 
+                user.role === 'instructor' ? 'new_teacher' : 'new_student',
+          user: user.name,
+          action: user.role === 'instructor' && !user.isApproved ? 'Applied to become teacher' : 
+                  user.role === 'instructor' ? 'Registered as teacher' : 'Registered as student',
+          time: formatTimeAgo(user.createdAt),
+          status: user.isApproved ? 'success' : user.role === 'instructor' ? 'pending' : 'success'
+        })),
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Real-time updates error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch real-time updates', error: error.message });
+  }
+};
+
+const formatTimeAgo = (date) => {
+    const now = new Date();
+    const d = new Date(date);
+    const diff = now - d;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours} hr ago`;
+    return `${days} day(s) ago`;
+};
+
 export default {
     getDashboardStats,
     getAllUsers,
@@ -578,5 +816,9 @@ export default {
     getRealTimeActivity,
     getPendingCoursePreviews,
     approveCoursePreview,
-    rejectPreview
+    rejectPreview,
+    getTeachers,
+    approveInstructor,
+    rejectInstructor,
+    getRealTimeUpdates
 };

@@ -10,12 +10,15 @@ import {
     Eye,
     BarChart3,
     AlertTriangle,
-    RefreshCw
+    RefreshCw,
+    Wifi,
+    WifiOff
 } from 'lucide-react';
-import { Card, Statistic, Tag, Button, DatePicker, Row, Col, Badge, Tooltip } from 'antd';
+import { Card, Statistic, Tag, Button, DatePicker, Row, Col, Badge, Tooltip, notification } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import ResponsiveTable from '../../components/layout/ResponsiveTable';
 import useRealTimeData from '../../hooks/useRealTimeData';
+import useRealTimeAdmin from '../../hooks/useRealTimeAdmin';
 import api from '../../services/api';
 
 const { RangePicker } = DatePicker;
@@ -48,16 +51,41 @@ const AdminDashboard = () => {
     const [recentActivity, setRecentActivity] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState(0);
     const [activeSessions, setActiveSessions] = useState(0);
-    const [dateRange, setDateRange] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const { currentUser } = useAuth();
-    const { connected, joinAdminDashboard, onlineUsers: rtOnline, activeSessions: rtSessions } = useRealTimeData();
+    const [loading, setLoading] = useState(false);
+    
+    // Real-time admin hook
+    const { isConnected, realTimeData, lastUpdate, requestUpdate } = useRealTimeAdmin();
 
-    // Join admin dashboard room when connected so we receive real-time events
+    // Update state when real-time data changes
     useEffect(() => {
-        if (connected && currentUser?.role === 'admin') {
-            joinAdminDashboard(currentUser.id);
+        if (realTimeData.stats) {
+            setStats(prev => ({
+                ...prev,
+                totalUsers: realTimeData.stats.totalUsers || prev.totalUsers,
+                pendingTeachers: realTimeData.stats.pendingTeachers || prev.pendingTeachers,
+                totalCourses: realTimeData.stats.totalCourses || prev.totalCourses
+            }));
         }
+        
+        if (realTimeData.recentActivity) {
+            setRecentActivity(realTimeData.recentActivity);
+        }
+    }, [realTimeData]);
+
+    // Show notification for real-time updates
+    useEffect(() => {
+        if (lastUpdate) {
+            notification.info({
+                message: 'Dashboard Updated',
+                description: 'Real-time data refreshed',
+                duration: 2,
+                placement: 'topRight'
+            });
+        }
+    }, [lastUpdate]);
+
+    const [dateRange, setDateRange] = useState(null);
+    const { currentUser } = useAuth();
     }, [connected, currentUser?.id, currentUser?.role, joinAdminDashboard]);
 
     // Listen for real-time user registration (teacher or student)
@@ -332,35 +360,39 @@ const AdminDashboard = () => {
         <div className="space-y-6">
             {/* Header */}
             <div className="bg-gradient-to-r from-dark-900 to-dark-800 border border-dark-700 rounded-xl p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">Admin Dashboard</h1>
-                        <p className="text-dark-400">
-                            Welcome back, {currentUser?.name}. Here's what's happening on your platform.
-                        </p>
+                        <h1 className="text-3xl font-bold text-white mb-2">Admin Dashboard</h1>
+                        <p className="text-gray-400">Real-time platform overview and management</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Tooltip title={connected ? "Real-time connected" : "Using polling fallback"}>
-                            <Badge
-                                status={connected ? "success" : "warning"}
-                                text={connected ? "Live" : "Polling"}
-                                className={connected ? "text-green-500" : "text-yellow-500"}
-                            />
-                        </Tooltip>
-                        <Button
-                            type="primary"
-                            className="bg-primary-500 hover:bg-primary-600 border-primary-500"
-                            onClick={() => window.location.reload()}
+                        <div className="flex items-center gap-2">
+                            {isConnected ? (
+                                <>
+                                    <Wifi className="text-green-500" size={20} />
+                                    <span className="text-green-500 text-sm">Connected</span>
+                                </>
+                            ) : (
+                                <>
+                                    <WifiOff className="text-red-500" size={20} />
+                                    <span className="text-red-500 text-sm">Disconnected</span>
+                                </>
+                            )}
+                        </div>
+                        <Button 
+                            icon={<RefreshCw size={16} />}
+                            onClick={requestUpdate}
+                            loading={loading}
                         >
-                            <RefreshCw size={16} className="mr-2" />
                             Refresh
                         </Button>
-                        <RangePicker
-                            className="bg-dark-800 border-dark-600"
-                            onChange={setDateRange}
-                        />
                     </div>
                 </div>
+                {lastUpdate && (
+                    <div className="mt-2 text-xs text-gray-500">
+                        Last updated: {lastUpdate.toLocaleTimeString()}
+                    </div>
+                )}
             </div>
 
             {/* Real-time User Stats */}

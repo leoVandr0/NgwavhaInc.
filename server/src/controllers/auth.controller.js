@@ -92,6 +92,22 @@ export const registerUser = async (req, res) => {
         user = await User.create(userData);
         console.log('7. ✅ User created successfully. ID:', user.id);
 
+        // Notify admins if this is an instructor registration
+        if (isInstructor && global.broadcastToAdmins) {
+            global.broadcastToAdmins('instructor-application', {
+                type: 'instructor_application',
+                instructor: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    createdAt: user.createdAt
+                },
+                message: `New instructor application: ${user.name}`,
+                timestamp: new Date().toISOString()
+            });
+        }
+
         // Generate token
         console.log('8. Generating JWT token...');
         console.log('   - JWT_SECRET exists:', !!process.env.JWT_SECRET);
