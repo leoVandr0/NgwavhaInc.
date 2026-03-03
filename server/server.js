@@ -151,6 +151,71 @@ app.get('/api/health', (req, res) => {
     res.json(health);
 });
 
+// TEMPORARY ADMIN SETUP FOR RAILWAY - REMOVE AFTER USE
+app.post('/create-railway-admin', async (req, res) => {
+    if (process.env.NODE_ENV !== 'production') {
+        return res.status(403).json({ error: 'This endpoint is for production only' });
+    }
+    
+    try {
+        console.log('🔧 Creating Railway admin account...');
+        
+        // Import required modules
+        const bcrypt = require('bcryptjs');
+        const { v4: uuidv4 } = require('uuid');
+        const User = await import('./src/models/User.js').then(m => m.default);
+        
+        // Check if admin already exists
+        const existingAdmin = await User.findOne({ where: { email: 'admin@ngwavha.com' } });
+        
+        if (existingAdmin) {
+            // Update existing admin
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await existingAdmin.update({
+                password: hashedPassword,
+                role: 'admin',
+                isVerified: true,
+                isApproved: true
+            });
+            console.log('✅ Updated existing Railway admin account');
+        } else {
+            // Create new admin
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await User.create({
+                id: uuidv4(),
+                name: 'Admin User',
+                email: 'admin@ngwavha.com',
+                password: hashedPassword,
+                role: 'admin',
+                isVerified: true,
+                isApproved: true
+            });
+            console.log('✅ Created new Railway admin account');
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'Railway admin account created successfully!',
+            login: {
+                email: 'admin@ngwavha.com',
+                password: 'admin123'
+            },
+            next_steps: [
+                '1. Go to your Railway app login page',
+                '2. Use these credentials to login as admin',
+                '3. Remove this endpoint from server.js for security',
+                '4. Change the default password after first login'
+            ]
+        });
+    } catch (error) {
+        console.error('❌ Error creating Railway admin:', error);
+        res.status(500).json({ 
+            error: 'Failed to create admin account',
+            details: error.message 
+        });
+    }
+});
+
 // SPA fallback - for React Router (must come after API routes)
 app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
