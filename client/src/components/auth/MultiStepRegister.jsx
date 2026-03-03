@@ -109,7 +109,7 @@ const MultiStepRegister = ({
                 return (
                     <NotificationPreferences
                         preferences={notificationPrefs}
-                        onChange={setNotificationPrefs}
+                        onChange={handleNotificationSubmit}
                         onSkip={handleNext}
                     />
                 );
