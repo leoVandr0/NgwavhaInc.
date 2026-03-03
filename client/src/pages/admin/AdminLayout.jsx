@@ -6,7 +6,7 @@ import {
     Typography 
 } from 'antd';
 import {
-    Dashboard,
+    LayoutDashboard,
     Users,
     UserCheck,
     BookOpen,
@@ -26,7 +26,7 @@ const AdminLayout = () => {
     const menuItems = [
         {
             key: '/admin/dashboard',
-            icon: <Dashboard size={18} />,
+            icon: <LayoutDashboard size={18} />,
             label: <Link to="/admin/dashboard">Dashboard</Link>,
         },
         {
