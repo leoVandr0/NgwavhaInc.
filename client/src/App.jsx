@@ -36,9 +36,14 @@ import AdminLayout from './pages/admin/AdminLayout';
 import About from './pages/About.jsx';
 import Contact from './pages/Contact.jsx';
 import HelpCenter from './pages/HelpCenter.jsx';
-import AdminCoursePreviews from './pages/admin/AdminCoursePreviews.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminTeachers from './pages/admin/AdminTeachers';
+import AdminCourses from './pages/admin/AdminCourses';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminFinance from './pages/admin/AdminFinance';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminCoursePreviews from './pages/admin/AdminCoursePreviews.jsx';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import TestNotificationPage from './pages/settings/TestNotificationPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -147,7 +152,12 @@ const App = () => {
                 <Route index element={<AdminDashboard />} />
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="teachers" element={<AdminTeachers />} />
+                <Route path="courses" element={<AdminCourses />} />
                 <Route path="course-previews" element={<AdminCoursePreviews />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="finance" element={<AdminFinance />} />
+                <Route path="settings" element={<AdminSettings />} />
               </Route>
 
               <Route
