@@ -1,7 +1,6 @@
 import { User } from '../models/User.js';
 import Course from '../models/Course.js';
 import { Review } from '../models/Review.js';
-import { Enrollment } from '../models/Enrollment.js';
 import Category from '../models/Category.js';
 import { Op } from 'sequelize';
 
