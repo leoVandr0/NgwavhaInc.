@@ -205,6 +205,7 @@ export const loginUser = async (req, res) => {
 
         // Check password
         const isMatch = await user.matchPassword(password);
+        console.log('Login attempt result:', { userId: user.id, email: user.email, role: user.role, passwordMatched: isMatch });
         if (!isMatch) {
             console.log('Login failed: Password mismatch for user:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });

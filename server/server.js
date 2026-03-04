@@ -245,6 +245,24 @@ server.listen(PORT, () => {
                 const { v4: uuidv4 } = await import('uuid');
                 const bcrypt = (await import('bcryptjs')).default;
                 const hashedPassword = await bcrypt.hash(adminPassword, 10);
+                await User.create({ id: uuidv4(), name: 'Railway Admin', email: adminEmail, password: hashedPassword, role: 'admin', isVerified: true, isApproved: true });
+                console.log('✅ Railway admin seeded:', adminEmail);
+            } else {
+                console.log('Railway admin already exists:', adminEmail);
+            }
+        } catch (err) {
+            console.error('❗ Railway admin seed failed:', err?.message);
+        }
+        // Auto-seed Railway admin account for production login
+        try {
+            const { default: User } = await import('./src/models/User.js');
+            const adminEmail = process.env.RAILWAY_ADMIN_EMAIL || 'admin@ngwavha.com';
+            const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || 'admin123';
+            const existing = await User.findOne({ where: { email: adminEmail } });
+            if (!existing) {
+                const { v4: uuidv4 } = await import('uuid');
+                const bcrypt = (await import('bcryptjs')).default;
+                const hashedPassword = await bcrypt.hash(adminPassword, 10);
                 await User.create({
                     id: uuidv4(),
                     name: 'Railway Admin',
