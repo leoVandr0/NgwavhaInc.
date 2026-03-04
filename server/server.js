@@ -171,23 +171,21 @@ app.post('/create-railway-admin', async (req, res) => {
         const existingAdmin = await User.findOne({ where: { email: 'admin@ngwavha.com' } });
 
         if (existingAdmin) {
-            // Update existing admin
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            // Update existing admin - NO manual hashing
             await existingAdmin.update({
-                password: hashedPassword,
+                password: 'admin123',
                 role: 'admin',
                 isVerified: true,
                 isApproved: true
             });
             console.log('✅ Updated existing Railway admin account');
         } else {
-            // Create new admin
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            // Create new admin - NO manual hashing
             await User.create({
                 id: uuidv4(),
                 name: 'Admin User',
                 email: 'admin@ngwavha.com',
-                password: hashedPassword,
+                password: 'admin123',
                 role: 'admin',
                 isVerified: true,
                 isApproved: true

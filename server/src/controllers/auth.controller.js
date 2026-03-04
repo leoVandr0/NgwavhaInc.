@@ -208,10 +208,9 @@ export const loginUser = async (req, res) => {
         // If admin user exists without a password (legacy data or missing seed), seed password from env
         if (!user.password) {
             if (user.role === 'admin') {
-                const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || process.env.railway_admin_password || 'admin123';
-                const bcrypt = (await import('bcryptjs')).default;
-                const hashedPassword = await bcrypt.hash(adminPassword, 10);
-                await user.update({ password: hashedPassword });
+                const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || process.env.railway_admin_password || 'admin123';
+                // Remove manual hash; beforeUpdate hook handles it
+                await user.update({ password: adminPassword });
                 console.log('✅ Admin password seeded from env for login');
             } else {
                 console.log('Login failed: User has no password (OAuth user)');
