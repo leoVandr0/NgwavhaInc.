@@ -35,41 +35,41 @@ const useStudentData = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             // Fetch all student data in parallel
             const [statsRes, coursesRes, progressRes, achievementsRes, activityRes] = await Promise.all([
-                api.get('/api/student/stats'),
-                api.get('/api/student/courses'),
-                api.get('/api/student/progress'),
-                api.get('/api/student/achievements'),
-                api.get('/api/student/activity')
+                api.get('/student/stats'),
+                api.get('/student/courses'),
+                api.get('/student/progress'),
+                api.get('/student/achievements'),
+                api.get('/student/activity')
             ]);
 
-            // Set real data from API
-            if (statsRes.data) {
-                setStudentStats(statsRes.data);
+            // Set real data from API (backend returns { success: true, data: [...] })
+            if (statsRes.data?.data) {
+                setStudentStats(statsRes.data.data);
             }
-            
-            if (coursesRes.data) {
-                setEnrolledCourses(coursesRes.data);
+
+            if (coursesRes.data?.data) {
+                setEnrolledCourses(coursesRes.data.data);
             }
-            
-            if (progressRes.data) {
-                setWeeklyProgress(progressRes.data);
+
+            if (progressRes.data?.data) {
+                setWeeklyProgress(progressRes.data.data);
             }
-            
-            if (achievementsRes.data) {
-                setAchievements(achievementsRes.data);
+
+            if (achievementsRes.data?.data) {
+                setAchievements(achievementsRes.data.data);
             }
-            
-            if (activityRes.data) {
-                setRecentActivity(activityRes.data);
+
+            if (activityRes.data?.data) {
+                setRecentActivity(activityRes.data.data);
             }
 
         } catch (error) {
             console.error('Error fetching student data:', error);
             setError(error.message || 'Failed to load student data');
-            
+
             // Set empty state instead of dummy data
             setStudentStats({
                 enrolledCourses: 0,
@@ -79,7 +79,7 @@ const useStudentData = () => {
                 learningStreak: 0,
                 averageProgress: 0
             });
-            
+
             setEnrolledCourses([]);
             setWeeklyProgress(getEmptyWeeklyProgress());
             setAchievements([]);
@@ -106,9 +106,9 @@ const useStudentData = () => {
     };
 
     const updateCourseProgress = (courseId, newProgress) => {
-        setEnrolledCourses(prev => 
-            prev.map(course => 
-                course.id === courseId 
+        setEnrolledCourses(prev =>
+            prev.map(course =>
+                course.id === courseId
                     ? { ...course, progress: newProgress }
                     : course
             )
