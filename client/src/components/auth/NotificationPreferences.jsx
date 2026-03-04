@@ -236,201 +236,166 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
     };
 
     return (
-        <div className="bg-dark-900 rounded-lg p-6 space-y-6">
+        <div className="bg-dark-950/40 border border-dark-800 rounded-2xl overflow-hidden">
             {/* Header */}
-            <div className="text-center">
-                <h3 className="text-xl font-bold text-white mb-2">
-                    Choose How You Want to Stay Updated
+            <div className="p-6 border-b border-dark-800 bg-dark-900/50">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                    Notification Preferences
                 </h3>
-                <p className="text-dark-400 text-sm">
-                    Select your preferred notification channels. You can always change these later in settings.
+                <p className="text-dark-400 text-xs">
+                    Get updates where you want them. You can customize these at any time.
                 </p>
             </div>
 
-            {/* Main Notification Channels */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {notificationTypes.map((type) => (
-                    <div
-                        key={type.key}
-                        className={`relative border-2 rounded-xl p-5 transition-all duration-200 ${preferences[type.key]
-                                ? 'border-primary-500 bg-primary-500/5 shadow-lg shadow-primary-500/10'
-                                : 'border-dark-700 bg-dark-800/50 hover:border-dark-600 hover:bg-dark-800'
-                            }`}
-                        onClick={() => handleToggle(type.key)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleToggle(type.key);
-                            }
-                        }}
-                    >
-                        <div className="flex items-start gap-4">
-                            <div className={`flex-shrink-0 p-2.5 rounded-xl ${getColorClasses(type.color, preferences[type.key])} shadow-inner`}>
-                                {type.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                    <h4 className="font-bold text-white text-base leading-tight">
-                                        {type.title}
-                                    </h4>
-                                    {type.recommended && (
-                                        <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-green-500/20 flex items-center gap-1">
-                                            <Star className="w-2.5 h-2.5 fill-current" />
-                                            Recommended
-                                        </span>
-                                    )}
-                                    {type.primary && (
-                                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-blue-500/20">
-                                            Primary
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-dark-400 text-sm leading-relaxed mb-3">
-                                    {type.description}
-                                </p>
-
-                                {type.requiresPhone && (
-                                    <div
-                                        className="mt-4 space-y-3 p-4 bg-dark-900/50 rounded-xl border border-dark-700"
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
-                                        <div className="relative">
-                                            <label className="block text-xs font-bold text-dark-300 uppercase tracking-widest mb-2 px-1">
-                                                Phone Number
-                                            </label>
-                                            <div className="relative group">
-                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-dark-400 group-focus-within:text-primary-500 transition-colors border-r border-dark-600 pr-3 pointer-events-none">
-                                                    <span className="text-sm font-bold">+263</span>
-                                                </div>
-                                                <input
-                                                    type="tel"
-                                                    value={(phoneNumbers[type.key] || '').replace('+263 ', '')}
-                                                    onChange={(e) => handlePhoneChange(type.key, '+263 ' + e.target.value.replace(/\D/g, ''))}
-                                                    placeholder="77 123 4567"
-                                                    disabled={!preferences[type.key]}
-                                                    className={`w-full pl-[72px] pr-4 py-3 bg-dark-800 border-2 rounded-xl text-white font-medium placeholder-dark-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all ${preferences[type.key]
-                                                            ? 'border-dark-700 focus:border-primary-500'
-                                                            : 'opacity-50 cursor-not-allowed border-transparent'
-                                                        }`}
-                                                />
-                                            </div>
-                                            {phoneErrors[type.key] && (
-                                                <p className="text-red-400 text-[11px] mt-2 flex items-center gap-1.5 px-1 animate-in fade-in slide-in-from-top-1">
-                                                    <Info className="w-3.5 h-3.5" />
-                                                    {phoneErrors[type.key]}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px] text-dark-500 bg-dark-800/30 p-2 rounded-lg border border-dark-700/50">
-                                            <Lock className="w-3 h-3 text-primary-500/50" />
-                                            <span>Encryption active • Numbers are never shared</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex-shrink-0 pt-0.5">
-                                {preferences[type.key] ? (
-                                    <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/20">
-                                        <CheckCircle className="w-4 h-4 text-dark-950 stroke-[3px]" />
-                                    </div>
-                                ) : (
-                                    <div className="w-6 h-6 border-2 border-dark-700 rounded-full flex items-center justify-center text-dark-600">
-                                        <X className="w-3 h-3" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Notification Categories */}
-            <div>
-                <button
-                    type="button"
-                    onClick={() => setShowDetails(!showDetails)}
-                    className="flex items-center gap-2 text-primary-400 hover:text-primary-300 text-sm font-medium"
-                >
-                    <Info className="w-4 h-4" />
-                    {showDetails ? 'Hide' : 'Show'} notification categories
-                </button>
-
-                {showDetails && (
-                    <div className="mt-4 space-y-3">
-                        <p className="text-dark-400 text-sm mb-4">
-                            Choose what types of notifications you want to receive:
-                        </p>
-                        {notificationCategories.map((category) => (
+            <div className="p-2">
+                {/* Channels List */}
+                <div className="space-y-1">
+                    {notificationTypes.map((type) => (
+                        <div key={type.key} className="group">
                             <div
-                                key={category.key}
-                                className="flex items-center justify-between p-3 bg-dark-800 rounded-lg border border-dark-700"
+                                className={`flex items-center justify-between p-4 rounded-xl transition-all ${preferences[type.key]
+                                    ? 'bg-primary-500/5'
+                                    : 'hover:bg-dark-800/50'
+                                    }`}
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className="p-1.5 bg-dark-700 rounded text-primary-400">
-                                        {category.icon}
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-2 rounded-lg ${getColorClasses(type.color, preferences[type.key])} shadow-sm`}>
+                                        {React.cloneElement(type.icon, { className: "w-4 h-4" })}
                                     </div>
                                     <div>
-                                        <h5 className="font-medium text-white text-sm">
-                                            {category.title}
-                                        </h5>
-                                        <p className="text-dark-400 text-xs">
-                                            {category.description}
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium text-white">{type.title}</span>
+                                            {type.recommended && (
+                                                <span className="text-[10px] bg-green-500/10 text-green-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border border-green-500/10">
+                                                    Best
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-dark-500 text-[11px] leading-tight mt-0.5">
+                                            {type.description}
                                         </p>
                                     </div>
                                 </div>
+
                                 <button
                                     type="button"
-                                    onClick={() => handleCategoryToggle(category.key)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences[category.key]
-                                            ? 'bg-primary-500'
-                                            : 'bg-dark-600'
+                                    onClick={() => handleToggle(type.key)}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${preferences[type.key] ? 'bg-primary-500' : 'bg-dark-700'
                                         }`}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences[category.key]
-                                                ? 'translate-x-6'
-                                                : 'translate-x-1'
+                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${preferences[type.key] ? 'translate-x-4' : 'translate-x-0'
                                             }`}
                                     />
                                 </button>
                             </div>
-                        ))}
-                    </div>
-                )}
+
+                            {/* Inline Phone Input for WhatsApp/SMS */}
+                            {type.requiresPhone && preferences[type.key] && (
+                                <div className="mx-4 mb-4 mt-1 p-4 bg-dark-900/80 rounded-xl border border-dark-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative flex-1">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none border-r border-dark-700 pr-3 my-2">
+                                                <span className="text-xs font-bold text-dark-400">+263</span>
+                                            </div>
+                                            <input
+                                                type="tel"
+                                                value={(phoneNumbers[type.key] || '').replace('+263 ', '')}
+                                                onChange={(e) => handlePhoneChange(type.key, '+263 ' + e.target.value.replace(/\D/g, ''))}
+                                                placeholder="77 123 4567"
+                                                className="block w-full pl-16 pr-3 py-2 bg-dark-950 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-600 focus:outline-none focus:ring-1 focus:ring-primary-500/50 focus:border-primary-500 transition-all font-medium"
+                                            />
+                                        </div>
+                                        <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-dark-500 whitespace-nowrap bg-dark-950 border border-dark-800 px-2 py-1.5 rounded-md">
+                                            <Shield className="w-3 h-3 text-primary-500/40" />
+                                            <span>Private</span>
+                                        </div>
+                                    </div>
+                                    {phoneErrors[type.key] && (
+                                        <p className="text-red-500/90 text-[10px] mt-2 font-medium flex items-center gap-1">
+                                            <Info className="w-3 h-3" />
+                                            {phoneErrors[type.key]}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* More Settings Footer */}
+                <div className="mt-4 pt-2 border-t border-dark-800/50 px-4 pb-4">
+                    <button
+                        type="button"
+                        onClick={() => setShowDetails(!showDetails)}
+                        className="flex items-center gap-2 text-dark-400 hover:text-white text-[11px] font-medium transition-colors"
+                    >
+                        <div className={`p-1 rounded bg-dark-800 transition-transform ${showDetails ? 'rotate-180' : ''}`}>
+                            <Info className="w-3 h-3" />
+                        </div>
+                        {showDetails ? 'Hide' : 'Customize'} specific alerts
+                    </button>
+
+                    {showDetails && (
+                        <div className="mt-3 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            {notificationCategories.map((category) => (
+                                <div
+                                    key={category.key}
+                                    className="flex items-center justify-between p-2.5 bg-dark-900/40 rounded-lg border border-dark-800/50"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-1.5 bg-dark-800 rounded text-dark-400 group-hover:text-primary-400 transition-colors">
+                                            {React.cloneElement(category.icon, { className: "w-3 h-3" })}
+                                        </div>
+                                        <div>
+                                            <h5 className="font-medium text-dark-200 text-xs">
+                                                {category.title}
+                                            </h5>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCategoryToggle(category.key)}
+                                        className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${preferences[category.key] ? 'bg-primary-500/80' : 'bg-dark-700'
+                                            }`}
+                                    >
+                                        <span
+                                            className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${preferences[category.key] ? 'translate-x-3.5' : 'translate-x-1'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Save Status Message */}
+            {/* Save Status Overlay (Subtle) */}
             {saveStatus && (
-                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${saveStatus.includes('blocked')
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                        : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    }`}>
-                    {saveStatus.includes('blocked') ? (
-                        <Info className="w-4 h-4" />
-                    ) : (
-                        <CheckCircle className="w-4 h-4" />
-                    )}
-                    {saveStatus}
+                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-dark-800 border border-primary-500/20 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 backdrop-blur-md">
+                        <CheckCircle className="w-3 h-3 text-primary-500" />
+                        {saveStatus}
+                    </div>
                 </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            {/* Action Footer */}
+            <div className="p-6 bg-dark-900/80 border-t border-dark-800 flex gap-3">
                 <button
                     type="button"
                     onClick={onSkip}
-                    className="flex-1 px-4 py-3 border border-dark-700 text-dark-300 rounded-lg hover:bg-dark-800 transition-colors"
+                    className="flex-1 px-4 py-2.5 border border-dark-700 text-dark-400 text-sm font-medium rounded-xl hover:bg-dark-800 hover:text-white transition-all"
                 >
-                    Skip for Now
+                    Skip
                 </button>
                 <button
                     type="button"
                     onClick={() => onChange(preferences)}
-                    className="flex-1 px-4 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                    className="flex-1 px-4 py-2.5 bg-primary-500 text-dark-950 text-sm font-bold rounded-xl hover:bg-primary-400 shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
                 >
-                    Continue
+                    Save & Continue
                 </button>
             </div>
         </div>
