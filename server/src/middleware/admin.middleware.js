@@ -36,9 +36,15 @@ export const adminOnly = (req, res, next) => {
         });
     }
 
-    // In a real app, you might have an 'admin' role or specific permissions
-    // For now, we'll assume any authenticated user can access admin routes
-    // In production, you'd check: req.user.role === 'admin' or specific permissions
+    // Enforce admin role in production by checking the token payload
+    const isAdmin = req.user?.role === 'admin';
+    // If you want to support an admin flag in the payload, adjust accordingly.
+    if (!isAdmin) {
+        return res.status(403).json({
+            success: false,
+            message: 'Forbidden. Admins only.'
+        });
+    }
     next();
 };
 

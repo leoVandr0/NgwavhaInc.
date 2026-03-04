@@ -69,40 +69,10 @@ const User = sequelize.define('User', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    isApproved: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        comment: 'For instructors - requires admin approval before they can create courses'
-    },
-    approvedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        comment: 'When instructor was approved by admin'
-    },
-    approvedBy: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        comment: 'Admin who approved the instructor'
-    },
-    isRejected: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        comment: 'For instructors - marked as rejected by admin'
-    },
-    rejectedAt: {
-        type: DataTypes.DATE,
-        allowNull: true,
-        comment: 'When instructor was rejected by admin'
-    },
-    rejectedBy: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        comment: 'Admin who rejected the instructor'
-    },
-    rejectionReason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-        comment: 'Reason for rejecting instructor application'
+    instructorStatus: {
+        type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+        defaultValue: 'PENDING',
+        comment: 'Instructor application status - PENDING, APPROVED, or REJECTED'
     },
     resetPasswordToken: {
         type: DataTypes.STRING,

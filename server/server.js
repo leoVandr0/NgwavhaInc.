@@ -18,7 +18,6 @@ import session from 'express-session';
 import MySQLStore from 'express-mysql-session';
 import compression from 'compression';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
 import { connectMySQL } from './src/config/mysql.js';
 import connectMongoDB from './src/config/mongodb.js';
 
@@ -42,6 +41,7 @@ import assignmentRoutes from './src/routes/assignment.routes.js';
 import cartRoutes from './src/routes/cart.routes.js';
 import wishlistRoutes from './src/routes/wishlist.routes.js';
 import enrollmentRoutes from './src/routes/enrollment.routes.js';
+import adminRoutes from './src/routes/admin.routes.js';
 import analyticsRoutes from './src/routes/analytics.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import notificationRoutes from './src/routes/notification.routes.js';
@@ -123,6 +123,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -231,9 +232,35 @@ server.listen(PORT, () => {
 });
 
 // Database connections (non-blocking)
-connectMySQL().then(async (sequelize) => {
+ connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
+        // Auto-seed Railway admin account for production login
+        try {
+            const { default: User } = await import('./src/models/User.js');
+            const adminEmail = process.env.RAILWAY_ADMIN_EMAIL || 'admin@ngwavha.com';
+            const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || 'admin123';
+            const existing = await User.findOne({ where: { email: adminEmail } });
+            if (!existing) {
+                const { v4: uuidv4 } = await import('uuid');
+                const bcrypt = (await import('bcryptjs')).default;
+                const hashedPassword = await bcrypt.hash(adminPassword, 10);
+                await User.create({
+                    id: uuidv4(),
+                    name: 'Railway Admin',
+                    email: adminEmail,
+                    password: hashedPassword,
+                    role: 'admin',
+                    isVerified: true,
+                    isApproved: true
+                });
+                console.log('✅ Railway admin account created:', adminEmail);
+            } else {
+                console.log('Railway admin already exists:', adminEmail);
+            }
+        } catch (err) {
+            console.error('❗ Railway admin seed failed:', err?.message);
+        }
 
         // Run notification preferences migration
         try {
@@ -263,6 +290,16 @@ connectMySQL().then(async (sequelize) => {
             console.log('✅ Instructor rejection migration completed');
         } catch (migrationError) {
             console.error('❌ Instructor rejection migration failed:', migrationError.message);
+        }
+
+        // Run instructor status migration
+        try {
+            console.log('🔄 Running instructor status migration...');
+            const { up } = await import('./src/migrations/add-instructor-status.js');
+            await up();
+            console.log('✅ Instructor status migration completed');
+        } catch (migrationError) {
+            console.error('❌ Instructor status migration failed:', migrationError.message);
         }
 
         seedCategories().catch((error) => {

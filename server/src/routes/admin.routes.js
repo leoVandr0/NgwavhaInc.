@@ -1,48 +1,17 @@
-import express from 'express';
-import {
-    getDashboardStats,
-    getAllUsers,
-    approveTeacher,
-    declineTeacher,
-    deleteUser,
-    getUserDetails,
-    getRealTimeActivity,
-    approveCoursePreview,
-    rejectCoursePreview,
-    getPendingCoursePreviews,
-    getTeachers,
-    approveInstructor,
-    rejectInstructor,
-    getRealTimeUpdates
-} from '../controllers/admin.controller.js';
-import { protect, authorize } from '../middleware/auth.middleware.js';
+import { Router } from 'express';
+import { getPendingInstructors, approveInstructor } from '../controllers/admin.controller.js';
+import { adminOnly, protect } from '../middleware/admin.middleware.js';
 
-const router = express.Router();
+const router = Router();
 
-// Apply admin middleware to all routes
+// Admin protection: ensure user is authenticated and admin
 router.use(protect);
-router.use(authorize('admin'));
+router.use(adminOnly);
 
-// Dashboard routes
-router.get('/dashboard', getDashboardStats);
-router.get('/dashboard/realtime', getRealTimeUpdates);
-router.get('/activity', getRealTimeActivity);
+// Pending instructors awaiting approval
+router.get('/instructors/pending', getPendingInstructors);
 
-// Teacher management routes
-router.get('/teachers', getTeachers);
-router.put('/teachers/:teacherId/approve', approveInstructor);
-router.put('/teachers/:teacherId/reject', rejectInstructor);
-
-// Preview approvals for courses
-router.get('/courses/previews/pending', getPendingCoursePreviews);
-router.post('/courses/:courseId/preview/approve', approveCoursePreview);
-router.post('/courses/:courseId/preview/reject', rejectCoursePreview);
-
-// User management routes
-router.get('/users', getAllUsers);
-router.get('/users/:userId', getUserDetails);
-router.put('/users/:userId/approve', approveTeacher);
-router.put('/users/:userId/decline', declineTeacher);
-router.delete('/users/:userId', deleteUser);
+// Approve an instructor by ID
+router.post('/instructors/:id/approve', approveInstructor);
 
 export default router;
