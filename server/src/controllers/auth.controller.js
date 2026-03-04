@@ -4,8 +4,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import logger from '../utils/dbLogger.js';
 
-// Helper to generate token
-const generateToken = (userId) => {
+// Helper to generate token (includes role in payload)
+const generateToken = (userId, role) => {
     const jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-for-emergency-use-change-in-production';
     if (!jwtSecret) {
         console.error('❌ JWT_SECRET is not defined! Using fallback.');
@@ -13,7 +13,7 @@ const generateToken = (userId) => {
     console.log('🔑 JWT Secret exists:', !!jwtSecret, 'Length:', jwtSecret?.length);
     
     return jwt.sign(
-        { userId },
+        { userId, role },
         jwtSecret,
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
     );
@@ -148,7 +148,7 @@ export const registerUser = async (req, res) => {
         console.log('12. Sending success response (201)...');
         res.status(201).json({
             ...responseUserData,
-            token
+            token: generateToken(user.id, user.role)
         });
         console.log('13. ✅ Response sent successfully');
         console.log('========== REGISTRATION REQUEST END ==========\n');
@@ -251,7 +251,7 @@ export const loginUser = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user.id);
+        const token = generateToken(user.id, user.role);
 
         // Remove password from response
         const { password: _, ...userData } = user.dataValues;
