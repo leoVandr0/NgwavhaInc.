@@ -4,22 +4,23 @@ import healthRoutes from './src/routes/health.routes.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables FIRST
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import passport from 'passport';
 import session from 'express-session';
 import MySQLStore from 'express-mysql-session';
 import compression from 'compression';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { fileURLToPath } from 'url';
 import { connectMySQL } from './src/config/mysql.js';
 import connectMongoDB from './src/config/mongodb.js';
-
-// ES module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Debug environment variables
 console.log('\n🔍 Environment Variables Debug:');
@@ -56,16 +57,13 @@ if (typeof app.use === 'function') {
 }
 const PORT = process.env.PORT || 8080;
 
-// Create HTTP server and Socket.IO instance
+// Create HTTP server first
 const server = createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: process.env.NODE_ENV === 'production' ? false : ["http://localhost:5173", "http://localhost:3000"],
-        methods: ["GET", "POST"]
-    }
-});
 
-// Store connected admins for real-time updates
+// Initialize real-time service (will create its own Socket.IO instance)
+realtimeService.initialize(server);
+
+// Store connected admins for real-time updates (for fallback)
 const connectedAdmins = new Set();
 
 // Serve static files from the frontend build with caching
@@ -225,51 +223,12 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-// Attach Express app to the same HTTP server that Socket.IO uses (required for real-time)
+// Attach Express app to same HTTP server that Socket.IO uses (required for real-time)
 server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
     console.log(`Socket.IO enabled for real-time admin dashboard`);
 });
-
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-    console.log('🔌 Socket connected:', socket.id);
-
-    // Handle admin dashboard connection
-    socket.on('join-admin-dashboard', (userData) => {
-        if (userData && userData.role === 'admin') {
-            connectedAdmins.add(socket.id);
-            socket.join('admin-dashboard');
-            console.log('👨‍💼 Admin joined dashboard:', socket.id);
-
-            // Send current stats to newly connected admin
-            socket.emit('stats-update', {
-                type: 'initial',
-                message: 'Connected to admin dashboard'
-            });
-        }
-    });
-
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        connectedAdmins.delete(socket.id);
-        socket.leave('admin-dashboard');
-        console.log('🔌 Socket disconnected:', socket.id);
-    });
-});
-
-// Function to broadcast real-time updates to all connected admins
-const broadcastToAdmins = (event, data) => {
-    io.to('admin-dashboard').emit(event, data);
-    console.log(`📊 Broadcasting to ${connectedAdmins.size} admins:`, event);
-};
-
-// Make broadcast function available globally
-global.broadcastToAdmins = broadcastToAdmins;
-
-// Initialize real-time service
-realtimeService.initialize(server);
 
 // Database connections (non-blocking)
 connectMySQL().then(async (sequelize) => {
@@ -294,6 +253,16 @@ connectMySQL().then(async (sequelize) => {
             console.log('✅ Instructor approval migration completed');
         } catch (migrationError) {
             console.error('❌ Instructor approval migration failed:', migrationError.message);
+        }
+
+        // Run instructor rejection migration
+        try {
+            console.log('🔄 Running instructor rejection migration...');
+            const { up } = await import('./src/migrations/add-instructor-rejection.js');
+            await up();
+            console.log('✅ Instructor rejection migration completed');
+        } catch (migrationError) {
+            console.error('❌ Instructor rejection migration failed:', migrationError.message);
         }
 
         seedCategories().catch((error) => {

@@ -1,4 +1,15 @@
 import { Sequelize } from "sequelize";
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
+const envPath = path.join(__dirname, '..', '.env');
+console.log('DEBUG: Loading .env from:', envPath);
+dotenv.config({ path: envPath });
 
 const dbConfig = {
   dialect: "mysql",
@@ -31,6 +42,13 @@ if (connectionString) {
   sequelize = new Sequelize(connectionString, dbConfig);
 } else {
   console.log("Using individual environment variables for MySQL connection");
+  console.log("DEBUG - Environment variables:");
+  console.log("MYSQLDATABASE:", process.env.MYSQLDATABASE);
+  console.log("MYSQLUSER:", process.env.MYSQLUSER);
+  console.log("MYSQLPASSWORD:", process.env.MYSQLPASSWORD ? "***" : "undefined");
+  console.log("MYSQLHOST:", process.env.MYSQLHOST);
+  console.log("MYSQLPORT:", process.env.MYSQLPORT);
+  
   sequelize = new Sequelize(
     process.env.MYSQLDATABASE,
     process.env.MYSQLUSER,
