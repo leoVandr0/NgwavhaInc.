@@ -16,6 +16,10 @@ export const EMOJI = {
   privacy: '🔒',
   admin: '🛡️',
   rocket: '🚀',
-  star: '⭐'
+  star: '⭐',
+  wishlist: '❤️',
+  cart: '🛒',
+  instructor: '👨‍🏫',
+  signout: '🚪'
 };
 export const emojiFor = (key) => EMOJI[key] ?? '🔹';

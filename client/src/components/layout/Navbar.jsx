@@ -4,6 +4,7 @@ import { Menu, X, Search, ShoppingCart, Bell, User, Heart } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import useCartStore from '../../store/cartStore';
 import Logo from '../Logo';
+import EmojiLabel from '../EmojiLabel';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -62,32 +63,35 @@ const Navbar = () => {
                     {/* Desktop Menu */}
                     <div className="hidden md:block">
                         <div className="ml-4 flex items-center space-x-4">
-                            <Link to="/courses" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Categories
+                            <Link to="/courses" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                <EmojiLabel label="Courses" kind="courses" />
+                                <span className="ml-2">Categories</span>
                             </Link>
 
                             {/* Always visible Bell Icon */}
                             <button 
                                 onClick={handleBellClick}
-                                className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none"
+                                className="text-dark-300 hover:text-white p-2 relative cursor-pointer bg-transparent border-none flex items-center"
                                 style={{ zIndex: 1000 }}
                                 title="Notifications"
                             >
-                                <Bell className="h-6 w-6" />
+                                <EmojiLabel label="Notifications" kind="notifications" />
                             </button>
 
                             {isAuthenticated ? (
                                 <>
                                     <Link 
                                         to="/student/dashboard" 
-                                        className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                                        className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center"
                                         onClick={() => console.log('My Learning clicked, navigating to: /student/dashboard')}
                                     >
-                                        My Learning
+                                        <EmojiLabel label="Dashboard" kind="dashboard" />
+                                        <span className="ml-2">My Learning</span>
                                     </Link>
 
-                                    <Link to="/wishlist" className="text-dark-300 hover:text-white p-2 relative">
-                                        <Heart className="h-6 w-6" />
+                                    <Link to="/wishlist" className="text-dark-300 hover:text-white p-2 relative flex items-center">
+                                        <EmojiLabel label="Wishlist" kind="wishlist" />
+                                        <span className="ml-2">Wishlist ({wishlist.length})</span>
                                         {wishlist.length > 0 && (
                                             <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary-600 rounded-full">
                                                 {wishlist.length}
@@ -95,8 +99,9 @@ const Navbar = () => {
                                         )}
                                     </Link>
 
-                                    <Link to="/cart" className="text-dark-300 hover:text-white p-2 relative">
-                                        <ShoppingCart className="h-6 w-6" />
+                                    <Link to="/cart" className="text-dark-300 hover:text-white p-2 relative flex items-center">
+                                        <EmojiLabel label="Cart" kind="cart" />
+                                        <span className="ml-2">Cart ({cart.length})</span>
                                         {cart.length > 0 && (
                                             <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary-600 rounded-full">
                                                 {cart.length}
@@ -105,8 +110,9 @@ const Navbar = () => {
                                     </Link>
 
                                     {currentUser?.role === 'instructor' && (
-                                        <Link to="/instructor/dashboard" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                            Instructor
+                                        <Link to="/instructor/dashboard" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                            <EmojiLabel label="Instructor" kind="instructor" />
+                                            <span className="ml-2">Instructor</span>
                                         </Link>
                                     )}
                                     
@@ -122,20 +128,26 @@ const Navbar = () => {
                                                 <p className="text-sm text-white font-bold">{currentUser?.name}</p>
                                                 <p className="text-xs text-dark-400 truncate">{currentUser?.email}</p>
                                             </div>
-                                            <Link to={currentUser?.role === 'instructor' ? "/teacher/profile" : "/student/profile"} className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700">Profile</Link>
-                                            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-dark-300 hover:bg-dark-700">
-                                                Sign out
+                                            <Link to={currentUser?.role === 'instructor' ? "/teacher/profile" : "/student/profile"} className="block px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 flex items-center">
+                                                <EmojiLabel label="Profile" kind="profile" />
+                                                <span className="ml-2">Profile</span>
+                                            </Link>
+                                            <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-dark-300 hover:bg-dark-700 flex items-center">
+                                                <EmojiLabel label="Sign out" kind="signout" />
+                                                <span className="ml-2">Sign out</span>
                                             </button>
                                         </div>
                                     </div>
                                 </>
                             ) : (
                                 <>
-                                    <Link to="/login" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                        Log in
+                                    <Link to="/login" className="text-dark-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                        <EmojiLabel label="Login" kind="login" />
+                                        <span className="ml-2">Log in</span>
                                     </Link>
-                                    <Link to="/register" className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                                        Sign up
+                                    <Link to="/register" className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
+                                        <EmojiLabel label="Sign up" kind="signup" />
+                                        <span className="ml-2">Sign up</span>
                                     </Link>
                                 </>
                             )}
@@ -158,40 +170,48 @@ const Navbar = () => {
             {isOpen && (
                 <div className="md:hidden bg-dark-800">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                        <Link to="/courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                            Browse Courses
+                        <Link to="/courses" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                            <EmojiLabel label="Courses" kind="courses" />
+                            <span className="ml-2">Browse Courses</span>
                         </Link>
                         
                         {/* Mobile Bell Icon */}
                         <button 
                             onClick={handleBellClick}
-                            className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                            className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center"
                         >
-                            🔔 Notifications
+                            <EmojiLabel label="Notifications" kind="notifications" />
+                            <span className="ml-2">Notifications</span>
                         </button>
                         
                         {isAuthenticated ? (
                             <>
-                                <Link to="/student/dashboard" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                                    My Learning
+                                <Link to="/student/dashboard" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Dashboard" kind="dashboard" />
+                                    <span className="ml-2">My Learning</span>
                                 </Link>
-                                <Link to="/cart" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                                    Cart ({cart.length})
+                                <Link to="/cart" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Cart" kind="cart" />
+                                    <span className="ml-2">Cart ({cart.length})</span>
                                 </Link>
-                                <Link to="/wishlist" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                                    Wishlist ({wishlist.length})
+                                <Link to="/wishlist" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Wishlist" kind="wishlist" />
+                                    <span className="ml-2">Wishlist ({wishlist.length})</span>
                                 </Link>
-                                <button onClick={handleLogout} className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium">
-                                    Sign out
+                                <button onClick={handleLogout} className="text-dark-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Sign out" kind="signout" />
+                                    <span className="ml-2">Sign out</span>
                                 </button>
                             </>
                         ) : (
                             <>
-                                <Link to="/login" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                                    Log in
+                                <Link to="/login" className="text-dark-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Login" kind="login" />
+                                    <span className="ml-2">Log in</span>
                                 </Link>
-                                <Link to="/register" className="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">
-                                    Sign up
+                                <Link to="/register" className="text-primary-500 block px-3 py-2 rounded-md text-base font-medium flex items-center">
+                                    <EmojiLabel label="Sign up" kind="signup" />
+                                    <span className="ml-2">Sign up</span>
                                 </Link>
                             </>
                         )}
