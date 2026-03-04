@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import logger from '../utils/dbLogger.js';
+import PasswordPolicy from '../utils/passwordPolicy.js';
 
 // Helper to generate token (includes role in payload)
 const generateToken = (userId, role) => {
@@ -34,7 +35,14 @@ export const registerUser = async (req, res) => {
     }
 
     try {
+        // Server-side password policy validation for signup
         const { name, email, password, role, notificationPreferences, phoneNumber, whatsappNumber } = req.body;
+        if (password) {
+            const { isValid, errors } = PasswordPolicy.validatePassword(password);
+            if (!isValid) {
+                return res.status(400).json({ message: errors[0] });
+            }
+        }
         console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password, hasNotificationPrefs: !!notificationPreferences });
 
         // Check if user exists
