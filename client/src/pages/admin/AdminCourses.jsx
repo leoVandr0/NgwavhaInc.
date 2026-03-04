@@ -20,7 +20,8 @@ const AdminCourses = () => {
         setLoading(true);
         try {
             const response = await api.get('/admin/courses');
-            setCourses(response.data || []);
+            const courseData = response.data?.data || response.data;
+            setCourses(Array.isArray(courseData) ? courseData : []);
         } catch (error) {
             console.error('Error fetching courses:', error);
             message.error('Failed to fetch courses');
@@ -49,9 +50,9 @@ const AdminCourses = () => {
         });
     };
 
-    const filteredCourses = courses.filter(course => {
+    const filteredCourses = (Array.isArray(courses) ? courses : []).filter(course => {
         const matchesSearch = course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            course.instructor?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+            course.instructor?.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -64,8 +65,8 @@ const AdminCourses = () => {
             render: (text, record) => (
                 <div className="flex items-center gap-3">
                     {record.thumbnail && (
-                        <img 
-                            src={record.thumbnail} 
+                        <img
+                            src={record.thumbnail}
                             alt={text}
                             className="w-12 h-12 rounded object-cover"
                         />
@@ -137,9 +138,9 @@ const AdminCourses = () => {
                     <Button size="small" icon={<Edit size={14} />}>
                         Edit
                     </Button>
-                    <Button 
-                        size="small" 
-                        danger 
+                    <Button
+                        size="small"
+                        danger
                         icon={<Trash2 size={14} />}
                         onClick={() => handleDelete(record.id)}
                     >

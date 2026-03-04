@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, DatePicker, Select, Statistic, Row, Col, Tag } from 'antd';
-import { 
-    DollarSign, 
-    TrendingUp, 
-    Download, 
+import {
+    DollarSign,
+    TrendingUp,
+    Download,
     Filter,
     CreditCard,
     ShoppingCart,
@@ -43,14 +43,15 @@ const AdminFinance = () => {
             if (statusFilter !== 'all') {
                 params.status = statusFilter;
             }
-            
+
             const [transactionsRes, revenueRes] = await Promise.all([
-                api.get('/admin/transactions', { params }),
-                api.get('/admin/revenue', { params })
+                api.get('/admin/transactions'),
+                api.get('/admin/revenue')
             ]);
-            
-            setTransactions(transactionsRes.data || []);
-            setRevenue(revenueRes.data || {});
+
+            const transactionData = transactionsRes.data?.data || transactionsRes.data;
+            setTransactions(Array.isArray(transactionData) ? transactionData : []);
+            setRevenue(revenueRes.data?.data || revenueRes.data || {});
         } catch (error) {
             console.error('Error fetching finance data:', error);
         } finally {
@@ -63,7 +64,7 @@ const AdminFinance = () => {
         console.log('Exporting transactions...');
     };
 
-    const filteredTransactions = transactions.filter(transaction => {
+    const filteredTransactions = (Array.isArray(transactions) ? transactions : []).filter(transaction => {
         const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
         return matchesStatus;
     });
@@ -242,11 +243,11 @@ const AdminFinance = () => {
             </Row>
 
             {/* Transactions Table */}
-            <Card 
+            <Card
                 title="Transactions"
                 extra={
                     <div className="flex gap-2">
-                        <Button 
+                        <Button
                             icon={<Download size={16} />}
                             onClick={handleExport}
                         >
@@ -256,7 +257,7 @@ const AdminFinance = () => {
                 }
             >
                 <div className="flex gap-4 mb-4">
-                    <RangePicker 
+                    <RangePicker
                         onChange={setDateRange}
                         placeholder={['Start date', 'End date']}
                     />

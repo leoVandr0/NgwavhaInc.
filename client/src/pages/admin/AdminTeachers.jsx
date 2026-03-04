@@ -20,7 +20,8 @@ const AdminTeachers = () => {
         setLoading(true);
         try {
             const response = await api.get('/admin/teachers');
-            setTeachers(response.data || []);
+            const teacherData = response.data?.data || response.data;
+            setTeachers(Array.isArray(teacherData) ? teacherData : []);
         } catch (error) {
             console.error('Error fetching teachers:', error);
             message.error('Failed to fetch teachers');
@@ -76,13 +77,13 @@ const AdminTeachers = () => {
         }
     };
 
-    const filteredTeachers = teachers.filter(teacher => {
+    const filteredTeachers = (Array.isArray(teachers) ? teachers : []).filter(teacher => {
         const matchesSearch = teacher.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            teacher.email?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || 
-                            (statusFilter === 'pending' && !teacher.is_approved) ||
-                            (statusFilter === 'approved' && teacher.is_approved) ||
-                            (statusFilter === 'rejected' && teacher.is_rejected);
+            teacher.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' ||
+            (statusFilter === 'pending' && !teacher.isApproved) ||
+            (statusFilter === 'approved' && teacher.isApproved) ||
+            (statusFilter === 'rejected' && teacher.instructorStatus === 'REJECTED');
         return matchesSearch && matchesStatus;
     });
 
@@ -100,10 +101,10 @@ const AdminTeachers = () => {
         },
         {
             title: 'Status',
-            dataIndex: 'is_approved',
+            dataIndex: 'isApproved',
             key: 'status',
             render: (isApproved, record) => {
-                if (record.is_rejected) {
+                if (record.instructorStatus === 'REJECTED') {
                     return <Tag color="red">Rejected</Tag>;
                 }
                 if (isApproved) {
@@ -138,19 +139,19 @@ const AdminTeachers = () => {
                     <Button size="small" icon={<Eye size={14} />}>
                         View
                     </Button>
-                    {!record.is_approved && !record.is_rejected && (
+                    {!record.isApproved && record.instructorStatus !== 'REJECTED' && (
                         <>
-                            <Button 
-                                size="small" 
-                                type="primary" 
+                            <Button
+                                size="small"
+                                type="primary"
                                 icon={<Check size={14} />}
                                 onClick={() => handleApprove(record.id)}
                             >
                                 Approve
                             </Button>
-                            <Button 
-                                size="small" 
-                                danger 
+                            <Button
+                                size="small"
+                                danger
                                 icon={<X size={14} />}
                                 onClick={() => handleReject(record.id)}
                             >

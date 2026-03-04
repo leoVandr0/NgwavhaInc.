@@ -102,6 +102,85 @@ export const getRealTimeUpdates = async (req, res) => {
   }
 };
 
+// @desc Get all teachers with stats
+// @route GET /api/admin/teachers
+export const getTeachers = async (req, res) => {
+  try {
+    const teachers = await User.findAll({
+      where: { role: 'instructor' },
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']]
+    });
+
+    // In a real app, we'd use Sequelize joins/grouping to get these counts
+    // For now, we'll return the teachers and the frontend will handle fallback/display
+    res.json({ success: true, data: teachers });
+  } catch (error) {
+    console.error('Admin get teachers error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch teachers' });
+  }
+};
+
+// @desc Get all courses with instructor info
+// @route GET /api/admin/courses
+export const getCourses = async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      include: [{
+        model: User,
+        as: 'instructor',
+        attributes: ['id', 'name', 'email']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json({ success: true, data: courses });
+  } catch (error) {
+    console.error('Admin get courses error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch courses' });
+  }
+};
+
+// @desc Get all transactions (enrollments)
+// @route GET /api/admin/transactions
+export const getTransactions = async (req, res) => {
+  try {
+    const transactions = await Enrollment.findAll({
+      include: [
+        { model: User, attributes: ['id', 'name', 'email'] },
+        { model: Course, attributes: ['id', 'title'] }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: 100
+    });
+    res.json({ success: true, data: transactions });
+  } catch (error) {
+    console.error('Admin get transactions error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch transactions' });
+  }
+};
+
+// @desc Get revenue breakdown
+// @route GET /api/admin/revenue
+export const getRevenue = async (req, res) => {
+  try {
+    const stats = await fetchStats();
+    res.json({
+      success: true,
+      data: {
+        totalRevenue: stats.revenue.total,
+        monthlyRevenue: stats.revenue.monthly,
+        weeklyRevenue: stats.revenue.monthly / 4, // Estimate for now
+        dailyRevenue: stats.revenue.monthly / 30, // Estimate for now
+        totalTransactions: await Enrollment.count(),
+        pendingPayouts: 0
+      }
+    });
+  } catch (error) {
+    console.error('Admin get revenue error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch revenue data' });
+  }
+};
+
 // @desc Get pending instructors awaiting approval
 // @route GET /api/admin/instructors/pending
 export const getPendingInstructors = async (req, res) => {
@@ -128,5 +207,114 @@ export const approveInstructor = async (req, res) => {
   } catch (error) {
     console.error('Admin approve instructor error:', error);
     res.status(500).json({ message: 'Failed to approve instructor' });
+  }
+};
+
+// @desc Get all users with pagination and filters
+// @route GET /api/admin/users
+export const getUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, role, status } = req.query;
+    const offset = (page - 1) * limit;
+
+    const where = {};
+    if (role && role !== 'all') {
+      where.role = role === 'teacher' ? 'instructor' : role;
+    }
+
+    if (search) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    if (status === 'pending') {
+      where.role = 'instructor';
+      where.isApproved = false;
+    } else if (status === 'approved') {
+      where.isApproved = true;
+    } else if (status === 'declined' || status === 'rejected') {
+      where.instructorStatus = 'REJECTED';
+    }
+
+    const { count, rows } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ['password'] },
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: {
+        users: rows,
+        pagination: {
+          total: count,
+          current: parseInt(page),
+          pageSize: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Admin get users error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch users' });
+  }
+};
+
+// @desc Delete a user
+// @route DELETE /api/admin/users/:id
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    await user.destroy();
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete user' });
+  }
+};
+
+// @desc Decline/Reject a teacher
+// @route PUT /api/admin/teachers/:id/reject or /api/admin/users/:id/decline
+export const rejectInstructor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const instructor = await User.findByPk(id);
+    if (!instructor) {
+      return res.status(404).json({ success: false, message: 'Instructor not found' });
+    }
+    await instructor.update({
+      isApproved: false,
+      instructorStatus: 'REJECTED',
+      bio: reason ? `${instructor.bio || ''} (Rejected: ${reason})` : instructor.bio
+    });
+    res.json({ success: true, message: 'Instructor application rejected' });
+  } catch (error) {
+    console.error('Admin reject instructor error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reject instructor' });
+  }
+};
+
+// @desc Delete a course
+// @route DELETE /api/admin/courses/:id
+export const deleteCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const course = await Course.findByPk(id);
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found' });
+    }
+    await course.destroy();
+    res.json({ success: true, message: 'Course deleted successfully' });
+  } catch (error) {
+    console.error('Admin delete course error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete course' });
   }
 };
