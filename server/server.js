@@ -305,6 +305,16 @@ connectMySQL().then(async (sequelize) => {
             console.error('❌ Enrollment archive migration failed:', migrationError.message);
         }
 
+        // Run holistic course schema fix (adds all missing preview columns)
+        try {
+            console.log('🔄 Running holistic course schema fix...');
+            const { up } = await import('./src/migrations/fix-course-schema.js');
+            await up();
+            console.log('✅ Course schema fix completed');
+        } catch (migrationError) {
+            console.error('❌ Course schema fix failed:', migrationError.message);
+        }
+
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });
