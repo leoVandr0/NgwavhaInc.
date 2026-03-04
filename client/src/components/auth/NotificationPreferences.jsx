@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Mail, 
-    MessageSquare, 
-    Smartphone, 
-    Bell, 
+import {
+    Mail,
+    MessageSquare,
+    Smartphone,
+    Bell,
     CheckCircle,
     Info,
     X,
@@ -116,7 +116,7 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
     const validateZimbabweNumber = (number) => {
         // Remove all non-digit characters
         const cleanNumber = number.replace(/\D/g, '');
-        
+
         // Check if it starts with 263 and has correct length
         if (cleanNumber.startsWith('263')) {
             // Remove 263 and check the remaining number
@@ -126,13 +126,13 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
                 return true;
             }
         }
-        
+
         return false;
     };
 
     const formatZimbabweNumber = (number) => {
         let cleanNumber = number.replace(/\D/g, '');
-        
+
         // If number starts with 263, keep it
         if (!cleanNumber.startsWith('263')) {
             // If it's a local number (starts with 7 or 8), add 263
@@ -140,12 +140,12 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
                 cleanNumber = '263' + cleanNumber;
             }
         }
-        
+
         // Format as +263 XX XXX XXXX
         if (cleanNumber.length === 12) {
             return `+263 ${cleanNumber.substring(3, 5)} ${cleanNumber.substring(5, 8)} ${cleanNumber.substring(8)}`;
         }
-        
+
         return number;
     };
 
@@ -153,12 +153,12 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
         const formattedValue = formatZimbabweNumber(value);
         const newPhoneNumbers = { ...phoneNumbers, [type]: formattedValue };
         setPhoneNumbers(newPhoneNumbers);
-        
+
         // Notify parent component if callback exists
         if (onPhoneNumbersChange) {
             onPhoneNumbersChange(newPhoneNumbers);
         }
-        
+
         // Validate number
         if (value && !validateZimbabweNumber(value)) {
             setPhoneErrors(prev => ({
@@ -196,7 +196,7 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
             ...preferences,
             [key]: !preferences[key]
         };
-        
+
         // Special handling for push notifications
         if (key === 'push' && newPrefs.push) {
             const granted = await requestPushPermission();
@@ -204,13 +204,13 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
                 newPrefs.push = false;
             }
         }
-        
+
         // If disabling phone-based notifications, clear the phone numbers
         if ((key === 'whatsapp' || key === 'sms') && !newPrefs[key]) {
             setPhoneNumbers(prev => ({ ...prev, [key]: '+263 ' }));
             setPhoneErrors(prev => ({ ...prev, [key]: '' }));
         }
-        
+
         onChange(newPrefs);
         setSaveStatus('Settings updated successfully!');
         setTimeout(() => setSaveStatus(''), 3000);
@@ -248,15 +248,14 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
             </div>
 
             {/* Main Notification Channels */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {notificationTypes.map((type) => (
                     <div
                         key={type.key}
-                        className={`relative border rounded-lg p-4 cursor-pointer transition-all ${
-                            preferences[type.key]
-                                ? 'border-primary-500 bg-primary-500/10'
-                                : 'border-dark-700 bg-dark-800 hover:border-dark-600'
-                        }`}
+                        className={`relative border-2 rounded-xl p-5 transition-all duration-200 ${preferences[type.key]
+                                ? 'border-primary-500 bg-primary-500/5 shadow-lg shadow-primary-500/10'
+                                : 'border-dark-700 bg-dark-800/50 hover:border-dark-600 hover:bg-dark-800'
+                            }`}
                         onClick={() => handleToggle(type.key)}
                         role="button"
                         tabIndex={0}
@@ -267,65 +266,79 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
                             }
                         }}
                     >
-                        <div className="flex items-start gap-3">
-                            <div className={`p-2 rounded-lg ${getColorClasses(type.color, preferences[type.key])}`}>
+                        <div className="flex items-start gap-4">
+                            <div className={`flex-shrink-0 p-2.5 rounded-xl ${getColorClasses(type.color, preferences[type.key])} shadow-inner`}>
                                 {type.icon}
                             </div>
-                            <div className="flex-1">
-                                <h4 className="font-semibold text-white mb-1 flex items-center gap-2">
-                                    {type.title}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                    <h4 className="font-bold text-white text-base leading-tight">
+                                        {type.title}
+                                    </h4>
                                     {type.recommended && (
-                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
-                                            <Star className="w-3 h-3" />
+                                        <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-green-500/20 flex items-center gap-1">
+                                            <Star className="w-2.5 h-2.5 fill-current" />
                                             Recommended
                                         </span>
                                     )}
                                     {type.primary && (
-                                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-blue-500/20">
                                             Primary
                                         </span>
                                     )}
-                                </h4>
-                                <p className="text-dark-400 text-sm">
+                                </div>
+                                <p className="text-dark-400 text-sm leading-relaxed mb-3">
                                     {type.description}
                                 </p>
+
                                 {type.requiresPhone && (
-                                    <div className="mt-3 space-y-2">
-                                        <div>
-                                            <label className="block text-sm font-medium text-dark-300 mb-1">
+                                    <div
+                                        className="mt-4 space-y-3 p-4 bg-dark-900/50 rounded-xl border border-dark-700"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="relative">
+                                            <label className="block text-xs font-bold text-dark-300 uppercase tracking-widest mb-2 px-1">
                                                 Phone Number
                                             </label>
-                                            <input
-                                                type="tel"
-                                                value={phoneNumbers[type.key] || ''}
-                                                onChange={(e) => handlePhoneChange(type.key, e.target.value)}
-                                                placeholder="+263 77 123 4567"
-                                                disabled={!preferences[type.key]}
-                                                className={`w-full px-3 py-2 border rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 transition-all ${
-                                                    preferences[type.key]
-                                                        ? 'bg-dark-700 border-dark-600 focus:ring-primary-500 focus:border-primary-500'
-                                                        : 'bg-dark-800 border-dark-700 opacity-50 cursor-not-allowed'
-                                                }`}
-                                            />
+                                            <div className="relative group">
+                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-dark-400 group-focus-within:text-primary-500 transition-colors border-r border-dark-600 pr-3 pointer-events-none">
+                                                    <span className="text-sm font-bold">+263</span>
+                                                </div>
+                                                <input
+                                                    type="tel"
+                                                    value={(phoneNumbers[type.key] || '').replace('+263 ', '')}
+                                                    onChange={(e) => handlePhoneChange(type.key, '+263 ' + e.target.value.replace(/\D/g, ''))}
+                                                    placeholder="77 123 4567"
+                                                    disabled={!preferences[type.key]}
+                                                    className={`w-full pl-[72px] pr-4 py-3 bg-dark-800 border-2 rounded-xl text-white font-medium placeholder-dark-500 focus:outline-none focus:ring-4 focus:ring-primary-500/10 transition-all ${preferences[type.key]
+                                                            ? 'border-dark-700 focus:border-primary-500'
+                                                            : 'opacity-50 cursor-not-allowed border-transparent'
+                                                        }`}
+                                                />
+                                            </div>
                                             {phoneErrors[type.key] && (
-                                                <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
-                                                    <Info className="w-3 h-3" />
+                                                <p className="text-red-400 text-[11px] mt-2 flex items-center gap-1.5 px-1 animate-in fade-in slide-in-from-top-1">
+                                                    <Info className="w-3.5 h-3.5" />
                                                     {phoneErrors[type.key]}
                                                 </p>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-1 text-xs text-dark-400">
-                                            <Lock className="w-3 h-3" />
-                                            <span>Your number is encrypted and never shared</span>
+                                        <div className="flex items-center gap-2 text-[10px] text-dark-500 bg-dark-800/30 p-2 rounded-lg border border-dark-700/50">
+                                            <Lock className="w-3 h-3 text-primary-500/50" />
+                                            <span>Encryption active • Numbers are never shared</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 pt-0.5">
                                 {preferences[type.key] ? (
-                                    <CheckCircle className="w-5 h-5 text-primary-400" />
+                                    <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/20">
+                                        <CheckCircle className="w-4 h-4 text-dark-950 stroke-[3px]" />
+                                    </div>
                                 ) : (
-                                    <X className="w-5 h-5 text-dark-400" />
+                                    <div className="w-6 h-6 border-2 border-dark-700 rounded-full flex items-center justify-center text-dark-600">
+                                        <X className="w-3 h-3" />
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -370,18 +383,16 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
                                 <button
                                     type="button"
                                     onClick={() => handleCategoryToggle(category.key)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                        preferences[category.key]
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${preferences[category.key]
                                             ? 'bg-primary-500'
                                             : 'bg-dark-600'
-                                    }`}
+                                        }`}
                                 >
                                     <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                            preferences[category.key]
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${preferences[category.key]
                                                 ? 'translate-x-6'
                                                 : 'translate-x-1'
-                                        }`}
+                                            }`}
                                     />
                                 </button>
                             </div>
@@ -392,11 +403,10 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
 
             {/* Save Status Message */}
             {saveStatus && (
-                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
-                    saveStatus.includes('blocked') 
+                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${saveStatus.includes('blocked')
                         ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
                         : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                }`}>
+                    }`}>
                     {saveStatus.includes('blocked') ? (
                         <Info className="w-4 h-4" />
                     ) : (
