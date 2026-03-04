@@ -197,10 +197,18 @@ export const loginUser = async (req, res) => {
 
         console.log('User found:', { id: user.id, email: user.email, hasPassword: !!user.password });
 
-        // Check if user has password (OAuth users might not)
+        // If admin user exists without a password (legacy data or missing seed), seed password from env
         if (!user.password) {
-            console.log('Login failed: User has no password (OAuth user)');
-            return res.status(400).json({ message: 'Please use Google Sign In for this account' });
+            if (user.role === 'admin') {
+                const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || process.env.railway_admin_password || 'admin123';
+                const bcrypt = (await import('bcryptjs')).default;
+                const hashedPassword = await bcrypt.hash(adminPassword, 10);
+                await user.update({ password: hashedPassword });
+                console.log('✅ Admin password seeded from env for login');
+            } else {
+                console.log('Login failed: User has no password (OAuth user)');
+                return res.status(400).json({ message: 'Please use Google Sign In for this account' });
+            }
         }
 
         // Check password
