@@ -189,7 +189,7 @@ export const loginUser = async (req, res) => {
         console.log('Attempting login for:', normalizedEmail);
 
         // Find user
-        const user = await User.findOne({ where: { email: normalizedEmail } });
+        let user = await User.findOne({ where: { email: normalizedEmail } });
         if (!user) {
             console.log('Login failed: User not found:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
@@ -221,7 +221,12 @@ export const loginUser = async (req, res) => {
             } catch (e) {
                 // ignore seed errors here; we'll fall through to invalid credentials
             }
-            isMatch = await user.matchPassword(password);
+            // Re-fetch fresh user since seed may have updated the password
+            const fresh = await User.findOne({ where: { email: normalizedEmail } });
+            if (fresh) {
+                user = fresh;
+                isMatch = await user.matchPassword(password);
+            }
         }
         console.log('Login attempt result:', {
             userId: user.id,
