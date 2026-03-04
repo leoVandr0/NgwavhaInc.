@@ -17,9 +17,11 @@ const CourseCard = ({ course, index }) => {
         return `$${price}`;
     };
 
-    const formatDuration = (duration) => {
-        if (!duration) return 'Unknown';
-        return duration;
+    const formatDuration = (minutes) => {
+        if (!minutes || minutes === 0) return 'Total duration vaires';
+        const hours = (minutes / 60).toFixed(1);
+        if (hours < 1) return `${minutes} mins`;
+        return `${hours} hours total`;
     };
 
     const handleCartAction = async (e) => {
@@ -141,8 +143,8 @@ const CourseCard = ({ course, index }) => {
                             <button
                                 onClick={handleWishlistAction}
                                 className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${inWishlist
-                                        ? 'bg-red-500 text-white hover:bg-red-600'
-                                        : 'bg-dark-950/80 text-white hover:bg-primary-500'
+                                    ? 'bg-red-500 text-white hover:bg-red-600'
+                                    : 'bg-dark-950/80 text-white hover:bg-primary-500'
                                     }`}
                                 title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                             >
@@ -151,8 +153,8 @@ const CourseCard = ({ course, index }) => {
                             <button
                                 onClick={handleCartAction}
                                 className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${inCart
-                                        ? 'bg-primary-500 text-dark-950 hover:bg-primary-600'
-                                        : 'bg-dark-950/80 text-white hover:bg-primary-500'
+                                    ? 'bg-primary-500 text-dark-950 hover:bg-primary-600'
+                                    : 'bg-dark-950/80 text-white hover:bg-primary-500'
                                     }`}
                                 title={inCart ? 'Remove from cart' : 'Add to cart'}
                             >
@@ -192,7 +194,7 @@ const CourseCard = ({ course, index }) => {
                             <div className="flex items-center gap-1">
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                 <span className="text-sm font-semibold text-white">
-                                    {course.averageRating || '4.5'}
+                                    {course.averageRating && parseFloat(course.averageRating) > 0 ? course.averageRating : '4.8'}
                                 </span>
                             </div>
                             <span className="text-sm text-dark-400">
@@ -204,7 +206,7 @@ const CourseCard = ({ course, index }) => {
                         <div className="flex items-center gap-4 text-xs text-dark-400 mb-3">
                             <div className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                <span>{formatDuration(course.duration)}</span>
+                                <span>{formatDuration(course.totalDuration)}</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <Users className="w-3 h-3 text-primary-500" />

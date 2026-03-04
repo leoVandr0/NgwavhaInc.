@@ -12,10 +12,19 @@ export const getImageUrl = (url) => {
 };
 
 export const getAvatarUrl = (url) => {
-    if (!url || url === 'default-avatar.png') return '/default-avatar.png';
+    if (!url || url === 'default-avatar.png' || url.includes('default-avatar')) {
+        return '/default-avatar.png';
+    }
+    // If it already has /uploads/ or starts with http, don't prepend again
+    if (url.startsWith('/uploads/') || url.startsWith('http')) {
+        return getImageUrl(url);
+    }
     return getImageUrl(`/uploads/${url}`);
 };
 
 export const getCourseThumbnail = (url) => {
+    if (!url || url === '/uploads/default-course.jpg' || url.includes('default-course')) {
+        return '/default-course.jpg';
+    }
     return getImageUrl(url) || '/default-course.jpg';
 };
