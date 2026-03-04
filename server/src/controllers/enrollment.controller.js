@@ -33,7 +33,7 @@ export const getMyCourses = async (req, res) => {
     } catch (error) {
         console.error('Error in getMyCourses:', error);
         console.error('Stack:', error.stack);
-        
+
         // Return a safe, empty array to keep UI stable even if backend fails
         res.status(500).json([]);
     }
@@ -318,6 +318,40 @@ export const getTeacherStudents = async (req, res) => {
         });
 
         res.json(enrollments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Toggle archive status of an enrollment
+// @route   PUT /api/enrollments/:courseId/toggle-archive
+// @access  Private
+export const toggleArchive = async (req, res) => {
+    try {
+        const enrollment = await Enrollment.findOne({
+            where: {
+                userId: req.user.id,
+                courseId: req.params.courseId
+            }
+        });
+
+        if (!enrollment) {
+            return res.status(404).json({ message: 'Enrollment not found' });
+        }
+
+        enrollment.isArchived = !enrollment.isArchived;
+        await enrollment.save();
+
+        logger.track({
+            userId: req.user.id,
+            action: 'toggle_archive',
+            resourceType: 'course',
+            resourceId: req.params.courseId,
+            details: { isArchived: enrollment.isArchived },
+            req
+        });
+
+        res.json(enrollment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

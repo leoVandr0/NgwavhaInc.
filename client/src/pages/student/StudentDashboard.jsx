@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import { BookOpen, Clock, Award, MoreVertical, PlayCircle } from 'lucide-react';
+import { BookOpen, Clock, Award, MoreVertical, PlayCircle, Archive, ArchiveRestore } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -15,15 +15,26 @@ const StudentDashboard = () => {
             return data;
         } catch (error) {
             console.error("Failed to fetch enrollments", error);
-            return []; // Return empty array on error to prevent crash
+            return [];
         }
     }, {
-        retry: 1, // Only retry once to prevent infinite loops
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: 1,
+        staleTime: 5 * 60 * 1000,
         onError: (error) => {
             console.error('Dashboard query error:', error);
         }
     });
+
+    const handleToggleArchive = async (e, courseId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await api.put(`/enrollments/${courseId}/toggle-archive`);
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to toggle archive", error);
+        }
+    };
 
     // Handle loading state
     if (isLoading) {
@@ -41,8 +52,8 @@ const StudentDashboard = () => {
                 <div className="text-center">
                     <div className="text-red-500 text-xl mb-4">Error loading dashboard</div>
                     <div className="text-dark-400 mb-6">Unable to load your courses. Please try again.</div>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
                     >
                         Reload
@@ -52,8 +63,14 @@ const StudentDashboard = () => {
         );
     }
 
-    // Filter logic (mock implementation if real filtering isn't available on backend)
+    // Filter logic
     const filteredEnrollments = enrollments?.filter(enrollment => {
+        // If archived tab is active, only show archived courses
+        if (activeTab === 'archived') return enrollment.isArchived;
+
+        // For all other tabs, hide archived courses
+        if (enrollment.isArchived) return false;
+
         if (activeTab === 'all') return true;
         if (activeTab === 'active') return enrollment.progress < 100;
         if (activeTab === 'completed') return enrollment.progress === 100;
@@ -96,7 +113,8 @@ const StudentDashboard = () => {
                             Wishlist
                         </Link>
                         <button
-                            className="pb-3 border-b-2 border-transparent hover:text-white transition-colors whitespace-nowrap"
+                            onClick={() => setActiveTab('archived')}
+                            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'archived' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
                         >
                             Archived
                         </button>
@@ -161,7 +179,13 @@ const StudentDashboard = () => {
                                                 <span className="text-dark-300">
                                                     {enrollment.progress === 0 ? 'Start Course' : `${Math.round(enrollment.progress)}% complete`}
                                                 </span>
-                                                {/* Optional star rating could go here */}
+                                                <button
+                                                    onClick={(e) => handleToggleArchive(e, enrollment.courseId)}
+                                                    className="p-1 hover:bg-dark-700 rounded transition-colors text-dark-400 hover:text-white"
+                                                    title={enrollment.isArchived ? "Restore from Archive" : "Archive Course"}
+                                                >
+                                                    {enrollment.isArchived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

@@ -295,6 +295,16 @@ connectMySQL().then(async (sequelize) => {
             console.error('❌ Course preview video path migration failed:', migrationError.message);
         }
 
+        // Run enrollment archive migration
+        try {
+            console.log('🔄 Running enrollment archive migration...');
+            const { up } = await import('./src/migrations/add-is-archived-to-enrollment.js');
+            await up();
+            console.log('✅ Enrollment archive migration completed');
+        } catch (migrationError) {
+            console.error('❌ Enrollment archive migration failed:', migrationError.message);
+        }
+
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });

@@ -38,6 +38,11 @@ const Enrollment = sequelize.define('Enrollment', {
     paymentId: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    isArchived: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: 'is_archived'
     }
 });
 
