@@ -131,6 +131,21 @@ const User = sequelize.define('User', {
         validate: {
             is: /^[+]?[\d\s\-\(\)]+$/ // Basic phone validation
         }
+    },
+    isApproved: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: 'is_approved'
+    },
+    approvedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        field: 'approved_at'
+    },
+    approvedBy: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'approved_by'
     }
 }, {
     hooks: {

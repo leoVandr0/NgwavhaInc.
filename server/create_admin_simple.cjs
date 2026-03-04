@@ -30,7 +30,7 @@ async function createAdmin() {
 
         // Insert admin user
         const insertQuery = `
-            INSERT INTO users (id, name, email, password, role, is_verified, is_approved, created_at, updated_at)
+            INSERT INTO User (id, name, email, password, role, is_verified, is_approved, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
             password = VALUES(password), 
@@ -54,7 +54,7 @@ async function createAdmin() {
 
         // Verify the admin was created
         const [rows] = await connection.execute(
-            'SELECT id, name, email, role, is_verified FROM users WHERE email = ?',
+            'SELECT id, name, email, role, is_verified FROM User WHERE email = ?',
             ['admin@ngwavha.com']
         );
 

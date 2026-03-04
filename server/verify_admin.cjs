@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 async function verifyAdmin() {
     try {
         console.log('🔍 Verifying admin account...');
-        
+
         // Connect to MySQL
         const connection = await mysql.createConnection({
             host: process.env.MYSQLHOST || 'localhost',
@@ -18,7 +18,7 @@ async function verifyAdmin() {
 
         // Find admin user
         const [rows] = await connection.execute(
-            'SELECT * FROM users WHERE email = ?',
+            'SELECT * FROM User WHERE email = ?',
             ['admin@ngwavha.com']
         );
 
@@ -51,23 +51,23 @@ async function verifyAdmin() {
 
         if (!isMatch) {
             console.log('❌ Password mismatch! Recreating admin with correct password...');
-            
+
             // Hash the correct password
             const hashedPassword = await bcrypt.hash('admin123', 10);
-            
+
             // Update admin password
             await connection.execute(
-                'UPDATE users SET password = ?, is_verified = 1, is_approved = 1 WHERE email = ?',
+                'UPDATE User SET password = ?, is_verified = 1, is_approved = 1 WHERE email = ?',
                 [hashedPassword, 'admin@ngwavha.com']
             );
-            
+
             console.log('✅ Admin password updated successfully');
         } else {
             console.log('✅ Admin password is correct');
         }
 
         await connection.end();
-        
+
         console.log('🎉 Admin verification complete!');
         console.log('📧 Login credentials:');
         console.log('   Email: admin@ngwavha.com');

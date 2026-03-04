@@ -6,7 +6,7 @@ const mysql = require('mysql2/promise');
 async function fixRailwayDatabase() {
     try {
         console.log('🔧 Fixing Railway database schema...');
-        
+
         // Connect to Railway database
         const connection = await mysql.createConnection({
             host: process.env.MYSQLHOST,
@@ -22,19 +22,19 @@ async function fixRailwayDatabase() {
         const columnsToAdd = [
             {
                 name: 'is_rejected',
-                sql: `ALTER TABLE users ADD COLUMN is_rejected BOOLEAN DEFAULT FALSE COMMENT 'For instructors - marked as rejected by admin'`
+                sql: `ALTER TABLE User ADD COLUMN is_rejected BOOLEAN DEFAULT FALSE COMMENT 'For instructors - marked as rejected by admin'`
             },
             {
                 name: 'rejected_at',
-                sql: `ALTER TABLE users ADD COLUMN rejected_at DATETIME NULL COMMENT 'When instructor was rejected by admin'`
+                sql: `ALTER TABLE User ADD COLUMN rejected_at DATETIME NULL COMMENT 'When instructor was rejected by admin'`
             },
             {
                 name: 'rejected_by',
-                sql: `ALTER TABLE users ADD COLUMN rejected_by UUID NULL COMMENT 'Admin who rejected the instructor'`
+                sql: `ALTER TABLE User ADD COLUMN rejected_by UUID NULL COMMENT 'Admin who rejected the instructor'`
             },
             {
                 name: 'rejection_reason',
-                sql: `ALTER TABLE users ADD COLUMN rejection_reason TEXT NULL COMMENT 'Reason for rejecting instructor application'`
+                sql: `ALTER TABLE User ADD COLUMN rejection_reason TEXT NULL COMMENT 'Reason for rejecting instructor application'`
             }
         ];
 
@@ -54,7 +54,7 @@ async function fixRailwayDatabase() {
         // Verify columns were added
         const [columns] = await connection.execute(
             `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
-             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' 
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'User' 
              AND COLUMN_NAME IN ('is_rejected', 'rejected_at', 'rejected_by', 'rejection_reason')`,
             [process.env.MYSQLDATABASE]
         );
@@ -68,7 +68,7 @@ async function fixRailwayDatabase() {
 
         console.log('🎉 Railway database schema fixed!');
         console.log('📧 Instructor registration should now work');
-        
+
         return { success: true };
 
     } catch (error) {

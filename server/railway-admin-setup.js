@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 async function createRailwayAdmin() {
     try {
         console.log('🔧 Creating Railway admin account...');
-        
+
         // Connect to Railway database
         const connection = await mysql.createConnection({
             host: process.env.MYSQLHOST,
@@ -29,7 +29,7 @@ async function createRailwayAdmin() {
 
         // Insert or update admin user
         const insertQuery = `
-            INSERT INTO users (id, name, email, password, role, is_verified, is_approved, created_at, updated_at)
+            INSERT INTO User (id, name, email, password, role, is_verified, is_approved, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE 
             password = VALUES(password), 
@@ -53,7 +53,7 @@ async function createRailwayAdmin() {
 
         // Verify the admin was created
         const [rows] = await connection.execute(
-            'SELECT id, name, email, role, is_verified, is_approved FROM users WHERE email = ?',
+            'SELECT id, name, email, role, is_verified, is_approved FROM User WHERE email = ?',
             ['admin@ngwavha.com']
         );
 
@@ -67,7 +67,7 @@ async function createRailwayAdmin() {
         console.log('📧 Login with:');
         console.log('   Email: admin@ngwavha.com');
         console.log('   Password: admin123');
-        
+
         return {
             success: true,
             message: 'Railway admin created successfully',

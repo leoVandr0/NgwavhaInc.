@@ -12,7 +12,7 @@ const generateToken = (userId, role) => {
         console.error('❌ JWT_SECRET is not defined! Using fallback.');
     }
     console.log('🔑 JWT Secret exists:', !!jwtSecret, 'Length:', jwtSecret?.length);
-    
+
     return jwt.sign(
         { userId, role },
         jwtSecret,
@@ -23,12 +23,12 @@ const generateToken = (userId, role) => {
 export const registerUser = async (req, res) => {
     console.log('\n========== REGISTRATION REQUEST START ==========');
     console.log('1. Received request body:', req.body);
-    
+
     // Validate JWT secret first
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
         console.error('❌ CRITICAL: JWT_SECRET is not defined!');
-        return res.status(500).json({ 
+        return res.status(500).json({
             message: 'Server configuration error: JWT secret missing',
             error: 'JWT_SECRET environment variable not set'
         });
@@ -90,7 +90,7 @@ export const registerUser = async (req, res) => {
             whatsappNumber: whatsappNumber || null
         };
 
-        console.log('6. Creating new user in database...', { 
+        console.log('6. Creating new user in database...', {
             hasNotificationPrefs: !!userData.notificationPreferences,
             hasPhoneNumber: !!userData.phoneNumber,
             hasWhatsappNumber: !!userData.whatsappNumber
@@ -143,7 +143,7 @@ export const registerUser = async (req, res) => {
                         createdAt: user.createdAt,
                         notificationPreferences: user.notificationPreferences
                     },
-                    message: user.role === 'instructor' 
+                    message: user.role === 'instructor'
                         ? `New instructor registered: ${user.name} - Requires admin approval`
                         : `New student registered: ${user.name}`
                 });
@@ -173,17 +173,17 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     console.log('\n========== LOGIN REQUEST START ==========');
     console.log('1. Received request body:', req.body);
-    
+
     // Validate JWT secret first
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
         console.error('❌ CRITICAL: JWT_SECRET is not defined!');
-        return res.status(500).json({ 
+        return res.status(500).json({
             message: 'Server configuration error: JWT secret missing',
             error: 'JWT_SECRET environment variable not set'
         });
     }
-    
+
     try {
         const { email, password } = req.body;
 
@@ -245,14 +245,16 @@ export const loginUser = async (req, res) => {
             inputLen: (password || '').length
         });
         if (!isMatch) {
-            console.log('Login failed: Password mismatch for user:', normalizedEmail);
+            console.log('❌ Login failed: Password mismatch for user:', normalizedEmail);
+            console.log('   - Role:', user.role);
+            console.log('   - IsApproved:', user.isApproved);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         // Check if instructor is approved (only block for instructors who haven't been approved)
         if (user.role === 'instructor' && !user.isApproved) {
             console.log('Login blocked: Instructor not approved:', normalizedEmail);
-            return res.status(403).json({ 
+            return res.status(403).json({
                 message: 'Your instructor account is pending approval. Please wait for admin to approve your account.',
                 code: 'INSTRUCTOR_NOT_APPROVED'
             });

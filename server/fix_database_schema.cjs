@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 async function fixDatabaseSchema() {
     try {
         console.log('🔧 Fixing database schema...');
-        
+
         // Connect to MySQL
         const connection = await mysql.createConnection({
             host: process.env.MYSQLHOST || 'localhost',
@@ -27,10 +27,11 @@ async function fixDatabaseSchema() {
         console.log('📋 Existing tables:', existingTables);
 
         // Create tables if they don't exist
-        if (!existingTables.includes('users')) {
-            console.log('🔧 Creating users table...');
+        // Create User table if it doesn't exist
+        if (!existingTables.includes('User')) {
+            console.log('🔧 Creating User table...');
             await connection.execute(`
-                CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS User (
                     id CHAR(36) PRIMARY KEY,
                     name VARCHAR(255) NOT NULL,
                     email VARCHAR(255) NOT NULL UNIQUE,
@@ -146,7 +147,7 @@ async function fixDatabaseSchema() {
 
         console.log('🎉 Database schema fixed!');
         await connection.end();
-        
+
     } catch (error) {
         console.error('❌ Error fixing database schema:', error);
         process.exit(1);

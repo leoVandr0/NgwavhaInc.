@@ -53,7 +53,7 @@ import realtimeService from './src/services/realtime.service.js';
 const app = express();
 // Health check endpoint
 if (typeof app.use === 'function') {
-  app.use('/health', healthRoutes);
+    app.use('/health', healthRoutes);
 }
 const PORT = process.env.PORT || 8080;
 
@@ -155,20 +155,21 @@ app.post('/create-railway-admin', async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
         return res.status(403).json({ error: 'This endpoint is for production only' });
     }
-    
+
     try {
         console.log('🔧 Creating Railway admin account...');
-        
+
         // Import required modules
-        const bcrypt = require('bcryptjs');
-        const { v4: uuidv4 } = require('uuid');
-        
+        // Use already imported bcrypt and uuid (if available) or dynamic import
+        const bcrypt = (await import('bcryptjs')).default;
+        const { v4: uuidv4 } = await import('uuid');
+
         // Import User model properly
         const { default: User } = await import('./src/models/User.js');
-        
+
         // Check if admin already exists
         const existingAdmin = await User.findOne({ where: { email: 'admin@ngwavha.com' } });
-        
+
         if (existingAdmin) {
             // Update existing admin
             const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -193,9 +194,9 @@ app.post('/create-railway-admin', async (req, res) => {
             });
             console.log('✅ Created new Railway admin account');
         }
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Railway admin account created successfully!',
             login: {
                 email: 'admin@ngwavha.com',
@@ -211,7 +212,7 @@ app.post('/create-railway-admin', async (req, res) => {
     } catch (error) {
         console.error('❌ Error creating Railway admin:', error);
         console.error('❌ Stack trace:', error.stack);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to create admin account',
             details: error.message,
             stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
@@ -232,7 +233,7 @@ server.listen(PORT, () => {
 });
 
 // Database connections (non-blocking)
- connectMySQL().then(async (sequelize) => {
+connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
         // Auto-seed Railway admin account for production login (single, idempotent seed)
