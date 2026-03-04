@@ -22,6 +22,10 @@ const MultiStepRegister = ({
         promotionalEmails: false,
         weeklyDigest: false
     });
+    const [phoneNumbers, setPhoneNumbers] = useState({
+        whatsapp: '+263 ',
+        sms: '+263 '
+    });
 
     const steps = [
         {
@@ -61,13 +65,19 @@ const MultiStepRegister = ({
         handleNext();
     };
 
+    const handlePhoneNumbersUpdate = (numbers) => {
+        setPhoneNumbers(numbers);
+    };
+
     const handleFinalSubmit = async (e) => {
         e.preventDefault();
         
-        // Merge notification preferences with form data
+        // Merge notification preferences and phone numbers with form data
         const submissionData = {
             ...formData,
-            notificationPreferences: notificationPrefs
+            notificationPreferences: notificationPrefs,
+            phoneNumber: phoneNumbers.sms,
+            whatsappNumber: phoneNumbers.whatsapp
         };
 
         await onSubmit(e, submissionData);
@@ -111,6 +121,8 @@ const MultiStepRegister = ({
                         preferences={notificationPrefs}
                         onChange={handleNotificationSubmit}
                         onSkip={handleNext}
+                        phoneNumbers={phoneNumbers}
+                        onPhoneNumbersChange={handlePhoneNumbersUpdate}
                     />
                 );
             

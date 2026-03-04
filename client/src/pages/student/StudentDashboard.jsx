@@ -63,40 +63,40 @@ const StudentDashboard = () => {
     return (
         <div className="min-h-screen bg-dark-950 text-white font-sans">
             {/* Udemy-style Header */}
-            <div className="bg-dark-900 border-b border-dark-800 pt-12 pb-4 px-4 sm:px-8">
+            <div className="bg-dark-900 border-b border-dark-800 pt-8 pb-3 px-4 sm:px-6">
                 <div className="max-w-7xl mx-auto">
-                    <h1 className="text-4xl font-bold font-serif mb-8 text-white">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-serif mb-4 sm:mb-6 text-white">
                         My Learning
                     </h1>
 
-                    {/* Tabs */}
-                    <div className="flex space-x-8 text-sm font-bold text-dark-300">
+                    {/* Tabs - Mobile Scrollable */}
+                    <div className="flex space-x-6 sm:space-x-8 text-sm font-bold text-dark-300 overflow-x-auto scrollbar-hide pb-2">
                         <button
                             onClick={() => setActiveTab('all')}
-                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'all' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
+                            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'all' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
                         >
                             All Courses
                         </button>
                         <button
                             onClick={() => setActiveTab('active')}
-                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'active' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
+                            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'active' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
                         >
                             In Progress
                         </button>
                         <button
                             onClick={() => setActiveTab('completed')}
-                            className={`pb-4 border-b-2 transition-colors ${activeTab === 'completed' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
+                            className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === 'completed' ? 'text-white border-white' : 'border-transparent hover:text-white'}`}
                         >
                             Completed
                         </button>
                         <Link
                             to="/student/wishlist"
-                            className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
+                            className="pb-3 border-b-2 border-transparent hover:text-white transition-colors whitespace-nowrap"
                         >
                             Wishlist
                         </Link>
                         <button
-                            className="pb-4 border-b-2 border-transparent hover:text-white transition-colors"
+                            className="pb-3 border-b-2 border-transparent hover:text-white transition-colors whitespace-nowrap"
                         >
                             Archived
                         </button>
@@ -105,22 +105,22 @@ const StudentDashboard = () => {
             </div>
 
             {/* Content Area */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {isLoading ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {[...Array(4)].map((_, i) => (
                             <div key={i} className="animate-pulse">
-                                <div className="aspect-video bg-dark-800 mb-4"></div>
+                                <div className="aspect-video bg-dark-800 mb-3 sm:mb-4"></div>
                                 <div className="h-4 bg-dark-800 rounded w-3/4 mb-2"></div>
                                 <div className="h-3 bg-dark-800 rounded w-1/2"></div>
                             </div>
                         ))}
                     </div>
                 ) : filteredEnrollments?.length > 0 ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {filteredEnrollments.map((enrollment) => (
                             <Link to={`/learn/${enrollment.course.slug}`} key={enrollment.id} className="group block h-full">
-                                <div className="bg-dark-900 border border-dark-800 hover:border-dark-600 transition-all h-full flex flex-col">
+                                <div className="bg-dark-900 border border-dark-800 hover:border-dark-600 transition-all h-full flex flex-col rounded-lg overflow-hidden">
                                     {/* Thumbnail */}
                                     <div className="relative aspect-video bg-dark-800 overflow-hidden">
                                         {enrollment.course.thumbnail ? (
@@ -141,11 +141,11 @@ const StudentDashboard = () => {
                                     </div>
 
                                     {/* Card Body */}
-                                    <div className="p-4 flex-1 flex flex-col">
-                                        <h3 className="font-bold text-white mb-1 line-clamp-2 leading-tight group-hover:text-primary-500 transition-colors">
+                                    <div className="p-3 sm:p-4 flex-1 flex flex-col">
+                                        <h3 className="font-bold text-white mb-1 sm:mb-2 line-clamp-2 leading-tight text-sm sm:text-base group-hover:text-primary-500 transition-colors">
                                             {enrollment.course.title}
                                         </h3>
-                                        <p className="text-xs text-dark-400 mb-4 truncate">
+                                        <p className="text-xs text-dark-400 mb-3 sm:mb-4 truncate">
                                             {enrollment.course.instructor?.name || 'Instructor'}
                                         </p>
 
@@ -171,14 +171,21 @@ const StudentDashboard = () => {
                     </div>
                 ) : (
                     // Empty State
-                    <div className="text-center py-20 bg-dark-900 border border-dark-800">
-                        <h2 className="text-2xl font-bold text-white mb-4">Let's start learning, {currentUser?.name?.split(' ')[0]}</h2>
-                        <p className="text-dark-400 mb-8 max-w-md mx-auto">
-                            Identify your goals and start learning today. We have thousands of courses for you.
-                        </p>
-                        <Link to="/courses" className="inline-flex items-center justify-center px-6 py-3 text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 transition-colors">
-                            Browse now
-                        </Link>
+                    <div className="text-center py-12 sm:py-16 bg-dark-900 border border-dark-800 rounded-lg max-w-2xl mx-auto">
+                        <div className="px-4 sm:px-6">
+                            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Let's start learning, {currentUser?.name?.split(' ')[0]}</h2>
+                            <p className="text-dark-400 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">
+                                Identify your goals and start learning today. We have thousands of courses for you.
+                            </p>
+                            <div className="space-y-4">
+                                <Link to="/courses" className="inline-flex items-center justify-center px-6 py-3 text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 transition-colors w-full sm:w-auto">
+                                    Explore Courses
+                                </Link>
+                                <div className="text-xs sm:text-sm text-dark-500">
+                                    🔥 Trending now in your area
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

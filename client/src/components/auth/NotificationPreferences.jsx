@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Mail, 
     MessageSquare, 
@@ -8,11 +8,30 @@ import {
     Info,
     X,
     Wifi,
-    Send
+    Send,
+    Shield,
+    Star,
+    Lock
 } from 'lucide-react';
 
-const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
+const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: externalPhoneNumbers, onPhoneNumbersChange }) => {
     const [showDetails, setShowDetails] = useState(false);
+    const [phoneNumbers, setPhoneNumbers] = useState(externalPhoneNumbers || {
+        whatsapp: '+263 ',
+        sms: '+263 '
+    });
+    const [phoneErrors, setPhoneErrors] = useState({
+        whatsapp: '',
+        sms: ''
+    });
+    const [saveStatus, setSaveStatus] = useState('');
+
+    // Update local phone numbers when external ones change
+    useEffect(() => {
+        if (externalPhoneNumbers) {
+            setPhoneNumbers(externalPhoneNumbers);
+        }
+    }, [externalPhoneNumbers]);
 
     const notificationTypes = [
         {
@@ -21,7 +40,8 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
             title: 'Email Notifications',
             description: 'Receive updates via email',
             default: true,
-            color: 'blue'
+            color: 'blue',
+            primary: true
         },
         {
             key: 'whatsapp',
@@ -30,7 +50,8 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
             description: 'Get updates on WhatsApp',
             default: false,
             color: 'green',
-            requiresPhone: true
+            requiresPhone: true,
+            recommended: true
         },
         {
             key: 'sms',
@@ -92,12 +113,107 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
         }
     ];
 
-    const handleToggle = (key) => {
+    const validateZimbabweNumber = (number) => {
+        // Remove all non-digit characters
+        const cleanNumber = number.replace(/\D/g, '');
+        
+        // Check if it starts with 263 and has correct length
+        if (cleanNumber.startsWith('263')) {
+            // Remove 263 and check the remaining number
+            const localNumber = cleanNumber.substring(3);
+            // Zimbabwe numbers are typically 9 digits after country code
+            if (localNumber.length === 9 && /^[67]\d{8}$/.test(localNumber)) {
+                return true;
+            }
+        }
+        
+        return false;
+    };
+
+    const formatZimbabweNumber = (number) => {
+        let cleanNumber = number.replace(/\D/g, '');
+        
+        // If number starts with 263, keep it
+        if (!cleanNumber.startsWith('263')) {
+            // If it's a local number (starts with 7 or 8), add 263
+            if (/^[67]/.test(cleanNumber)) {
+                cleanNumber = '263' + cleanNumber;
+            }
+        }
+        
+        // Format as +263 XX XXX XXXX
+        if (cleanNumber.length === 12) {
+            return `+263 ${cleanNumber.substring(3, 5)} ${cleanNumber.substring(5, 8)} ${cleanNumber.substring(8)}`;
+        }
+        
+        return number;
+    };
+
+    const handlePhoneChange = (type, value) => {
+        const formattedValue = formatZimbabweNumber(value);
+        const newPhoneNumbers = { ...phoneNumbers, [type]: formattedValue };
+        setPhoneNumbers(newPhoneNumbers);
+        
+        // Notify parent component if callback exists
+        if (onPhoneNumbersChange) {
+            onPhoneNumbersChange(newPhoneNumbers);
+        }
+        
+        // Validate number
+        if (value && !validateZimbabweNumber(value)) {
+            setPhoneErrors(prev => ({
+                ...prev,
+                [type]: 'Please enter a valid Zimbabwe number (e.g., +263 77 123 4567)'
+            }));
+        } else {
+            setPhoneErrors(prev => ({ ...prev, [type]: '' }));
+        }
+    };
+
+    const requestPushPermission = async () => {
+        if ('Notification' in window) {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    setSaveStatus('Push notifications enabled!');
+                    setTimeout(() => setSaveStatus(''), 3000);
+                    return true;
+                } else if (permission === 'denied') {
+                    setSaveStatus('Push notifications are blocked. Please enable them in browser settings.');
+                    setTimeout(() => setSaveStatus(''), 5000);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error requesting push permission:', error);
+                return false;
+            }
+        }
+        return false;
+    };
+
+    const handleToggle = async (key) => {
         const newPrefs = {
             ...preferences,
             [key]: !preferences[key]
         };
+        
+        // Special handling for push notifications
+        if (key === 'push' && newPrefs.push) {
+            const granted = await requestPushPermission();
+            if (!granted) {
+                newPrefs.push = false;
+            }
+        }
+        
+        // If disabling phone-based notifications, clear the phone numbers
+        if ((key === 'whatsapp' || key === 'sms') && !newPrefs[key]) {
+            setPhoneNumbers(prev => ({ ...prev, [key]: '+263 ' }));
+            setPhoneErrors(prev => ({ ...prev, [key]: '' }));
+        }
+        
         onChange(newPrefs);
+        setSaveStatus('Settings updated successfully!');
+        setTimeout(() => setSaveStatus(''), 3000);
     };
 
     const handleCategoryToggle = (key) => {
@@ -156,16 +272,52 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
                                 {type.icon}
                             </div>
                             <div className="flex-1">
-                                <h4 className="font-semibold text-white mb-1">
+                                <h4 className="font-semibold text-white mb-1 flex items-center gap-2">
                                     {type.title}
+                                    {type.recommended && (
+                                        <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full flex items-center gap-1">
+                                            <Star className="w-3 h-3" />
+                                            Recommended
+                                        </span>
+                                    )}
+                                    {type.primary && (
+                                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-xs rounded-full">
+                                            Primary
+                                        </span>
+                                    )}
                                 </h4>
                                 <p className="text-dark-400 text-sm">
                                     {type.description}
                                 </p>
-                                {type.requiresPhone && preferences[type.key] && (
-                                    <div className="mt-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded text-yellow-400 text-xs">
-                                        <Info className="w-3 h-3 inline mr-1" />
-                                        Phone number required for this option
+                                {type.requiresPhone && (
+                                    <div className="mt-3 space-y-2">
+                                        <div>
+                                            <label className="block text-sm font-medium text-dark-300 mb-1">
+                                                Phone Number
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                value={phoneNumbers[type.key] || ''}
+                                                onChange={(e) => handlePhoneChange(type.key, e.target.value)}
+                                                placeholder="+263 77 123 4567"
+                                                disabled={!preferences[type.key]}
+                                                className={`w-full px-3 py-2 border rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 transition-all ${
+                                                    preferences[type.key]
+                                                        ? 'bg-dark-700 border-dark-600 focus:ring-primary-500 focus:border-primary-500'
+                                                        : 'bg-dark-800 border-dark-700 opacity-50 cursor-not-allowed'
+                                                }`}
+                                            />
+                                            {phoneErrors[type.key] && (
+                                                <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                                                    <Info className="w-3 h-3" />
+                                                    {phoneErrors[type.key]}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1 text-xs text-dark-400">
+                                            <Lock className="w-3 h-3" />
+                                            <span>Your number is encrypted and never shared</span>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -237,6 +389,22 @@ const NotificationPreferences = ({ preferences, onChange, onSkip }) => {
                     </div>
                 )}
             </div>
+
+            {/* Save Status Message */}
+            {saveStatus && (
+                <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
+                    saveStatus.includes('blocked') 
+                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                        : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                }`}>
+                    {saveStatus.includes('blocked') ? (
+                        <Info className="w-4 h-4" />
+                    ) : (
+                        <CheckCircle className="w-4 h-4" />
+                    )}
+                    {saveStatus}
+                </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4">

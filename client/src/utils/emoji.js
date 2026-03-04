@@ -1,5 +1,5 @@
 export const EMOJI = {
- notifications: '🔔',
+  notifications: '🔔',
   login: '🔑',
   signup: '✨',
   courses: '📚',
