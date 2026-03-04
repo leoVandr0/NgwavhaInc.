@@ -7,16 +7,17 @@ export async function seedRailwayAdmin() {
     if (!existing) {
       const { v4: uuidv4 } = await import('uuid');
       const bcrypt = (await import('bcryptjs')).default;
-      const hashed = await bcrypt.hash(adminPassword, 10);
+      const hashed = await bcrypt.hash(adminPassword, 12);
       await User.create({ id: uuidv4(), name: 'Railway Admin', email: adminEmail, password: hashed, role: 'admin', isVerified: true, isApproved: true });
       console.log('✅ Railway admin seeded:', adminEmail);
     } else {
       const bcrypt = (await import('bcryptjs')).default;
       const isMatch = await bcrypt.compare(adminPassword, existing.password);
-      if (!isMatch) {
-        const newHash = await bcrypt.hash(adminPassword, 10);
+      const FORCE = (process.env.FORCE_RAILWAY_ADMIN_RESET === 'true');
+      if (FORCE || !isMatch) {
+        const newHash = await bcrypt.hash(adminPassword, 12);
         await existing.update({ password: newHash, role: 'admin', isVerified: true, isApproved: true });
-        console.log('🔐 Railway admin password updated from env var');
+        console.log('🔐 Railway admin password updated from env var (force)');
       } else {
         await existing.update({ role: 'admin', isVerified: true, isApproved: true });
         console.log('✅ Railway admin already exists:', adminEmail);

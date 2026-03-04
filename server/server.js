@@ -252,13 +252,7 @@ server.listen(PORT, () => {
         } catch (migrationError) {
             console.error('❌ Migration failed:', migrationError.message);
         }
-        // Seed Railway admin (idempotent)
-        try {
-            const { seedRailwayAdmin } = await import('./src/utils/adminSeed.js');
-            await seedRailwayAdmin();
-        } catch (err) {
-            console.error('⚠ Railway admin seed failed:', err?.message);
-        }
+        // (duplicate admin seed block removed)
 
         // Run instructor approval migration
         try {

@@ -212,8 +212,25 @@ export const loginUser = async (req, res) => {
         }
 
         // Check password
-        const isMatch = await user.matchPassword(password);
-        console.log('Login attempt result:', { userId: user.id, email: user.email, role: user.role, passwordMatched: isMatch });
+        let isMatch = await user.matchPassword(password);
+        // If admin password mismatches, try reseeding from env var once and retry
+        if (user.role === 'admin' && !isMatch) {
+            try {
+                const { seedRailwayAdmin } = await import('../utils/adminSeed.js');
+                await seedRailwayAdmin();
+            } catch (e) {
+                // ignore seed errors here; we'll fall through to invalid credentials
+            }
+            isMatch = await user.matchPassword(password);
+        }
+        console.log('Login attempt result:', {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            passwordMatched: isMatch,
+            hashLen: user.password?.length,
+            inputLen: (password || '').length
+        });
         if (!isMatch) {
             console.log('Login failed: Password mismatch for user:', normalizedEmail);
             return res.status(400).json({ message: 'Invalid credentials' });
