@@ -52,7 +52,7 @@ const AdminDashboard = () => {
     const [onlineUsers, setOnlineUsers] = useState(0);
     const [activeSessions, setActiveSessions] = useState(0);
     const [loading, setLoading] = useState(false);
-    
+
     // Real-time admin hook
     const { isConnected, realTimeData, lastUpdate, requestUpdate } = useRealTimeAdmin();
 
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
                 totalCourses: realTimeData.stats.totalCourses || prev.totalCourses
             }));
         }
-        
+
         if (realTimeData.recentActivity) {
             setRecentActivity(realTimeData.recentActivity);
         }
@@ -219,13 +219,10 @@ const AdminDashboard = () => {
         };
     }, []);
 
-    // Use real-time online/session counts when connected
+    // Online/session counts could go here if implemented in real-time service
     useEffect(() => {
-        if (connected && (rtOnline !== undefined || rtSessions !== undefined)) {
-            if (rtOnline !== undefined) setOnlineUsers(rtOnline);
-            if (rtSessions !== undefined) setActiveSessions(rtSessions);
-        }
-    }, [connected, rtOnline, rtSessions]);
+        // Handle online status or other live stats if needed
+    }, [isConnected]);
 
     // Fetch dashboard data
     useEffect(() => {
@@ -264,15 +261,15 @@ const AdminDashboard = () => {
 
     const getActivityIcon = (type) => {
         switch (type) {
-            case 'teacher_approval': 
-            case 'teacher_approved': 
+            case 'teacher_approval':
+            case 'teacher_approved':
                 return <UserPlus size={16} />;
             case 'teacher_declined':
                 return <AlertTriangle size={16} />;
-            case 'new_teacher': 
-            case 'new_student': 
+            case 'new_teacher':
+            case 'new_student':
                 return <UserPlus size={16} />;
-            case 'course_creation': 
+            case 'course_creation':
             case 'course_update':
             case 'course_deletion':
                 return <BookOpen size={16} />;
@@ -294,16 +291,16 @@ const AdminDashboard = () => {
 
     const getActivityColor = (type) => {
         switch (type) {
-            case 'teacher_approval': 
+            case 'teacher_approval':
             case 'teacher_approved':
                 return 'orange';
             case 'teacher_declined':
                 return 'red';
-            case 'new_teacher': 
+            case 'new_teacher':
                 return 'purple';
-            case 'new_student': 
+            case 'new_student':
                 return 'green';
-            case 'course_creation': 
+            case 'course_creation':
                 return 'blue';
             case 'course_update':
                 return 'cyan';
@@ -369,7 +366,7 @@ const AdminDashboard = () => {
                             {isConnected ? (
                                 <>
                                     <Wifi className="text-green-500" size={20} />
-                                    <span className="text-green-500 text-sm">Connected</span>
+                                    <span className="text-green-500 text-sm">Live System Connected</span>
                                 </>
                             ) : (
                                 <>
@@ -378,7 +375,7 @@ const AdminDashboard = () => {
                                 </>
                             )}
                         </div>
-                        <Button 
+                        <Button
                             icon={<RefreshCw size={16} />}
                             onClick={requestUpdate}
                             loading={loading}
@@ -407,7 +404,7 @@ const AdminDashboard = () => {
                             <TrendingUp size={16} className="text-green-500" />
                             <span className="text-green-500 text-sm">+{Math.floor(Math.random() * 20 + 5)}% from last month</span>
                         </div>
-                        {connected && (
+                        {isConnected && (
                             <div className="mt-2 pt-2 border-t border-dark-600">
                                 <span className="text-xs text-primary-400">🔴 Live updates enabled</span>
                             </div>
@@ -443,7 +440,7 @@ const AdminDashboard = () => {
                             <TrendingUp size={16} className="text-green-500" />
                             <span className="text-green-500 text-sm">+{Math.floor(Math.random() * 25 + 8)}% from last month</span>
                         </div>
-                        {connected && (
+                        {isConnected && (
                             <div className="mt-2 pt-2 border-t border-dark-600">
                                 <span className="text-xs text-primary-400">🔴 Real-time updates</span>
                             </div>
@@ -467,7 +464,7 @@ const AdminDashboard = () => {
                             prefix={<TrendingUp size={16} className="text-green-500" />}
                             valueStyle={{ color: '#10b981' }}
                         />
-                        {connected && (
+                        {isConnected && (
                             <div className="mt-2 text-xs text-green-400">🟢 Live</div>
                         )}
                     </Card>
@@ -485,7 +482,7 @@ const AdminDashboard = () => {
                             prefix={<BarChart3 size={16} className="text-blue-500" />}
                             valueStyle={{ color: '#3b82f6' }}
                         />
-                        {connected && (
+                        {isConnected && (
                             <div className="mt-2 text-xs text-blue-400">🟢 Live</div>
                         )}
                     </Card>
@@ -503,7 +500,7 @@ const AdminDashboard = () => {
                             prefix={<AlertTriangle size={16} className="text-orange-500" />}
                             valueStyle={{ color: '#f59e0b' }}
                         />
-                        {stats.pendingTeachers > 0 && connected && (
+                        {stats.pendingTeachers > 0 && isConnected && (
                             <div className="mt-2 text-xs text-orange-400">⚠️ Needs attention</div>
                         )}
                     </Card>
@@ -575,7 +572,7 @@ const AdminDashboard = () => {
                     <span className="text-white flex items-center gap-2">
                         <Activity size={20} />
                         Recent Activity
-                        {connected && (
+                        {isConnected && (
                             <Badge count="LIVE" className="bg-green-500 text-white text-xs" />
                         )}
                     </span>
