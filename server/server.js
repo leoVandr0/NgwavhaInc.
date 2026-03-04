@@ -235,49 +235,12 @@ server.listen(PORT, () => {
  connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
-        // Auto-seed Railway admin account for production login
+        // Auto-seed Railway admin account for production login (single, idempotent seed)
         try {
-            const { default: User } = await import('./src/models/User.js');
-            const adminEmail = process.env.RAILWAY_ADMIN_EMAIL || 'admin@ngwavha.com';
-            const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || 'admin123';
-            const existing = await User.findOne({ where: { email: adminEmail } });
-            if (!existing) {
-                const { v4: uuidv4 } = await import('uuid');
-                const bcrypt = (await import('bcryptjs')).default;
-                const hashedPassword = await bcrypt.hash(adminPassword, 10);
-                await User.create({ id: uuidv4(), name: 'Railway Admin', email: adminEmail, password: hashedPassword, role: 'admin', isVerified: true, isApproved: true });
-                console.log('✅ Railway admin seeded:', adminEmail);
-            } else {
-                console.log('Railway admin already exists:', adminEmail);
-            }
+            const { seedRailwayAdmin } = await import('./src/utils/adminSeed.js');
+            await seedRailwayAdmin();
         } catch (err) {
-            console.error('❗ Railway admin seed failed:', err?.message);
-        }
-        // Auto-seed Railway admin account for production login
-        try {
-            const { default: User } = await import('./src/models/User.js');
-            const adminEmail = process.env.RAILWAY_ADMIN_EMAIL || 'admin@ngwavha.com';
-            const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || 'admin123';
-            const existing = await User.findOne({ where: { email: adminEmail } });
-            if (!existing) {
-                const { v4: uuidv4 } = await import('uuid');
-                const bcrypt = (await import('bcryptjs')).default;
-                const hashedPassword = await bcrypt.hash(adminPassword, 10);
-                await User.create({
-                    id: uuidv4(),
-                    name: 'Railway Admin',
-                    email: adminEmail,
-                    password: hashedPassword,
-                    role: 'admin',
-                    isVerified: true,
-                    isApproved: true
-                });
-                console.log('✅ Railway admin account created:', adminEmail);
-            } else {
-                console.log('Railway admin already exists:', adminEmail);
-            }
-        } catch (err) {
-            console.error('❗ Railway admin seed failed:', err?.message);
+            console.error('⚠ Railway admin seed failed:', err?.message);
         }
 
         // Run notification preferences migration
@@ -288,6 +251,13 @@ server.listen(PORT, () => {
             console.log('✅ Notification preferences migration completed');
         } catch (migrationError) {
             console.error('❌ Migration failed:', migrationError.message);
+        }
+        // Seed Railway admin (idempotent)
+        try {
+            const { seedRailwayAdmin } = await import('./src/utils/adminSeed.js');
+            await seedRailwayAdmin();
+        } catch (err) {
+            console.error('⚠ Railway admin seed failed:', err?.message);
         }
 
         // Run instructor approval migration
@@ -318,6 +288,16 @@ server.listen(PORT, () => {
             console.log('✅ Instructor status migration completed');
         } catch (migrationError) {
             console.error('❌ Instructor status migration failed:', migrationError.message);
+        }
+
+        // Run course preview video path migration (ensure DB supports preview_video_path)
+        try {
+            console.log('🔄 Running course preview video path migration...');
+            const { up } = await import('./src/migrations/add-course-preview-video-path.js');
+            await up();
+            console.log('✅ Course preview video path migration completed');
+        } catch (migrationError) {
+            console.error('❌ Course preview video path migration failed:', migrationError.message);
         }
 
         seedCategories().catch((error) => {
