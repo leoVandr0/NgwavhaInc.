@@ -6,49 +6,80 @@ import { Op } from 'sequelize';
 
 // helper to get all dashboard stats
 const fetchStats = async () => {
-  const [
-    totalUsers,
-    totalStudents,
-    totalTeachers,
-    pendingTeachers,
-    totalCourses,
-    activeCourses,
-    totalRevenue,
-    monthlyRevenue
-  ] = await Promise.all([
-    User.count(),
-    User.count({ where: { role: 'student' } }),
-    User.count({ where: { role: 'instructor' } }),
-    User.count({ where: { role: 'instructor', isApproved: false } }),
-    Course.count(),
-    Course.count({ where: { isPublished: true } }),
-    Enrollment.sum('pricePaid') || 0,
-    Enrollment.sum('pricePaid', {
-      where: {
-        createdAt: { [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30)) }
+  try {
+    console.log('📊 Starting dashboard stats fetch...');
+
+    // 1. User counts
+    let totalUsers = 0, totalStudents = 0, totalTeachers = 0, pendingTeachers = 0;
+    try {
+      totalUsers = await User.count();
+      totalStudents = await User.count({ where: { role: 'student' } });
+      totalTeachers = await User.count({ where: { role: 'instructor' } });
+      pendingTeachers = await User.count({ where: { role: 'instructor', isApproved: false } });
+    } catch (e) {
+      console.error('❌ User stats error:', e.message);
+    }
+
+    // 2. Course counts
+    let totalCourses = 0, activeCourses = 0;
+    try {
+      totalCourses = await Course.count();
+      activeCourses = await Course.count({ where: { isPublished: true } });
+    } catch (e) {
+      console.error('❌ Course stats error:', e.message);
+    }
+
+    // 3. Revenue
+    let totalRevenue = 0, monthlyRevenue = 0;
+    try {
+      const totalRevResult = await Enrollment.sum('pricePaid');
+      totalRevenue = totalRevResult || 0;
+
+      const monthlyRevResult = await Enrollment.sum('pricePaid', {
+        where: {
+          createdAt: { [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30)) }
+        }
+      });
+      monthlyRevenue = monthlyRevResult || 0;
+    } catch (e) {
+      console.error('❌ Revenue stats error:', e.message);
+    }
+
+    // 4. Activity
+    let recentActivities = [];
+    try {
+      if (Activity && typeof Activity.find === 'function') {
+        recentActivities = await Activity.find().sort({ timestamp: -1 }).limit(20).lean();
       }
-    }) || 0
-  ]);
+    } catch (e) {
+      console.error('❌ Activity stats error (non-blocking):', e.message);
+    }
 
-  const recentActivity = await Activity.find()
-    .sort({ timestamp: -1 })
-    .limit(20)
-    .lean();
-
-  return {
-    users: { total: totalUsers, students: totalStudents, teachers: totalTeachers, pendingTeachers, active: 0 /* placeholder */ },
-    courses: { total: totalCourses, active: activeCourses },
-    revenue: { total: parseFloat(totalRevenue), monthly: parseFloat(monthlyRevenue) },
-    recentActivity: recentActivity.map(a => ({
-      id: a._id,
-      type: a.type || a.action,
-      user: a.userName || 'System',
-      action: a.description || a.action,
-      time: a.timestamp,
-      status: 'success'
-    })),
-    realTime: { onlineUsers: 0, activeSessions: 0 } // handled by service
-  };
+    return {
+      users: { total: totalUsers, students: totalStudents, teachers: totalTeachers, pendingTeachers, active: 0 },
+      courses: { total: totalCourses, active: activeCourses },
+      revenue: { total: parseFloat(totalRevenue), monthly: parseFloat(monthlyRevenue) },
+      recentActivity: (recentActivities || []).map(a => ({
+        id: a._id || Math.random().toString(36).substr(2, 9),
+        type: a.type || a.action || 'system',
+        user: a.userName || 'System',
+        action: a.description || a.action || 'Performed action',
+        time: a.timestamp || new Date(),
+        status: 'success'
+      })),
+      realTime: { onlineUsers: 0, activeSessions: 0 }
+    };
+  } catch (err) {
+    console.error('❌ Critical failure in fetchStats:', err);
+    // Return empty stats instead of throwing to prevent 500
+    return {
+      users: { total: 0, students: 0, teachers: 0, pendingTeachers: 0, active: 0 },
+      courses: { total: 0, active: 0 },
+      revenue: { total: 0, monthly: 0 },
+      recentActivity: [],
+      realTime: { onlineUsers: 0, activeSessions: 0 }
+    };
+  }
 };
 
 export const getDashboardData = async (req, res) => {

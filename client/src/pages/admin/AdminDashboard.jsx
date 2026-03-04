@@ -232,26 +232,28 @@ const AdminDashboard = () => {
                 const data = response.data;
                 if (data.success) {
                     setStats({
-                        totalUsers: data.data.users.total || 0,
-                        activeUsers: data.data.users.active || 0,
-                        totalTeachers: data.data.users.teachers || 0,
-                        totalStudents: data.data.users.students || 0,
-                        pendingTeachers: data.data.users.pendingTeachers || 0,
-                        totalCourses: data.data.courses.total || 0,
-                        activeCourses: data.data.courses.active || 0,
-                        totalRevenue: data.data.revenue?.total || 0,
-                        monthlyRevenue: data.data.revenue?.monthly || 0
+                        totalUsers: data.data?.users?.total || 0,
+                        activeUsers: data.data?.users?.active || 0,
+                        totalTeachers: data.data?.users?.teachers || 0,
+                        totalStudents: data.data?.users?.students || 0,
+                        pendingTeachers: data.data?.users?.pendingTeachers || 0,
+                        totalCourses: data.data?.courses?.total || 0,
+                        activeCourses: data.data?.courses?.active || 0,
+                        totalRevenue: data.data?.revenue?.total || 0,
+                        monthlyRevenue: data.data?.revenue?.monthly || 0
                     });
-                    if (data.data.recentActivity?.length) {
+                    if (data.data?.recentActivity && Array.isArray(data.data.recentActivity)) {
                         setRecentActivity(data.data.recentActivity);
                     }
-                    if (data.data.realTime) {
+                    if (data.data?.realTime) {
                         setOnlineUsers(data.data.realTime.onlineUsers ?? 0);
                         setActiveSessions(data.data.realTime.activeSessions ?? 0);
                     }
                 }
             } catch (error) {
                 console.error('Dashboard data fetch error:', error);
+                // Don't let fetch error crash the whole component
+                setStats(prev => prev);
             } finally {
                 setLoading(false);
             }

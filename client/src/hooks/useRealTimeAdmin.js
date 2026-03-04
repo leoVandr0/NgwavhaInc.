@@ -33,11 +33,19 @@ const useRealTimeAdmin = () => {
     }, [currentUser]);
 
     const connectSocket = () => {
-        const newSocket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:8080', {
+        // In production, we usually connect to the same host.
+        // If REACT_APP_SERVER_URL is not set, use window.location.origin (for same-domain deploy)
+        const socketUrl = process.env.REACT_APP_SERVER_URL ||
+            (window.location.hostname === 'localhost' ? 'http://localhost:8080' : window.location.origin);
+
+        console.log('📡 Connecting to real-time service at:', socketUrl);
+
+        const newSocket = io(socketUrl, {
+            path: '/socket.io/', // Ensure path matches server config
             transports: ['websocket', 'polling'],
-            timeout: 10000,
+            timeout: 20000, // Increased timeout for Railway instability
             reconnection: true,
-            reconnectionDelay: 1000,
+            reconnectionDelay: 2000,
             reconnectionAttempts: maxReconnectAttempts
         });
 
@@ -45,7 +53,7 @@ const useRealTimeAdmin = () => {
             console.log('✅ Connected to admin real-time service');
             setIsConnected(true);
             reconnectAttempts.current = 0;
-            
+
             // Authenticate as admin
             newSocket.emit('admin-auth', {
                 role: currentUser.role,
@@ -61,7 +69,7 @@ const useRealTimeAdmin = () => {
         newSocket.on('connect_error', (error) => {
             console.error('Socket connection error:', error);
             reconnectAttempts.current++;
-            
+
             if (reconnectAttempts.current >= maxReconnectAttempts) {
                 console.log('Max reconnection attempts reached, giving up');
                 newSocket.disconnect();

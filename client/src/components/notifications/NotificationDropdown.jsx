@@ -72,9 +72,9 @@ const NotificationDropdown = () => {
         }
     };
 
-    const sortedNotifications = [...notifications].sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-    );
+    const sortedNotifications = Array.isArray(notifications)
+        ? [...notifications].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        : [];
 
     return (
         <div className="relative" ref={dropdownRef}>

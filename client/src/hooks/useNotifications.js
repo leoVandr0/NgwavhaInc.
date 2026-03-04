@@ -18,16 +18,21 @@ const useNotifications = () => {
         try {
             setLoading(true);
             const response = await api.get('/notifications');
-            if (response.data && Array.isArray(response.data)) {
-                setNotifications(response.data);
-                const unread = response.data.filter(n => !n.read).length;
+            // The API returns { success: true, data: [...], count: X }
+            const notificationData = response.data?.data || response.data;
+
+            if (notificationData && Array.isArray(notificationData)) {
+                setNotifications(notificationData);
+                const unread = notificationData.filter(n => !n.read).length;
                 setUnreadCount(unread);
             } else {
-                console.error('Invalid notifications data:', response.data);
+                console.error('Invalid notifications data format:', response.data);
                 setNotifications([]);
+                setUnreadCount(0);
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
+            setNotifications([]);
         } finally {
             setLoading(false);
         }
@@ -36,7 +41,7 @@ const useNotifications = () => {
     const markAsRead = async (notificationId) => {
         try {
             await api.put(`/notifications/${notificationId}/read`);
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
@@ -48,7 +53,7 @@ const useNotifications = () => {
     const markAllAsRead = async () => {
         try {
             await api.put('/notifications/read-all');
-            setNotifications(prev => 
+            setNotifications(prev =>
                 prev.map(n => ({ ...n, read: true }))
             );
             setUnreadCount(0);
