@@ -50,7 +50,6 @@ import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminModeration from './pages/admin/AdminModeration';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminReports from './pages/admin/AdminReports';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminTeacherVerification from './pages/admin/AdminTeacherVerification';
 import AdminCategories from './pages/admin/AdminCategories';
 import NotificationSettings from './pages/settings/NotificationSettings';
