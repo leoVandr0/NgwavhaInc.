@@ -57,7 +57,7 @@ export const upload = multer({
     storage: localStorage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 50 * 1024 * 1024 // 50MB max file size
+        fileSize: 200 * 1024 * 1024 // 200MB max file size
     }
 });
 
@@ -106,7 +106,7 @@ export const r2Status = {
 };
 
 // R2 uploader (will be swapped to R2 storage when available)
-export let r2Upload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 50 * 1024 * 1024 } });
+export let r2Upload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
 
 // Try to initialize Cloudflare R2 uploader and swap in if configured
 const initializeR2Uploader = async () => {
@@ -143,7 +143,7 @@ const initializeR2Uploader = async () => {
         // Swap in R2 uploader
         const multerModule = await import('multer');
         const multerInstance = multerModule.default;
-        r2Upload = multerInstance({ storage: storageR2, fileFilter: fileFilter, limits: { fileSize: 50 * 1024 * 1024 } });
+        r2Upload = multerInstance({ storage: storageR2, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
 
         // Update runtime status
         r2Status.ready = true;

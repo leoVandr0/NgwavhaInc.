@@ -35,8 +35,8 @@ const useRealTimeAdmin = () => {
     const connectSocket = () => {
         // In production, we usually connect to the same host.
         // If REACT_APP_SERVER_URL is not set, use window.location.origin (for same-domain deploy)
-        const socketUrl = process.env.REACT_APP_SERVER_URL ||
-            (window.location.hostname === 'localhost' ? 'http://localhost:8080' : window.location.origin);
+        const socketUrl = import.meta.env.VITE_API_URL ||
+            (window.location.hostname === 'localhost' ? 'http://localhost:5000' : window.location.origin);
 
         console.log('📡 Connecting to real-time service at:', socketUrl);
 
