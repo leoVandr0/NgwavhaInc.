@@ -22,7 +22,6 @@ import {
     Star,
     CheckSquare,
     ShieldAlert,
-    UserGroup,
     BarChart3
 } from 'lucide-react';
 import { Badge, Avatar } from 'antd';
@@ -74,7 +73,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                         },
                         {
                             path: '/admin/students',
-                            icon: <UserGroup size={18} />,
+                            icon: <Users size={18} />,
                             label: 'Students',
                             badge: null
                         },

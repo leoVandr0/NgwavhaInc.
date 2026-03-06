@@ -448,7 +448,7 @@ const AdminDashboard = () => {
                     <Card className="bg-dark-800 border-dark-700">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-dark-300 font-medium">Total Students</span>
-                            <UserGroup size={20} className="text-blue-500" />
+                            <Users size={20} className="text-blue-500" />
                         </div>
                         <div className="text-3xl font-bold text-white mb-2">{stats.totalStudents.toLocaleString()}</div>
                         <div className="flex items-center gap-2">
