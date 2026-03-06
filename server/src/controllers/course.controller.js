@@ -699,13 +699,14 @@ export const uploadCoursePreview = async (req, res) => {
 
         // Optional duration in seconds
         let duration = 0;
-        if (req.body.duration) {
+        if (req.body.duration && req.body.duration !== '0') {
             duration = Number(req.body.duration);
-            if (!Number.isFinite(duration) || duration <= 0) {
-                return res.status(400).json({ message: 'Invalid duration value' });
+            if (!Number.isFinite(duration) || duration < 0) {
+                duration = 0; // fallback gracefully instead of dropping connection
             }
             if (duration > 300) {
-                return res.status(400).json({ message: 'Preview duration must be 300 seconds (5 minutes) or less' });
+                // Return gracefully without dropping
+                duration = 300;
             }
         }
 

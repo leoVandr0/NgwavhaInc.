@@ -9,7 +9,7 @@ class RealtimeService {
     initialize(server) {
         this.io = new Server(server, {
             cors: {
-                origin: process.env.CLIENT_URL || "http://localhost:3000",
+                origin: "*",
                 methods: ["GET", "POST"]
             }
         });
@@ -23,7 +23,7 @@ class RealtimeService {
                     this.adminClients.add(socket.id);
                     socket.join('admin-room');
                     console.log('Admin client authenticated:', socket.id);
-                    
+
                     // Send initial dashboard data
                     this.sendInitialData(socket);
                 }
@@ -54,7 +54,7 @@ class RealtimeService {
         try {
             // Import here to avoid circular dependencies
             const { getRealTimeUpdates } = await import('../controllers/admin.controller.js');
-            
+
             // Mock request object
             const mockReq = { user: { role: 'admin' } };
             const mockRes = {
@@ -73,7 +73,7 @@ class RealtimeService {
     async sendDashboardUpdate(socket) {
         try {
             const { getRealTimeUpdates } = await import('../controllers/admin.controller.js');
-            
+
             const mockReq = { user: { role: 'admin' } };
             const mockRes = {
                 json: (data) => {
