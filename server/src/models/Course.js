@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/mysql.js';
 import slug from 'slug';
+import { deleteFile } from '../utils/fileUtils.js';
 
 const Course = sequelize.define('Course', {
     id: {
@@ -124,6 +125,12 @@ const Course = sequelize.define('Course', {
             if (course.changed('title')) {
                 course.slug = slug(course.title) + '-' + Math.floor(Math.random() * 1000);
             }
+        },
+        afterDestroy: (course) => {
+            console.log(`🗑️ Cleaning up files for course: ${course.title}`);
+            deleteFile(course.thumbnail);
+            deleteFile(course.videoPreview);
+            deleteFile(course.previewVideoPath);
         }
     }
 });
