@@ -369,19 +369,19 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                                                         <Link
                                                             to={item.path}
                                                             onClick={onMobileClose}
-                                                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 ${active
-                                                                ? 'bg-primary-500/10 text-primary-500 border-l-4 border-primary-500 rounded-l-none'
+                                                            className={`flex items-center justify-between px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${active
+                                                                ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/25'
                                                                 : 'text-dark-200 active:bg-dark-800/80'
                                                                 }`}
                                                         >
                                                             <div className="flex items-center gap-3.5">
-                                                                <span className={active ? 'text-primary-500' : 'text-dark-400'}>
+                                                                <span className={active ? 'text-dark-950' : 'text-dark-400'}>
                                                                     {item.icon}
                                                                 </span>
                                                                 <span>{item.label}</span>
                                                             </div>
                                                             {item.badge && (
-                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-primary-500 text-dark-950' : 'bg-primary-500/20 text-primary-500'}`}>
+                                                                <span className={`px-2 py-0.5 rounded-sm text-[11px] font-bold ${active ? 'bg-dark-950 text-primary-500' : 'bg-primary-500 text-dark-950'}`}>
                                                                     {item.badge}
                                                                 </span>
                                                             )}
@@ -485,9 +485,9 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
             {/* Badge */}
             {isOpen && layoutInfo.showShield && (
                 <div className="px-4 py-3">
-                    <div className="flex items-center gap-2 px-3 py-2 bg-primary-500/10 border border-primary-500/30 rounded-lg">
-                        <Shield size={14} className="text-primary-500 flex-shrink-0" />
-                        <span className="text-xs font-medium text-primary-400 whitespace-nowrap">Administrator Access</span>
+                    <div className="flex items-center gap-2 px-3 py-2.5 bg-transparent border border-primary-500/50 rounded-lg">
+                        <Shield size={16} className="text-primary-500 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-primary-500 whitespace-nowrap">Administrator Access</span>
                     </div>
                 </div>
             )}
@@ -513,17 +513,14 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                                         <li key={item.path}>
                                             <Link
                                                 to={item.path}
-                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative group ${active
-                                                    ? 'bg-primary-500/10 text-primary-500'
+                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${active
+                                                    ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/25'
                                                     : 'text-dark-300 hover:bg-dark-800 hover:text-white'
                                                     }`}
                                                 title={!isOpen ? item.label : undefined}
                                             >
-                                                {active && (
-                                                    <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-primary-500 rounded-r-full" />
-                                                )}
                                                 <div className="flex items-center gap-3 min-w-0">
-                                                    <span className={`flex-shrink-0 ${active ? 'text-primary-500' : 'text-dark-400 group-hover:text-white'}`}>
+                                                    <span className={`flex-shrink-0 ${active ? 'text-dark-950' : 'text-dark-400 group-hover:text-white'}`}>
                                                         {item.icon}
                                                     </span>
                                                     {isOpen && (
@@ -531,7 +528,7 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                                                     )}
                                                 </div>
                                                 {isOpen && item.badge && (
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-primary-500 text-dark-950' : 'bg-primary-500/20 text-primary-500'}`}>
+                                                    <span className={`px-2 py-0.5 rounded-sm text-[11px] font-bold ${active ? 'bg-dark-950 text-primary-500' : 'bg-primary-500 text-dark-950'}`}>
                                                         {item.badge}
                                                     </span>
                                                 )}
