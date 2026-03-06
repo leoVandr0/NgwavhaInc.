@@ -1,6 +1,8 @@
 import User from '../models/User.js';
 import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
+import Category from '../models/Category.js';
+import Review from '../models/Review.js';
 import Activity from '../models/nosql/Activity.js';
 import { Op } from 'sequelize';
 
@@ -316,5 +318,136 @@ export const deleteCourse = async (req, res) => {
   } catch (error) {
     console.error('Admin delete course error:', error);
     res.status(500).json({ success: false, message: 'Failed to delete course' });
+  }
+};
+
+// @desc Approve a course
+// @route PUT /api/admin/courses/:id/approve
+export const approveCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const course = await Course.findByPk(id);
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found' });
+    }
+    await course.update({
+      status: 'approved',
+      publishedAt: new Date()
+    });
+    res.json({ success: true, message: 'Course approved and published' });
+  } catch (error) {
+    console.error('Admin approve course error:', error);
+    res.status(500).json({ success: false, message: 'Failed to approve course' });
+  }
+};
+
+// @desc Reject a course
+// @route PUT /api/admin/courses/:id/reject
+export const rejectCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const course = await Course.findByPk(id);
+    if (!course) {
+      return res.status(404).json({ success: false, message: 'Course not found' });
+    }
+    await course.update({
+      status: 'rejected',
+      rejectionReason: reason
+    });
+    res.json({ success: true, message: 'Course rejected' });
+  } catch (error) {
+    console.error('Admin reject course error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reject course' });
+  }
+};
+
+// @desc Verify a teacher
+// @route PUT /api/admin/teachers/:id/verify
+export const verifyTeacher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id);
+    if (!user || user.role !== 'instructor') {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
+    await user.update({
+      verificationStatus: 'verified',
+      isVerified: true
+    });
+    res.json({ success: true, message: 'Teacher verified successfully' });
+  } catch (error) {
+    console.error('Admin verify teacher error:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify teacher' });
+  }
+};
+
+// @desc Reject teacher verification
+// @route PUT /api/admin/teachers/:id/reject-verification
+export const rejectTeacherVerification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const user = await User.findByPk(id);
+    if (!user || user.role !== 'instructor') {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
+    await user.update({
+      verificationStatus: 'rejected',
+      rejectionReason: reason
+    });
+    res.json({ success: true, message: 'Teacher verification rejected' });
+  } catch (error) {
+    console.error('Admin reject teacher verification error:', error);
+    res.status(500).json({ success: false, message: 'Failed to reject teacher verification' });
+  }
+};
+
+// Category management
+// @desc Get all categories
+// @route GET /api/admin/categories
+export const getAllCategories = async (req, res) => {
+  try {
+    const categories = await Category.findAll({ order: [['name', 'ASC']] });
+    res.json({ success: true, data: categories });
+  } catch (error) {
+    console.error('Admin get categories error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch categories' });
+  }
+};
+
+// @desc Create a new category
+// @route POST /api/admin/categories
+export const createCategory = async (req, res) => {
+  try {
+    const { name, slug } = req.body;
+    const category = await Category.create({ name, slug });
+    res.status(201).json({ success: true, data: category });
+  } catch (error) {
+    console.error('Admin create category error:', error);
+    res.status(500).json({ success: false, message: 'Failed to create category' });
+  }
+};
+
+// Review moderation
+// @desc Report/Flag a review
+// @route PUT /api/admin/reviews/:id/flag
+export const flagReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const review = await Review.findByPk(id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+    await review.update({
+      isReported: true,
+      reportReason: reason,
+      status: 'flagged'
+    });
+    res.json({ success: true, message: 'Review flagged for moderation' });
+  } catch (error) {
+    console.error('Admin flag review error:', error);
+    res.status(500).json({ success: false, message: 'Failed to flag review' });
   }
 };

@@ -74,6 +74,22 @@ const User = sequelize.define('User', {
         defaultValue: 'PENDING',
         comment: 'Instructor application status - PENDING, APPROVED, or REJECTED'
     },
+    verificationStatus: {
+        type: DataTypes.ENUM('pending', 'verified', 'rejected'),
+        defaultValue: 'pending'
+    },
+    nationalIDUrl: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    certificatesUrl: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    rejectionReason: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
     resetPasswordToken: {
         type: DataTypes.STRING,
         allowNull: true

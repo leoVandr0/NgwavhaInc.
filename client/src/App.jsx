@@ -50,6 +50,9 @@ import AdminApprovals from './pages/admin/AdminApprovals';
 import AdminModeration from './pages/admin/AdminModeration';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminReports from './pages/admin/AdminReports';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminTeacherVerification from './pages/admin/AdminTeacherVerification';
+import AdminCategories from './pages/admin/AdminCategories';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import TestNotificationPage from './pages/settings/TestNotificationPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -163,7 +166,7 @@ const App = () => {
                   <Route path="admins" element={<AdminAdmins />} />
                   <Route path="courses" element={<AdminCourses />} />
                   <Route path="course-previews" element={<AdminCoursePreviews />} />
-                  <Route path="approvals" element={<AdminApprovals />} />
+                  <Route path="course-approvals" element={<AdminApprovals />} />
                   <Route path="moderation" element={<AdminModeration />} />
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="analytics" element={<AdminAnalytics />} />

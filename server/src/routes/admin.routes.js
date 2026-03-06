@@ -10,7 +10,14 @@ import {
     getUsers,
     deleteUser,
     rejectInstructor,
-    deleteCourse
+    deleteCourse,
+    approveCourse,
+    rejectCourse,
+    verifyTeacher,
+    rejectTeacherVerification,
+    getAllCategories,
+    createCategory,
+    flagReview
 } from '../controllers/admin.controller.js';
 import { adminOnly, protect } from '../middleware/admin.middleware.js';
 
@@ -40,7 +47,20 @@ router.put('/teachers/:id/approve', approveInstructor); // Reuse approve
 router.put('/teachers/:id/reject', rejectInstructor);
 
 // Courses
+router.put('/courses/:id/approve', approveCourse);
+router.put('/courses/:id/reject', rejectCourse);
 router.delete('/courses/:id', deleteCourse);
+
+// Teacher Verification
+router.put('/teachers/:id/verify', verifyTeacher);
+router.put('/teachers/:id/reject-verification', rejectTeacherVerification);
+
+// Categories
+router.get('/categories', getAllCategories);
+router.post('/categories', createCategory);
+
+// Reviews
+router.put('/reviews/:id/flag', flagReview);
 
 // Pending instructors awaiting approval
 router.get('/instructors/pending', getPendingInstructors);
