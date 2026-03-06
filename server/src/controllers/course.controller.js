@@ -403,7 +403,7 @@ export const createCourse = async (req, res) => {
 
         // Check if instructor is approved (only for instructors, not admins)
         if (req.user.role === 'instructor' && !req.user.isApproved) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 message: 'Your instructor account is pending approval. Please wait for admin to approve your account before creating courses.',
                 code: 'INSTRUCTOR_NOT_APPROVED'
             });
@@ -456,54 +456,54 @@ export const createCourse = async (req, res) => {
 // @route   PUT /api/courses/:id
 // @access  Private/Instructor
 export const updateCourse = async (req, res) => {
-  try {
-    const course = await Course.findByPk(req.params.id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-    // Guard: only admin can update unless preview approved
-    if (req.user?.role !== 'admin' && course.previewStatus && course.previewStatus !== 'approved') {
-      return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before updating content.' });
-    }
+    try {
+        const course = await Course.findByPk(req.params.id);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+        // Guard: only admin can update unless preview approved
+        if (req.user?.role !== 'admin' && course.previewStatus && course.previewStatus !== 'approved') {
+            return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before updating content.' });
+        }
 
-    // Authorization check
-    if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized to update this course' });
+        // Authorization check
+        if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized to update this course' });
+        }
+
+        // Apply updates
+        if (req.body.title) course.title = req.body.title;
+        if (req.body.description) course.description = req.body.description;
+        if (req.body.price != null) course.price = req.body.price;
+        if (req.body.categoryId) course.categoryId = req.body.categoryId;
+        if (req.body.level) course.level = req.body.level;
+        if (req.body.thumbnail) course.thumbnail = req.body.thumbnail;
+        if (req.body.status) {
+            course.status = req.body.status;
+            if (req.body.status === 'published' && !course.publishedAt) {
+                course.publishedAt = new Date();
+            }
+        }
+
+        const updatedCourse = await course.save();
+
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('course-updated', {
+                type: 'course_updated',
+                course: {
+                    id: updatedCourse.id,
+                    title: updatedCourse.title,
+                    instructorId: updatedCourse.instructorId,
+                    status: updatedCourse.status
+                },
+                message: `Course updated: ${updatedCourse.title}`
+            });
+        }
+
+        res.json(updatedCourse);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-
-    // Apply updates
-    if (req.body.title) course.title = req.body.title;
-    if (req.body.description) course.description = req.body.description;
-    if (req.body.price != null) course.price = req.body.price;
-    if (req.body.categoryId) course.categoryId = req.body.categoryId;
-    if (req.body.level) course.level = req.body.level;
-    if (req.body.thumbnail) course.thumbnail = req.body.thumbnail;
-    if (req.body.status) {
-      course.status = req.body.status;
-      if (req.body.status === 'published' && !course.publishedAt) {
-        course.publishedAt = new Date();
-      }
-    }
-
-    const updatedCourse = await course.save();
-
-    if (global.broadcastToAdmins) {
-      global.broadcastToAdmins('course-updated', {
-        type: 'course_updated',
-        course: {
-          id: updatedCourse.id,
-          title: updatedCourse.title,
-          instructorId: updatedCourse.instructorId,
-          status: updatedCourse.status
-        },
-        message: `Course updated: ${updatedCourse.title}`
-      });
-    }
-
-    res.json(updatedCourse);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
 // @desc    Add section to course content
@@ -716,9 +716,25 @@ export const uploadCoursePreview = async (req, res) => {
         course.previewUploadedBy = req.user.id;
         await course.save();
 
+        // Send real-time notification to admins
+        if (global.broadcastToAdmins) {
+            global.broadcastToAdmins('course-preview-uploaded', {
+                type: 'preview_uploaded',
+                course: {
+                    id: course.id,
+                    title: course.title,
+                    instructorId: course.instructorId,
+                    instructorName: req.user.name,
+                    uploadedAt: course.previewUploadedAt
+                },
+                message: `Instructor ${req.user.name} uploaded a preview for "${course.title}".`
+            });
+        }
+
         res.json({ success: true, courseId: course.id, preview: { path: videoPath, duration, status: 'pending' } });
     } catch (error) {
-        res.status(500).json({ message: error.message, error: error.stack });
+        console.error('Upload preview logic error:', error);
+        res.status(500).json({ message: 'Failed to process preview' });
     }
 };
 

@@ -101,10 +101,16 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                             badge: null
                         },
                         {
+                            path: '/admin/course-previews',
+                            icon: <CheckSquare size={18} />,
+                            label: 'Course Previews',
+                            badge: 'Review'
+                        },
+                        {
                             path: '/admin/approvals',
                             icon: <CheckSquare size={18} />,
-                            label: 'Approvals',
-                            badge: '3 New'
+                            label: 'Other Approvals',
+                            badge: null
                         },
                         {
                             path: '/admin/moderation',

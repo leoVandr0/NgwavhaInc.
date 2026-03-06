@@ -17,7 +17,10 @@ import {
     rejectTeacherVerification,
     getAllCategories,
     createCategory,
-    flagReview
+    flagReview,
+    getPendingCoursePreviews,
+    approveCoursePreview,
+    rejectCoursePreview
 } from '../controllers/admin.controller.js';
 import { adminOnly, protect } from '../middleware/admin.middleware.js';
 
@@ -50,6 +53,11 @@ router.put('/teachers/:id/reject', rejectInstructor);
 router.put('/courses/:id/approve', approveCourse);
 router.put('/courses/:id/reject', rejectCourse);
 router.delete('/courses/:id', deleteCourse);
+
+// Course Previews
+router.get('/courses/previews/pending', getPendingCoursePreviews);
+router.post('/courses/:id/preview/approve', approveCoursePreview);
+router.post('/courses/:id/preview/reject', rejectCoursePreview);
 
 // Teacher Verification
 router.put('/teachers/:id/verify', verifyTeacher);

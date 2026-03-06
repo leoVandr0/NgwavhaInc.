@@ -93,8 +93,8 @@ const Course = sequelize.define('Course', {
         defaultValue: 'English'
     },
     status: {
-        type: DataTypes.ENUM('draft', 'published', 'archived'),
-        defaultValue: 'published'
+        type: DataTypes.ENUM('draft', 'published', 'archived', 'pending', 'rejected'),
+        defaultValue: 'pending'
     },
     publishedAt: {
         type: DataTypes.DATE,

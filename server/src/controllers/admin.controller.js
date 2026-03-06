@@ -451,3 +451,84 @@ export const flagReview = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to flag review' });
   }
 };
+
+// --- COURSE PREVIEWS ---
+
+// @desc    Get all courses with pending previews
+// @route   GET /api/admin/courses/previews/pending
+export const getPendingCoursePreviews = async (req, res) => {
+  try {
+    const courses = await Course.findAll({
+      where: {
+        previewStatus: 'pending',
+        previewVideoPath: { [Op.not]: null }
+      },
+      include: [{
+        model: User,
+        as: 'instructor',
+        attributes: ['id', 'name', 'email', 'avatar']
+      }],
+      order: [['previewUploadedAt', 'ASC']]
+    });
+
+    res.json({ success: true, count: courses.length, data: courses });
+  } catch (error) {
+    console.error('Error fetching pending previews:', error);
+    res.status(500).json({ message: 'Failed to fetch pending course previews' });
+  }
+};
+
+// @desc    Approve course preview
+// @route   POST /api/admin/courses/:id/preview/approve
+export const approveCoursePreview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const course = await Course.findByPk(id);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    course.previewStatus = 'approved';
+    course.previewApprovedAt = new Date();
+    course.previewApprovedBy = req.user.id;
+
+    // Ensure its overall status is not 'rejected' if previously rejected
+    if (course.status === 'rejected') {
+      course.status = 'pending'; // or 'published' based on the workflow you want
+    }
+
+    await course.save();
+
+    res.json({ success: true, message: 'Preview approved successfully', data: course });
+  } catch (error) {
+    console.error('Error approving preview:', error);
+    res.status(500).json({ message: 'Failed to approve course preview' });
+  }
+};
+
+// @desc    Reject course preview
+// @route   POST /api/admin/courses/:id/preview/reject
+export const rejectCoursePreview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const course = await Course.findByPk(id);
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    course.previewStatus = 'rejected';
+    course.previewRejectReason = reason || 'No reason provided by admin';
+    await course.save();
+
+    // Optionally, send notification to the instructor
+
+    res.json({ success: true, message: 'Preview rejected successfully', data: course });
+  } catch (error) {
+    console.error('Error rejecting preview:', error);
+    res.status(500).json({ message: 'Failed to reject course preview' });
+  }
+};
