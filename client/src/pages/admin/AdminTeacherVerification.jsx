@@ -216,7 +216,7 @@ const AdminTeacherVerification = () => {
                         key="pending"
                     />
                     <TabPane tab="Verified Teachers" key="verified" />
-                </TabPane>
+                </Tabs>
 
                 <Table
                     columns={columns}
