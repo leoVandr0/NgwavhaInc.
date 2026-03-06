@@ -198,7 +198,9 @@ const TeacherCoursesPage = () => {
 
     // Course Builder Actions
     const handleAddSection = async () => {
-        if (!newSectionTitle.trim()) return;
+        if (!newSectionTitle.trim()) {
+            return message.warning('Please enter a section title first.');
+        }
         try {
             await api.post(`/courses/${selectedCourseId}/sections`, { title: newSectionTitle });
             message.success('Section added!');
@@ -206,12 +208,14 @@ const TeacherCoursesPage = () => {
             setIsAddingSection(false);
             fetchCourseContent(selectedCourseId);
         } catch (error) {
-            message.error('Failed to add section.');
+            message.error(error.response?.data?.message || 'Failed to add section.');
         }
     };
 
     const handleAddLecture = async (sectionId) => {
-        if (!newLectureTitle.trim()) return;
+        if (!newLectureTitle.trim()) {
+            return message.warning('Please enter a lecture title first.');
+        }
         try {
             await api.post(`/courses/${selectedCourseId}/sections/${sectionId}/lectures`, {
                 title: newLectureTitle,
@@ -223,7 +227,7 @@ const TeacherCoursesPage = () => {
             setIsAddingLecture({ active: false, sectionId: '' });
             fetchCourseContent(selectedCourseId);
         } catch (error) {
-            message.error('Failed to add lecture.');
+            message.error(error.response?.data?.message || 'Failed to add lecture.');
         }
     };
 
