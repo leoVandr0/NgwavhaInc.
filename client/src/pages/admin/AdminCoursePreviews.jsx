@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button, Table, Modal, Input, Tag, Space, message, Typography } from 'antd';
 import { Eye, CheckCircle, XCircle } from 'lucide-react';
 import api from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -118,12 +119,7 @@ const AdminCoursePreviews = () => {
     }
   ];
 
-  // Helper to format video URL (assuming uploaded locally to /uploads or fully qualified)
-  const getVideoUrl = (path) => {
-    if (!path) return '';
-    if (path.startsWith('http')) return path;
-    return `http://localhost:5000${path}`;
-  };
+  // We now use getImageUrl from imageUtils instead of the hardcoded localhost:5000 helper
 
   return (
     <div className="space-y-6">
@@ -186,7 +182,7 @@ const AdminCoursePreviews = () => {
             <div className="bg-dark-950 rounded-lg overflow-hidden border border-dark-700 aspect-video flex items-center justify-center">
               {selectedCourse.previewVideoPath ? (
                 <video
-                  src={getVideoUrl(selectedCourse.previewVideoPath)}
+                  src={getImageUrl(selectedCourse.previewVideoPath)}
                   controls
                   className="w-full h-full object-contain"
                 />
