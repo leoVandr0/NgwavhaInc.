@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/mysql.js';
 import bcrypt from 'bcryptjs';
+import { deleteFile } from '../utils/fileUtils.js';
 
 const User = sequelize.define('User', {
     id: {
@@ -176,6 +177,12 @@ const User = sequelize.define('User', {
                 const salt = await bcrypt.genSalt(10);
                 user.password = await bcrypt.hash(user.password, salt);
             }
+        },
+        afterDestroy: async (user) => {
+            console.log(`💣 Cleaning up files for user: ${user.email}`);
+            deleteFile(user.avatar);
+            deleteFile(user.nationalIDUrl);
+            deleteFile(user.certificatesUrl);
         }
     }
 });
