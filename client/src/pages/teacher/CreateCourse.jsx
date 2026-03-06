@@ -70,6 +70,26 @@ const CreateCourse = () => {
         }
     };
 
+    const handlePreviewChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type (basic video check)
+            if (!file.type.startsWith('video/')) {
+                message.error('Please select a video file (mp4, webm, etc.)');
+                return;
+            }
+
+            // Validate file size (max 50MB for preview)
+            if (file.size > 50 * 1024 * 1024) {
+                message.error('Preview video size should be less than 50MB');
+                return;
+            }
+
+            setPreviewFile(file);
+            message.success(`Preview video selected: ${file.name}`);
+        }
+    };
+
     // Preview change was implemented; ensure we only have one handler
 
     const handleSubmit = async (e) => {
@@ -87,19 +107,19 @@ const CreateCourse = () => {
 
                 try {
                     console.log('Uploading thumbnail...', formData.thumbnailFile.name);
-                    
+
                     const { data: uploadData } = await api.post('/upload/course-thumbnail', formDataUpload, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
-                    
+
                     console.log('Upload response:', uploadData);
-                    
+
                     if (uploadData.filePath) {
                         thumbnailPath = uploadData.filePath;
                     }
-                    
+
                     message.success('Thumbnail uploaded successfully');
                 } catch (uploadError) {
                     console.error('Thumbnail upload error:', uploadError);
@@ -114,7 +134,7 @@ const CreateCourse = () => {
             }
 
             console.log('Creating course with thumbnail:', thumbnailPath);
-            
+
             const { data } = await api.post('/courses', {
                 title: formData.title,
                 description: formData.description,
@@ -130,23 +150,6 @@ const CreateCourse = () => {
                     const formPreview = new FormData();
                     formPreview.append('video', previewFile);
                     formPreview.append('duration', String(previewDuration));
-                    const resp = await api.post(`/courses/${data.id}/preview`, formPreview, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-                    console.log('Preview upload response:', resp?.data);
-                    message.success('Preview uploaded for admin review');
-                } catch (err) {
-                    console.error('Preview upload failed:', err);
-                    message.warning('Preview upload failed. Admin will review the rest of the course.');
-                }
-            }
-
-            // If preview file selected, upload for admin review
-            if (previewFile && data?.id) {
-                const formPreview = new FormData();
-                formPreview.append('video', previewFile);
-                formPreview.append('duration', String(previewDuration));
-                try {
                     const resp = await api.post(`/courses/${data.id}/preview`, formPreview, {
                         headers: { 'Content-Type': 'multipart/form-data' }
                     });
