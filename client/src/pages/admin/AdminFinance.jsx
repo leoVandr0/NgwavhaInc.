@@ -121,7 +121,18 @@ const AdminFinance = () => {
             title: 'Payment Method',
             dataIndex: 'payment_method',
             key: 'payment_method',
-            render: (method) => method || 'N/A',
+            render: (method) => {
+                const methods = {
+                    ecocash: { label: 'EcoCash', color: 'blue' },
+                    onemoney: { label: 'OneMoney', color: 'orange' },
+                    innbucks: { label: 'Innbucks', color: 'green' },
+                    visa: { label: 'Visa/Mastercard', color: 'purple' },
+                    credit_card: { label: 'Credit Card', color: 'cyan' },
+                    paypal: { label: 'PayPal', color: 'gold' }
+                };
+                const config = methods[method?.toLowerCase()] || { label: method || 'N/A', color: 'default' };
+                return <Tag color={config.color}>{config.label}</Tag>;
+            },
         },
         {
             title: 'Date',
@@ -147,7 +158,7 @@ const AdminFinance = () => {
             course: { title: 'Introduction to React' },
             amount: 99.99,
             status: 'completed',
-            payment_method: 'credit_card',
+            payment_method: 'ecocash',
             created_at: '2024-01-15T10:30:00Z'
         },
         {
@@ -156,7 +167,7 @@ const AdminFinance = () => {
             course: { title: 'Advanced JavaScript' },
             amount: 149.99,
             status: 'completed',
-            payment_method: 'paypal',
+            payment_method: 'innbucks',
             created_at: '2024-01-15T11:45:00Z'
         },
         {
@@ -165,7 +176,7 @@ const AdminFinance = () => {
             course: { title: 'Node.js Masterclass' },
             amount: 199.99,
             status: 'pending',
-            payment_method: 'stripe',
+            payment_method: 'onemoney',
             created_at: '2024-01-15T14:20:00Z'
         },
         {
@@ -174,7 +185,7 @@ const AdminFinance = () => {
             course: { title: 'CSS Grid & Flexbox' },
             amount: 79.99,
             status: 'completed',
-            payment_method: 'credit_card',
+            payment_method: 'visa',
             created_at: '2024-01-15T16:10:00Z'
         },
         {
@@ -183,7 +194,7 @@ const AdminFinance = () => {
             course: { title: 'Python for Beginners' },
             amount: 89.99,
             status: 'refunded',
-            payment_method: 'paypal',
+            payment_method: 'ecocash',
             created_at: '2024-01-15T18:30:00Z'
         },
     ];

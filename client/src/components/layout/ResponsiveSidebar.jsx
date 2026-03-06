@@ -18,7 +18,12 @@ import {
     FileText,
     Video,
     ShoppingCart,
-    Heart
+    Heart,
+    Star,
+    CheckSquare,
+    ShieldAlert,
+    UserGroup,
+    BarChart3
 } from 'lucide-react';
 import { Badge, Avatar } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,46 +41,107 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
         if (path.startsWith('/admin')) {
             return [
                 {
-                    path: '/admin/dashboard',
-                    icon: <LayoutDashboard size={20} />,
-                    label: 'Dashboard',
-                    badge: null
+                    category: 'OVERVIEW',
+                    items: [
+                        {
+                            path: '/admin/dashboard',
+                            icon: <LayoutDashboard size={18} />,
+                            label: 'Dashboard',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/analytics',
+                            icon: <Activity size={18} />,
+                            label: 'Analytics',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/reports',
+                            icon: <BarChart3 size={18} />,
+                            label: 'Reports',
+                            badge: null
+                        }
+                    ]
                 },
                 {
-                    path: '/admin/users',
-                    icon: <Users size={20} />,
-                    label: 'Users',
-                    badge: null
+                    category: 'MANAGEMENT',
+                    items: [
+                        {
+                            path: '/admin/users',
+                            icon: <Users size={18} />,
+                            label: 'Users',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/students',
+                            icon: <UserGroup size={18} />,
+                            label: 'Students',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/teachers',
+                            icon: <GraduationCap size={18} />,
+                            label: 'Teachers',
+                            badge: '5 Pending'
+                        },
+                        {
+                            path: '/admin/admins',
+                            icon: <Shield size={18} />,
+                            label: 'Admins',
+                            badge: null
+                        }
+                    ]
                 },
                 {
-                    path: '/admin/teachers',
-                    icon: <GraduationCap size={20} />,
-                    label: 'Teachers',
-                    badge: 5
+                    category: 'COURSES',
+                    items: [
+                        {
+                            path: '/admin/courses',
+                            icon: <BookOpen size={18} />,
+                            label: 'Courses',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/approvals',
+                            icon: <CheckSquare size={18} />,
+                            label: 'Approvals',
+                            badge: '3 New'
+                        },
+                        {
+                            path: '/admin/moderation',
+                            icon: <ShieldAlert size={18} />,
+                            label: 'Moderation',
+                            badge: null
+                        },
+                        {
+                            path: '/admin/reviews',
+                            icon: <Star size={18} />,
+                            label: 'Reviews',
+                            badge: null
+                        }
+                    ]
                 },
                 {
-                    path: '/admin/courses',
-                    icon: <BookOpen size={20} />,
-                    label: 'Courses',
-                    badge: null
+                    category: 'BUSINESS',
+                    items: [
+                        {
+                            path: '/admin/finance',
+                            icon: <DollarSign size={18} />,
+                            label: 'Finance',
+                            badge: null
+                        }
+                    ]
                 },
                 {
-                    path: '/admin/analytics',
-                    icon: <Activity size={20} />,
-                    label: 'Analytics',
-                    badge: null
-                },
-                {
-                    path: '/admin/finance',
-                    icon: <DollarSign size={20} />,
-                    label: 'Finance',
-                    badge: null
-                },
-                {
-                    path: '/admin/settings',
-                    icon: <Settings size={20} />,
-                    label: 'Settings',
-                    badge: null
+                    category: 'SYSTEM',
+                    items: [
+                        {
+                            path: '/admin/settings',
+                            icon: <Settings size={18} />,
+                            label: 'Settings',
+                            badge: null
+                        }
+                    ]
                 }
             ];
         }
@@ -263,11 +329,11 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                                     {currentUser?.name?.charAt(0)?.toUpperCase()}
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[15px] font-semibold text-white truncate">
-                                        {currentUser?.name || 'Student'}
+                                    <p className="text-[15px] font-bold text-white truncate">
+                                        {currentUser?.name || 'System Administrator'}
                                     </p>
-                                    <p className="text-xs text-dark-400 truncate">
-                                        {currentUser?.email}
+                                    <p className="text-xs text-primary-500 font-medium tracking-tight">
+                                        Role: {currentUser?.role === 'admin' ? 'Super Admin' : (currentUser?.role || 'Admin')}
                                     </p>
                                 </div>
                             </div>
@@ -287,63 +353,90 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
 
                         {/* ─── Navigation (scrollable) ─── */}
                         <nav className="flex-1 overflow-y-auto overscroll-contain">
-                            <div className="px-4 pt-4 pb-1">
-                                <p className="px-3 pb-2 text-[10px] font-bold text-dark-500 uppercase tracking-widest">
-                                    Menu
-                                </p>
-                            </div>
-                            <ul className="px-3 pb-4 space-y-0.5">
-                                {menuItems.map((item) => {
-                                    const active = isActive(item.path);
-                                    return (
-                                        <li key={item.path}>
-                                            <Link
-                                                to={item.path}
-                                                onClick={onMobileClose}
-                                                className={`flex items-center justify-between px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${active
-                                                        ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/25'
-                                                        : 'text-dark-200 active:bg-dark-800/80'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-3.5">
-                                                    <span className={active ? 'text-dark-950' : 'text-dark-400'}>
-                                                        {item.icon}
-                                                    </span>
-                                                    <span>{item.label}</span>
-                                                </div>
-                                                {item.badge ? (
-                                                    <Badge
-                                                        count={item.badge}
-                                                        style={{
-                                                            backgroundColor: '#FFA500',
-                                                            color: '#000',
-                                                            fontWeight: 600,
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    !active && (
-                                                        <svg
-                                                            width="7"
-                                                            height="12"
-                                                            viewBox="0 0 7 12"
-                                                            fill="none"
-                                                            className="text-dark-600 flex-shrink-0"
+                            {menuItems[0]?.category ? (
+                                // Render categorized items (Admin)
+                                menuItems.map((group) => (
+                                    <div key={group.category} className="mb-4">
+                                        <div className="px-7 pt-4 pb-1">
+                                            <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">
+                                                {group.category}
+                                            </p>
+                                        </div>
+                                        <ul className="px-3 space-y-0.5">
+                                            {group.items.map((item) => {
+                                                const active = isActive(item.path);
+                                                return (
+                                                    <li key={item.path}>
+                                                        <Link
+                                                            to={item.path}
+                                                            onClick={onMobileClose}
+                                                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 ${active
+                                                                ? 'bg-primary-500/10 text-primary-500 border-l-4 border-primary-500 rounded-l-none'
+                                                                : 'text-dark-200 active:bg-dark-800/80'
+                                                                }`}
                                                         >
-                                                            <path
-                                                                d="M1 1L6 6L1 11"
-                                                                stroke="currentColor"
-                                                                strokeWidth="1.5"
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
+                                                            <div className="flex items-center gap-3.5">
+                                                                <span className={active ? 'text-primary-500' : 'text-dark-400'}>
+                                                                    {item.icon}
+                                                                </span>
+                                                                <span>{item.label}</span>
+                                                            </div>
+                                                            {item.badge && (
+                                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-primary-500 text-dark-950' : 'bg-primary-500/20 text-primary-500'}`}>
+                                                                    {item.badge}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                ))
+                            ) : (
+                                // Render flat items (Teacher/Student)
+                                <>
+                                    <div className="px-4 pt-4 pb-1">
+                                        <p className="px-3 pb-2 text-[10px] font-bold text-dark-500 uppercase tracking-widest">
+                                            Menu
+                                        </p>
+                                    </div>
+                                    <ul className="px-3 pb-4 space-y-0.5">
+                                        {menuItems.map((item) => {
+                                            const active = isActive(item.path);
+                                            return (
+                                                <li key={item.path}>
+                                                    <Link
+                                                        to={item.path}
+                                                        onClick={onMobileClose}
+                                                        className={`flex items-center justify-between px-4 py-3 rounded-xl text-[15px] font-medium transition-all duration-150 ${active
+                                                            ? 'bg-primary-500 text-dark-950 shadow-lg shadow-primary-500/25'
+                                                            : 'text-dark-200 active:bg-dark-800/80'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-3.5">
+                                                            <span className={active ? 'text-dark-950' : 'text-dark-400'}>
+                                                                {item.icon}
+                                                            </span>
+                                                            <span>{item.label}</span>
+                                                        </div>
+                                                        {item.badge && (
+                                                            <Badge
+                                                                count={item.badge}
+                                                                style={{
+                                                                    backgroundColor: '#FFA500',
+                                                                    color: '#000',
+                                                                    fontWeight: 600,
+                                                                }}
                                                             />
-                                                        </svg>
-                                                    )
-                                                )}
-                                            </Link>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                                                        )}
+                                                    </Link>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </>
+                            )}
                         </nav>
 
                         {/* ─── Bottom logout ─── */}
@@ -401,37 +494,88 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
             )}
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-2 overflow-y-auto">
-                <ul className="space-y-1">
-                    {menuItems.map((item) => (
-                        <li key={item.path}>
-                            <Link
-                                to={item.path}
-                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
-                                    ? 'bg-primary-500 text-dark-950'
-                                    : 'text-dark-300 hover:bg-dark-800 hover:text-white'
-                                    }`}
-                                title={!isOpen ? item.label : undefined}
-                            >
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <span className={`flex-shrink-0 ${isActive(item.path) ? 'text-dark-950' : ''}`}>
-                                        {item.icon}
-                                    </span>
-                                    {isOpen && (
-                                        <span className="truncate">{item.label}</span>
+            <nav className="flex-1 pt-4 pb-2 overflow-y-auto">
+                {menuItems[0]?.category ? (
+                    // Render categorized items (Admin)
+                    menuItems.map((group) => (
+                        <div key={group.category} className="mb-5 last:mb-0">
+                            {isOpen && (
+                                <p className="px-6 pb-2 text-[10px] font-extrabold text-dark-500 uppercase tracking-[0.15em]">
+                                    {group.category}
+                                </p>
+                            )}
+                            {!isOpen && (
+                                <div className="h-px bg-dark-800 mx-4 mb-4" />
+                            )}
+                            <ul className="px-3 space-y-1">
+                                {group.items.map((item) => {
+                                    const active = isActive(item.path);
+                                    return (
+                                        <li key={item.path}>
+                                            <Link
+                                                to={item.path}
+                                                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative group ${active
+                                                    ? 'bg-primary-500/10 text-primary-500'
+                                                    : 'text-dark-300 hover:bg-dark-800 hover:text-white'
+                                                    }`}
+                                                title={!isOpen ? item.label : undefined}
+                                            >
+                                                {active && (
+                                                    <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-primary-500 rounded-r-full" />
+                                                )}
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <span className={`flex-shrink-0 ${active ? 'text-primary-500' : 'text-dark-400 group-hover:text-white'}`}>
+                                                        {item.icon}
+                                                    </span>
+                                                    {isOpen && (
+                                                        <span className="truncate">{item.label}</span>
+                                                    )}
+                                                </div>
+                                                {isOpen && item.badge && (
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${active ? 'bg-primary-500 text-dark-950' : 'bg-primary-500/20 text-primary-500'}`}>
+                                                        {item.badge}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    ))
+                ) : (
+                    // Render flat items (Teacher/Student)
+                    <ul className="space-y-1">
+                        {menuItems.map((item) => (
+                            <li key={item.path}>
+                                <Link
+                                    to={item.path}
+                                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.path)
+                                        ? 'bg-primary-500 text-dark-950'
+                                        : 'text-dark-300 hover:bg-dark-800 hover:text-white'
+                                        }`}
+                                    title={!isOpen ? item.label : undefined}
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <span className={`flex-shrink-0 ${isActive(item.path) ? 'text-dark-950' : ''}`}>
+                                            {item.icon}
+                                        </span>
+                                        {isOpen && (
+                                            <span className="truncate">{item.label}</span>
+                                        )}
+                                    </div>
+                                    {isOpen && item.badge && (
+                                        <Badge
+                                            count={item.badge}
+                                            className="bg-primary-500 text-dark-950 flex-shrink-0"
+                                            style={{ backgroundColor: '#FFA500', color: '#000' }}
+                                        />
                                     )}
-                                </div>
-                                {isOpen && item.badge && (
-                                    <Badge
-                                        count={item.badge}
-                                        className="bg-primary-500 text-dark-950 flex-shrink-0"
-                                        style={{ backgroundColor: '#FFA500', color: '#000' }}
-                                    />
-                                )}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </nav>
 
             {/* Desktop User Section */}
@@ -445,11 +589,11 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                             {currentUser?.name?.charAt(0)?.toUpperCase()}
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">
+                            <p className="text-sm font-bold text-white truncate">
                                 {currentUser?.name}
                             </p>
-                            <p className="text-xs text-dark-400 truncate">
-                                {currentUser?.email}
+                            <p className="text-[10px] text-primary-500 font-bold uppercase tracking-wider">
+                                {currentUser?.role === 'admin' ? 'Super Admin' : (currentUser?.role || 'Admin')}
                             </p>
                         </div>
                     </div>

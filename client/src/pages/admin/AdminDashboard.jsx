@@ -12,7 +12,11 @@ import {
     AlertTriangle,
     RefreshCw,
     Wifi,
-    WifiOff
+    WifiOff,
+    Bell,
+    CheckSquare,
+    ShieldAlert,
+    CreditCard
 } from 'lucide-react';
 import { Card, Statistic, Tag, Button, DatePicker, Row, Col, Badge, Tooltip, notification } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
@@ -393,13 +397,58 @@ const AdminDashboard = () => {
                 )}
             </div>
 
+            {/* Platform Alerts */}
+            <Row gutter={[16, 16]}>
+                <Col span={24}>
+                    <Card
+                        className="bg-dark-800 border-dark-700 overflow-hidden"
+                        bodyStyle={{ padding: 0 }}
+                    >
+                        <div className="flex items-center gap-3 px-6 py-3 bg-primary-500/10 border-b border-dark-700">
+                            <Bell size={18} className="text-primary-500" />
+                            <span className="text-sm font-bold text-white uppercase tracking-wider">Critical Platform Alerts</span>
+                            <Badge count={6} className="ml-auto" style={{ backgroundColor: '#ef4444' }} />
+                        </div>
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="flex items-center gap-4 p-3 bg-dark-900/50 rounded-xl border border-dark-700 hover:border-primary-500/30 transition-colors cursor-pointer group">
+                                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                                    <CheckSquare size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-sm">3 Courses</p>
+                                    <p className="text-dark-400 text-xs text-nowrap">Awaiting approval</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 p-3 bg-dark-900/50 rounded-xl border border-dark-700 hover:border-primary-500/30 transition-colors cursor-pointer group">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                    <GraduationCap size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-sm">2 Teachers</p>
+                                    <p className="text-dark-400 text-xs text-nowrap">Pending verification</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4 p-3 bg-dark-900/50 rounded-xl border border-dark-700 hover:border-primary-500/30 transition-colors cursor-pointer group">
+                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                                    <CreditCard size={20} />
+                                </div>
+                                <div>
+                                    <p className="text-white font-bold text-sm">1 Payment</p>
+                                    <p className="text-dark-400 text-xs text-nowrap">Issue reported</p>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </Col>
+            </Row>
+
             {/* Real-time User Stats */}
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={8}>
                     <Card className="bg-dark-800 border-dark-700">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-dark-300 font-medium">Total Students</span>
-                            <Users size={20} className="text-blue-500" />
+                            <UserGroup size={20} className="text-blue-500" />
                         </div>
                         <div className="text-3xl font-bold text-white mb-2">{stats.totalStudents.toLocaleString()}</div>
                         <div className="flex items-center gap-2">
