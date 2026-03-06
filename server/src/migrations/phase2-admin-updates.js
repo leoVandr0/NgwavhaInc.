@@ -11,14 +11,14 @@ export async function up() {
         console.log('📦 Updating Course table...');
         // Alter status column to include new values
         // Note: MySQL ENUM alteration can be tricky, often requires re-defining the column
-        await queryInterface.changeColumn('Courses', 'status', {
+        await queryInterface.changeColumn('Course', 'status', {
             type: DataTypes.ENUM('pending', 'approved', 'rejected', 'draft', 'published', 'archived'),
             defaultValue: 'pending'
         });
 
-        const courseTable = await queryInterface.describeTable('Courses');
+        const courseTable = await queryInterface.describeTable('Course');
         if (!courseTable.rejectionReason) {
-            await queryInterface.addColumn('Courses', 'rejectionReason', {
+            await queryInterface.addColumn('Course', 'rejectionReason', {
                 type: DataTypes.TEXT,
                 allowNull: true
             });
@@ -26,28 +26,28 @@ export async function up() {
 
         // 2. Update User table
         console.log('👤 Updating User table...');
-        const userTable = await queryInterface.describeTable('Users');
+        const userTable = await queryInterface.describeTable('User');
 
         if (!userTable.verificationStatus) {
-            await queryInterface.addColumn('Users', 'verificationStatus', {
+            await queryInterface.addColumn('User', 'verificationStatus', {
                 type: DataTypes.ENUM('pending', 'verified', 'rejected'),
                 defaultValue: 'pending'
             });
         }
         if (!userTable.nationalIDUrl) {
-            await queryInterface.addColumn('Users', 'nationalIDUrl', {
+            await queryInterface.addColumn('User', 'nationalIDUrl', {
                 type: DataTypes.STRING,
                 allowNull: true
             });
         }
         if (!userTable.certificatesUrl) {
-            await queryInterface.addColumn('Users', 'certificatesUrl', {
+            await queryInterface.addColumn('User', 'certificatesUrl', {
                 type: DataTypes.STRING,
                 allowNull: true
             });
         }
         if (!userTable.rejectionReason) {
-            await queryInterface.addColumn('Users', 'rejectionReason', {
+            await queryInterface.addColumn('User', 'rejectionReason', {
                 type: DataTypes.TEXT,
                 allowNull: true
             });
@@ -55,22 +55,22 @@ export async function up() {
 
         // 3. Update Review table
         console.log('💬 Updating Review table...');
-        const reviewTable = await queryInterface.describeTable('Reviews');
+        const reviewTable = await queryInterface.describeTable('Review');
 
         if (!reviewTable.isReported) {
-            await queryInterface.addColumn('Reviews', 'isReported', {
+            await queryInterface.addColumn('Review', 'isReported', {
                 type: DataTypes.BOOLEAN,
                 defaultValue: false
             });
         }
         if (!reviewTable.reportReason) {
-            await queryInterface.addColumn('Reviews', 'reportReason', {
+            await queryInterface.addColumn('Review', 'reportReason', {
                 type: DataTypes.TEXT,
                 allowNull: true
             });
         }
         if (!reviewTable.status) {
-            await queryInterface.addColumn('Reviews', 'status', {
+            await queryInterface.addColumn('Review', 'status', {
                 type: DataTypes.ENUM('approved', 'flagged', 'hidden'),
                 defaultValue: 'approved'
             });

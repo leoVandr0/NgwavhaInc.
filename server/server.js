@@ -251,7 +251,26 @@ connectMySQL().then(async (sequelize) => {
         } catch (migrationError) {
             console.error('❌ Migration failed:', migrationError.message);
         }
-        // (duplicate admin seed block removed)
+
+        // Run Phase 2 Admin Migrations (Critical for User table columns)
+        try {
+            console.log('🔄 Running Phase 2 admin migrations...');
+            const { up } = await import('./src/migrations/phase2-admin-updates.js');
+            await up();
+            console.log('✅ Phase 2 admin migrations completed');
+        } catch (migrationError) {
+            console.error('❌ Phase 2 admin migrations failed:', migrationError.message);
+        }
+
+        // Run Audit Log migration
+        try {
+            console.log('🔄 Running audit log migration...');
+            const { up } = await import('./src/migrations/add-audit-log.js');
+            await up();
+            console.log('✅ Audit log migration completed');
+        } catch (migrationError) {
+            console.error('❌ Audit log migration failed:', migrationError.message);
+        }
 
         // Run instructor approval migration
         try {
