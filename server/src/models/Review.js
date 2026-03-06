@@ -21,15 +21,18 @@ const Review = sequelize.define('Review', {
     },
     isPublished: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: true,
+        field: 'is_published'
     },
     isReported: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'is_reported'
     },
     reportReason: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: 'report_reason'
     },
     status: {
         type: DataTypes.ENUM('approved', 'flagged', 'hidden'),

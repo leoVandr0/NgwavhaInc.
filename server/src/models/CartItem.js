@@ -9,11 +9,13 @@ const CartItem = sequelize.define('CartItem', {
     },
     userId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'user_id'
     },
     courseId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'course_id'
     }
 }, {
     tableName: 'cart_items',

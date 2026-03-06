@@ -23,7 +23,8 @@ const Category = sequelize.define('Category', {
     },
     parentId: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        field: 'parent_id'
     }
 });
 

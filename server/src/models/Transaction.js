@@ -9,7 +9,8 @@ const Transaction = sequelize.define('Transaction', {
     },
     stripePaymentIntentId: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'stripe_payment_intent_id'
     },
     amount: {
         type: DataTypes.DECIMAL(10, 2),
@@ -25,11 +26,13 @@ const Transaction = sequelize.define('Transaction', {
     },
     paymentMethod: {
         type: DataTypes.STRING,
-        defaultValue: 'card'
+        defaultValue: 'card',
+        field: 'payment_method'
     },
     receiptUrl: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'receipt_url'
     }
 });
 

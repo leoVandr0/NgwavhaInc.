@@ -73,23 +73,28 @@ const User = sequelize.define('User', {
     instructorStatus: {
         type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
         defaultValue: 'PENDING',
-        comment: 'Instructor application status - PENDING, APPROVED, or REJECTED'
+        comment: 'Instructor application status - PENDING, APPROVED, or REJECTED',
+        field: 'instructor_status'
     },
     verificationStatus: {
         type: DataTypes.ENUM('pending', 'verified', 'rejected'),
-        defaultValue: 'pending'
+        defaultValue: 'pending',
+        field: 'verification_status'
     },
     nationalIDUrl: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'national_id_url'
     },
     certificatesUrl: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'certificates_url'
     },
     rejectionReason: {
         type: DataTypes.TEXT,
-        allowNull: true
+        allowNull: true,
+        field: 'rejection_reason'
     },
     resetPasswordToken: {
         type: DataTypes.STRING,
@@ -133,21 +138,24 @@ const User = sequelize.define('User', {
             newMessages: true,
             promotionalEmails: false,
             weeklyDigest: false
-        }
+        },
+        field: 'notification_preferences'
     },
     phoneNumber: {
         type: DataTypes.STRING,
         allowNull: true,
         validate: {
             is: /^[+]?[\d\s\-\(\)]+$/ // Basic phone validation
-        }
+        },
+        field: 'phone_number'
     },
     whatsappNumber: {
         type: DataTypes.STRING,
         allowNull: true,
         validate: {
             is: /^[+]?[\d\s\-\(\)]+$/ // Basic phone validation
-        }
+        },
+        field: 'whatsapp_number'
     },
     isApproved: {
         type: DataTypes.BOOLEAN,

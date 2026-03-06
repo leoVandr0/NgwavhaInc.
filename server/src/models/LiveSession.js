@@ -17,19 +17,23 @@ const LiveSession = sequelize.define('LiveSession', {
     },
     courseId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'course_id'
     },
     instructorId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'instructor_id'
     },
     lectureId: {
         type: DataTypes.STRING, // MongoDB ID of the lecture
-        allowNull: true
+        allowNull: true,
+        field: 'lecture_id'
     },
     startTime: {
         type: DataTypes.DATE,
-        allowNull: false
+        allowNull: false,
+        field: 'start_time'
     },
     duration: {
         type: DataTypes.INTEGER, // in minutes
@@ -38,7 +42,8 @@ const LiveSession = sequelize.define('LiveSession', {
     meetingId: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
+        field: 'meeting_id'
     },
     status: {
         type: DataTypes.ENUM('scheduled', 'live', 'ended'),

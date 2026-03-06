@@ -9,11 +9,13 @@ const WishlistItem = sequelize.define('WishlistItem', {
     },
     userId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'user_id'
     },
     courseId: {
         type: DataTypes.UUID,
-        allowNull: false
+        allowNull: false,
+        field: 'course_id'
     }
 }, {
     tableName: 'wishlist_items',

@@ -13,31 +13,38 @@ const Enrollment = sequelize.define('Enrollment', {
     },
     completedLectures: {
         type: DataTypes.JSON, // Array of lecture IDs
-        defaultValue: []
+        defaultValue: [],
+        field: 'completed_lectures'
     },
     lastAccessedAt: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        field: 'last_accessed_at'
     },
     isCompleted: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false
+        defaultValue: false,
+        field: 'is_completed'
     },
     completedAt: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: true,
+        field: 'completed_at'
     },
     certificateUrl: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'certificate_url'
     },
     pricePaid: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
+        allowNull: false,
+        field: 'price_paid'
     },
     paymentId: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'payment_id'
     },
     isArchived: {
         type: DataTypes.BOOLEAN,

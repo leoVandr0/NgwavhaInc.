@@ -31,7 +31,8 @@ const Course = sequelize.define('Course', {
     },
     estimatedPrice: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: true
+        allowNull: true,
+        field: 'estimated_price'
     },
     thumbnail: {
         type: DataTypes.STRING,
@@ -39,40 +40,49 @@ const Course = sequelize.define('Course', {
     },
     videoPreview: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'video_preview'
     },
     // Preview video metadata for admin review
     previewVideoPath: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_video_path'
     },
     previewVideoDuration: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_video_duration'
     },
     previewStatus: {
         type: DataTypes.ENUM('pending', 'approved', 'rejected'),
-        defaultValue: 'pending'
+        defaultValue: 'pending',
+        field: 'preview_status'
     },
     previewUploadedAt: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_uploaded_at'
     },
     previewUploadedBy: {
         type: DataTypes.UUID,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_uploaded_by'
     },
     previewApprovedAt: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_approved_at'
     },
     previewApprovedBy: {
         type: DataTypes.UUID,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_approved_by'
     },
     previewRejectReason: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        field: 'preview_reject_reason'
     },
     level: {
         type: DataTypes.ENUM('beginner', 'intermediate', 'expert', 'all'),
@@ -88,31 +98,38 @@ const Course = sequelize.define('Course', {
     },
     publishedAt: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: true,
+        field: 'published_at'
     },
     totalDuration: {
         type: DataTypes.INTEGER, // in minutes
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'total_duration'
     },
     totalLectures: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'total_lectures'
     },
     averageRating: {
         type: DataTypes.FLOAT,
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'average_rating'
     },
     ratingsCount: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'ratings_count'
     },
     enrollmentsCount: {
         type: DataTypes.INTEGER,
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'enrollments_count'
     },
     mongoContentId: {
         type: DataTypes.STRING, // Reference to MongoDB document
-        allowNull: true
+        allowNull: true,
+        field: 'mongo_content_id'
     }
 }, {
     hooks: {

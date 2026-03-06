@@ -17,11 +17,13 @@ const Assignment = sequelize.define('Assignment', {
     },
     fileUrl: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        field: 'file_url'
     },
     dueDate: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: true,
+        field: 'due_date'
     }
 });
 
