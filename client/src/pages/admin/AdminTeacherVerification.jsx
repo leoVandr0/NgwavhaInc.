@@ -21,7 +21,7 @@ import {
     Search,
     ShieldCheck,
     FileText,
-    IdCard,
+    CreditCard,
     User,
     Mail
 } from 'lucide-react';
@@ -125,7 +125,7 @@ const AdminTeacherVerification = () => {
                         <Button
                             size="small"
                             disabled={!record.nationalIDUrl}
-                            icon={<IdCard size={14} />}
+                            icon={<CreditCard size={14} />}
                             className="bg-dark-900 border-dark-700 text-white flex items-center"
                             onClick={() => window.open(record.nationalIDUrl, '_blank')}
                         >
