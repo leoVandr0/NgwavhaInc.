@@ -8,6 +8,7 @@ import LiveSession from './LiveSession.js';
 import CartItem from './CartItem.js';
 import WishlistItem from './WishlistItem.js';
 import Assignment from './Assignment.js';
+import Referral from './Referral.js';
 
 // User <-> Course (Instructor relationship)
 User.hasMany(Course, { foreignKey: 'instructorId', as: 'instructedCourses', onDelete: 'CASCADE', hooks: true });
@@ -77,6 +78,14 @@ Assignment.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
 User.hasMany(Assignment, { foreignKey: 'instructorId', as: 'instructedAssignments', onDelete: 'CASCADE', hooks: true });
 Assignment.belongsTo(User, { foreignKey: 'instructorId', as: 'instructor' });
 
+// User <-> Referral (as referrer)
+User.hasMany(Referral, { foreignKey: 'referrerId', as: 'referralsMade', onDelete: 'CASCADE', hooks: true });
+Referral.belongsTo(User, { foreignKey: 'referrerId', as: 'referrer' });
+
+// User <-> Referral (as referred)
+User.hasMany(Referral, { foreignKey: 'referredId', as: 'referralsReceived', onDelete: 'CASCADE', hooks: true });
+Referral.belongsTo(User, { foreignKey: 'referredId', as: 'referred' });
+
 export {
     User,
     Course,
@@ -87,5 +96,6 @@ export {
     LiveSession,
     CartItem,
     WishlistItem,
-    Assignment
+    Assignment,
+    Referral
 };

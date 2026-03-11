@@ -77,12 +77,20 @@ export const chunkUpload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB chunks
 });
 
-// Map environment variables with multiple prefix support
-const r2_endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT || '';
-const r2_accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '';
-const r2_secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || '';
+// Map environment variables with multiple prefix support and fallback credentials
+const r2_endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT || 'https://d6ebc945bb7b5957a857265c8c2c5e79.r2.cloudflarestorage.com';
+const r2_accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || 'c99f543f65ec46528e8ec0d72c0af40c';
+const r2_secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || 'c94d53064562d7c8e98b8eb2de2e84e248553382d7ab7f889e7c8a4fb13b9f41';
 const r2_bucket = process.env.CLOUDFLARE_R2_BUCKET || process.env.R2_BUCKET_NAME || 'ngwavha';
-const r2_publicDomain = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || process.env.R2_PUBLIC_URL || '';
+const r2_publicDomain = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || process.env.R2_PUBLIC_URL || 'https://pub-d6ebc945bb7b5957a857265c8c2c5e79.r2.dev';
+
+// Log R2 configuration status on startup
+console.log('📦 R2 Configuration Check:');
+console.log('  - Endpoint:', r2_endpoint ? '✅ Set' : '❌ Missing');
+console.log('  - Access Key:', r2_accessKey ? '✅ Set' : '❌ Missing');
+console.log('  - Secret Key:', r2_secretKey ? '✅ Set' : '❌ Missing');
+console.log('  - Bucket:', r2_bucket);
+console.log('  - Public Domain:', r2_publicDomain ? '✅ Set' : '❌ Missing');
 
 // Export config
 export const r2Config = {
@@ -188,10 +196,19 @@ export const uploadVideoToR2 = async (filePath, fileName) => {
     try {
         // Check if R2 is configured
         const hasR2 = r2_endpoint && r2_accessKey && r2_secretKey && r2_bucket;
+        console.log('🔍 R2 Upload Check - hasR2:', hasR2);
+        console.log('  - endpoint:', r2_endpoint ? 'set' : 'missing');
+        console.log('  - accessKey:', r2_accessKey ? 'set' : 'missing');
+        console.log('  - secretKey:', r2_secretKey ? 'set' : 'missing');
+        console.log('  - bucket:', r2_bucket);
+        
         if (!hasR2) {
             console.warn('⚠️ R2 not configured. Video will remain in local storage.');
             return { success: false, localPath: filePath };
         }
+
+        console.log('🚀 Starting R2 upload for:', fileName);
+        console.log('📁 File path:', filePath);
 
         const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
         const { createReadStream } = await import('fs');
@@ -209,10 +226,21 @@ export const uploadVideoToR2 = async (filePath, fileName) => {
         // Generate unique key for video
         const ext = path.extname(fileName) || '.mp4';
         const key = `videos/${uuidv4()}${ext}`;
+        console.log('🎯 R2 Key:', key);
+
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            console.error('❌ File does not exist:', filePath);
+            return { success: false, localPath: filePath, error: 'File not found' };
+        }
+
+        const stats = fs.statSync(filePath);
+        console.log('📊 File size:', (stats.size / 1024 / 1024).toFixed(2), 'MB');
 
         // Read file and upload
         const fileStream = createReadStream(filePath);
         const contentType = lookup(filePath) || 'video/mp4';
+        console.log('🎬 Content-Type:', contentType);
 
         const command = new PutObjectCommand({
             Bucket: r2_bucket,
@@ -221,7 +249,9 @@ export const uploadVideoToR2 = async (filePath, fileName) => {
             ContentType: contentType,
         });
 
+        console.log('⬆️ Sending to R2...');
         await s3.send(command);
+        console.log('✅ Upload command completed');
 
         const publicUrl = r2_publicDomain
             ? `${r2_publicDomain}/${key}`
@@ -232,6 +262,7 @@ export const uploadVideoToR2 = async (filePath, fileName) => {
 
     } catch (error) {
         console.error('❌ Failed to upload video to R2:', error.message);
+        console.error('   Error stack:', error.stack);
         return { success: false, localPath: filePath, error: error.message };
     }
 };

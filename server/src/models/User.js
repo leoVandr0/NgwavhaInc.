@@ -171,6 +171,27 @@ const User = sequelize.define('User', {
         type: DataTypes.UUID,
         allowNull: true,
         field: 'approved_by'
+    },
+    // Referral system fields
+    referralCode: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+        field: 'referral_code'
+    },
+    referralPoints: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+        field: 'referral_points'
+    },
+    referredBy: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'referred_by',
+        references: {
+            model: 'Users',
+            key: 'id'
+        }
     }
 }, {
     hooks: {

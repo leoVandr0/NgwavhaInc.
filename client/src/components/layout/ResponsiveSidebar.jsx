@@ -23,7 +23,8 @@ import {
     CheckSquare,
     ShieldAlert,
     BarChart3,
-    Megaphone
+    Megaphone,
+    Gift
 } from 'lucide-react';
 import { Badge, Avatar } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
@@ -247,6 +248,12 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                     path: '/student/profile',
                     icon: <User size={20} />,
                     label: 'Profile',
+                    badge: null
+                },
+                {
+                    path: '/student/referrals',
+                    icon: <Gift size={20} />,
+                    label: 'Refer & Earn',
                     badge: null
                 }
             ];

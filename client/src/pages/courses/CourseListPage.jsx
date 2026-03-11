@@ -5,6 +5,7 @@ import { Search, Filter, Star, Clock, Users } from 'lucide-react';
 import api from '../../services/api';
 import { Link } from 'react-router-dom';
 import CourseCard from '../../components/CourseCard';
+import CourseCarousel from '../../components/CourseCarousel';
 
 const CourseListPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -48,25 +49,54 @@ const CourseListPage = () => {
                     </button>
                 </div>
 
-                {/* Course Grid */}
+                {/* Course Grid - Desktop */}
                 {isLoading ? (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="card animate-pulse">
-                                <div className="aspect-video bg-dark-700"></div>
-                                <div className="p-6 space-y-3">
-                                    <div className="h-4 bg-dark-700 rounded w-3/4"></div>
-                                    <div className="h-3 bg-dark-700 rounded w-1/2"></div>
+                    <>
+                        {/* Mobile Skeleton Carousel */}
+                        <div className="md:hidden flex gap-4 overflow-x-auto pb-4">
+                            {[...Array(3)].map((_, i) => (
+                                <div key={i} className="flex-shrink-0 w-[72vw]">
+                                    <div className="bg-dark-800 rounded-xl overflow-hidden">
+                                        <div className="aspect-video bg-dark-700 animate-pulse" />
+                                        <div className="p-3 space-y-2">
+                                            <div className="h-4 bg-dark-700 rounded w-3/4 animate-pulse" />
+                                            <div className="h-3 bg-dark-700 rounded w-1/2 animate-pulse" />
+                                            <div className="h-3 bg-dark-700 rounded w-1/3 animate-pulse" />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                        {/* Desktop Skeleton Grid */}
+                        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="card animate-pulse">
+                                    <div className="aspect-video bg-dark-700"></div>
+                                    <div className="p-6 space-y-3">
+                                        <div className="h-4 bg-dark-700 rounded w-3/4"></div>
+                                        <div className="h-3 bg-dark-700 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {data?.courses?.map((course, index) => (
-                            <CourseCard key={course.id} course={course} index={index} />
-                        ))}
-                    </div>
+                    <>
+                        {/* Mobile Carousel */}
+                        <div className="md:hidden">
+                            <CourseCarousel
+                                courses={data?.courses || []}
+                                title="Explore Courses"
+                                subtitle="Discover your next learning adventure"
+                            />
+                        </div>
+                        {/* Desktop Grid */}
+                        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {data?.courses?.map((course, index) => (
+                                <CourseCard key={course.id} course={course} index={index} />
+                            ))}
+                        </div>
+                    </>
                 )}
 
                 {/* Pagination */}

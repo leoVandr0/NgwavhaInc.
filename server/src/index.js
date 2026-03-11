@@ -16,6 +16,7 @@ import paymentRoutes from './routes/payment.routes.js';
 import healthRoutes from './routes/health.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import referralRoutes from './routes/referral.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
@@ -52,6 +53,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/referrals', referralRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

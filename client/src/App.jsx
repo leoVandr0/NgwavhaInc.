@@ -54,6 +54,7 @@ import AdminTeacherVerification from './pages/admin/AdminTeacherVerification';
 import AdminCategories from './pages/admin/AdminCategories';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import TestNotificationPage from './pages/settings/TestNotificationPage';
+import ReferralPage from './pages/referrals/ReferralPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { debugBellIcon } from './debug/debug-bell';
@@ -205,6 +206,7 @@ const App = () => {
                   <Route path="live-room/:meetingId" element={<LiveRoom userRole="student" />} />
                   <Route path="schedule" element={<div>My Schedule</div>} />
                   <Route path="profile" element={<StudentProfile />} />
+                  <Route path="referrals" element={<ReferralPage />} />
                   {/* Redirect /student to /student/dashboard */}
                   <Route index element={<Navigate to="dashboard" replace />} />
                 </Route>

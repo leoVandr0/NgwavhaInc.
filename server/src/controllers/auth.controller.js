@@ -2,8 +2,10 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Referral from '../models/Referral.js';
 import logger from '../utils/dbLogger.js';
 import PasswordPolicy from '../utils/passwordPolicy.js';
+import { v4 as uuidv4 } from 'uuid';
 
 // Helper to generate token (includes role in payload)
 const generateToken = (userId, role) => {
@@ -36,14 +38,14 @@ export const registerUser = async (req, res) => {
 
     try {
         // Server-side password policy validation for signup
-        const { name, email, password, role, notificationPreferences, phoneNumber, whatsappNumber } = req.body;
+        const { name, email, password, role, notificationPreferences, phoneNumber, whatsappNumber, referralCode } = req.body;
         if (password) {
             const { isValid, errors } = PasswordPolicy.validatePassword(password);
             if (!isValid) {
                 return res.status(400).json({ message: errors[0] });
             }
         }
-        console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password, hasNotificationPrefs: !!notificationPreferences });
+        console.log('2. Extracted fields:', { name, email, role, hasPassword: !!password, hasNotificationPrefs: !!notificationPreferences, hasReferralCode: !!referralCode });
 
         // Check if user exists
         const normalizedEmail = email.trim().toLowerCase();
@@ -64,9 +66,26 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message });
         }
 
+        // Validate referral code if provided
+        let referrer = null;
+        if (referralCode) {
+            console.log('5a. Validating referral code:', referralCode);
+            referrer = await User.findOne({ where: { referralCode: referralCode.trim().toUpperCase() } });
+            if (!referrer) {
+                console.log('⚠️ Invalid referral code provided');
+            } else {
+                console.log('✅ Referral code valid. Referrer:', referrer.name);
+            }
+        }
+
         // Prepare user data with notification preferences
         // For instructors, require admin approval before they can create courses
         const isInstructor = (role || 'student') === 'instructor';
+        
+        // Generate unique referral code for the new user
+        const newReferralCode = uuidv4().substring(0, 8).toUpperCase();
+        console.log('5b. Generated referral code for new user:', newReferralCode);
+        
         const userData = {
             name,
             email: normalizedEmail,
@@ -74,6 +93,9 @@ export const registerUser = async (req, res) => {
             role: role || 'student',
             isVerified: !isInstructor, // Students are verified by default, instructors need approval
             isApproved: !isInstructor, // Students are approved by default, instructors need admin approval
+            referralCode: newReferralCode,
+            referralPoints: 0,
+            referredBy: referrer ? referrer.id : null,
             notificationPreferences: notificationPreferences || {
                 email: true,
                 whatsapp: false,
@@ -99,6 +121,31 @@ export const registerUser = async (req, res) => {
         // Create user (password will be hashed by beforeCreate hook)
         user = await User.create(userData);
         console.log('7. ✅ User created successfully. ID:', user.id);
+
+        // Handle referral tracking and award points
+        if (referrer) {
+            console.log('7a. Creating referral record and awarding points...');
+            try {
+                // Create referral record
+                await Referral.create({
+                    referrerId: referrer.id,
+                    referredId: user.id,
+                    referralCode: referralCode.trim().toUpperCase(),
+                    pointsAwarded: 3,
+                    status: 'completed'
+                });
+                
+                // Award 3 points to referrer
+                await referrer.update({
+                    referralPoints: (referrer.referralPoints || 0) + 3
+                });
+                
+                console.log(`✅ Referral recorded! ${referrer.name} earned 3 points. Total: ${referrer.referralPoints + 3}`);
+            } catch (referralError) {
+                console.error('⚠️ Error processing referral:', referralError.message);
+                // Don't fail registration if referral processing fails
+            }
+        }
 
         // Notify admins if this is an instructor registration
         if (isInstructor && global.broadcastToAdmins) {

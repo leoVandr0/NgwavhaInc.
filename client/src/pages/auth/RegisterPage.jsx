@@ -16,7 +16,8 @@ const RegisterPage = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: searchParams.get('role') || 'student'
+        role: searchParams.get('role') || 'student',
+        referralCode: searchParams.get('ref') || ''
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -89,7 +90,8 @@ const RegisterPage = () => {
                 email: submissionData.email,
                 password: submissionData.password,
                 role: submissionData.role,
-                notificationPreferences: submissionData.notificationPreferences
+                notificationPreferences: submissionData.notificationPreferences,
+                referralCode: submissionData.referralCode
             });
 
             // Show specific message for instructors
