@@ -1,4 +1,6 @@
 import { Server } from 'socket.io';
+import notificationService from './notification.service.js';
+import User from '../models/User.js';
 
 class RealtimeService {
     constructor() {
@@ -106,23 +108,41 @@ class RealtimeService {
     }
 
     // Notify admins when instructor applies for approval
-    notifyInstructorApplication(instructorData) {
+    async notifyInstructorApplication(instructorData) {
         this.broadcastToAdmins('instructor-application', {
             type: 'instructor_application',
             instructor: instructorData,
             message: `New instructor application: ${instructorData.name}`,
             timestamp: new Date().toISOString()
         });
+
+        const admins = await User.findAll({ where: { role: 'admin' } });
+        for (const admin of admins) {
+            await notificationService.sendMultiChannelNotification(admin, {
+                subject: 'New Instructor Application',
+                emailBody: `<h1>New Instructor</h1><p>${instructorData.name} has applied to be an instructor. Please review their application.</p>`,
+                shortMessage: `New instructor application from ${instructorData.name}. Please review in the admin dashboard.`
+            });
+        }
     }
 
     // Notify admins when course is created
-    notifyNewCourse(courseData) {
+    async notifyNewCourse(courseData) {
         this.broadcastToAdmins('new-course', {
             type: 'new_course',
             course: courseData,
             message: `New course created: ${courseData.title}`,
             timestamp: new Date().toISOString()
         });
+
+        const admins = await User.findAll({ where: { role: 'admin' } });
+        for (const admin of admins) {
+            await notificationService.sendMultiChannelNotification(admin, {
+                subject: 'New Course Submitted',
+                emailBody: `<h1>New Course!</h1><p>A new course "<strong>${courseData.title}</strong>" has been submitted and is pending review.</p>`,
+                shortMessage: `New course submitted: "${courseData.title}". Please review it in the admin dashboard.`
+            });
+        }
     }
 
     // Notify admins of system events

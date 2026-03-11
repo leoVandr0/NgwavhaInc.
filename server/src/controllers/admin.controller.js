@@ -4,6 +4,7 @@ import Enrollment from '../models/Enrollment.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';
 import Activity from '../models/nosql/Activity.js';
+import notificationService from '../services/notification.service.js';
 import { Op } from 'sequelize';
 
 // helper to get all dashboard stats
@@ -500,6 +501,16 @@ export const approveCoursePreview = async (req, res) => {
 
     await course.save();
 
+    // Notify the instructor
+    const instructor = await User.findByPk(course.instructorId);
+    if (instructor) {
+      await notificationService.sendMultiChannelNotification(instructor, {
+        subject: 'Course Preview Approved',
+        emailBody: `<h1>Congratulations!</h1><p>Your preview for the course "<strong>${course.title}</strong>" has been approved by an admin. You can now publish your course or add more lectures.</p>`,
+        shortMessage: `Great news! Your course preview for "${course.title}" has been approved. You can now proceed to publish it.`
+      });
+    }
+
     res.json({ success: true, message: 'Preview approved successfully', data: course });
   } catch (error) {
     console.error('Error approving preview:', error);
@@ -524,7 +535,15 @@ export const rejectCoursePreview = async (req, res) => {
     course.previewRejectReason = reason || 'No reason provided by admin';
     await course.save();
 
-    // Optionally, send notification to the instructor
+    // Send notification to the instructor
+    const instructor = await User.findByPk(course.instructorId);
+    if (instructor) {
+      await notificationService.sendMultiChannelNotification(instructor, {
+        subject: 'Course Preview Rejected',
+        emailBody: `<h1>Preview Rejected</h1><p>Your preview for the course "<strong>${course.title}</strong>" was rejected by an admin.</p><p><strong>Reason:</strong> ${course.previewRejectReason}</p>`,
+        shortMessage: `Your course preview for "${course.title}" was rejected. Reason: ${course.previewRejectReason}`
+      });
+    }
 
     res.json({ success: true, message: 'Preview rejected successfully', data: course });
   } catch (error) {

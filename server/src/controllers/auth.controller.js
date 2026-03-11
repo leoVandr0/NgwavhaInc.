@@ -333,9 +333,17 @@ export const uploadAvatar = async (req, res) => {
             });
         }
 
-        // Update user avatar with the filename
+        // Build the avatar URL depending on storage backend:
+        // multer-s3 (R2) sets req.file.key; local multer sets req.file.filename.
+        const isR2 = !!req.file.key;
+        const r2PublicDomain = process.env.R2_PUBLIC_URL || process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || '';
+        const avatarUrl = isR2 && r2PublicDomain
+            ? `${r2PublicDomain}/${req.file.key}`
+            : `/uploads/${req.file.filename}`;
+
         const oldAvatar = user.avatar;
-        user.avatar = req.file.filename;
+        // Always store the full displayable URL so the frontend can use it directly.
+        user.avatar = avatarUrl;
         await user.save();
 
         logger.track({
@@ -343,7 +351,7 @@ export const uploadAvatar = async (req, res) => {
             action: 'upload_avatar',
             resourceType: 'user',
             resourceId: user.id,
-            details: { oldAvatar, newAvatar: req.file.filename },
+            details: { oldAvatar, newAvatar: avatarUrl },
             req
         });
 
@@ -351,9 +359,9 @@ export const uploadAvatar = async (req, res) => {
 
         res.json({
             success: true,
-            url: req.file.filename,
+            url: avatarUrl,
             message: 'Avatar uploaded successfully',
-            filename: req.file.filename
+            filename: isR2 ? req.file.key : req.file.filename
         });
     } catch (error) {
         logger.error('Auth', `Avatar upload error: ${error.message}`, {

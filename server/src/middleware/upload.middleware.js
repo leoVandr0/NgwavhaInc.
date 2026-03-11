@@ -77,13 +77,6 @@ export const chunkUpload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB chunks
 });
 
-// R2 upload function (optional - for future use)
-export const uploadToR2 = async (file) => {
-    // Placeholder for R2 upload logic
-    // Currently just returns local path
-    return `/uploads/${file.filename}`;
-};
-
 // Map environment variables with multiple prefix support
 const r2_endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT || '';
 const r2_accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '';
@@ -105,10 +98,13 @@ export const r2Status = {
     lastError: null
 };
 
-// R2 uploader (will be swapped to R2 storage when available)
+// R2 uploaders – fall back to local if R2 is not configured
+// r2Upload      → thumbnails/  prefix  (course thumbnails)
+// r2AvatarUpload → avatars/   prefix  (user profile photos)
 export let r2Upload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
+export let r2AvatarUpload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Try to initialize Cloudflare R2 uploader and swap in if configured
+// Try to initialize Cloudflare R2 uploaders and swap in if configured
 const initializeR2Uploader = async () => {
     try {
         const hasR2 = r2_endpoint && r2_accessKey && r2_secretKey && r2_bucket;
@@ -120,6 +116,8 @@ const initializeR2Uploader = async () => {
         const { S3Client } = await import('@aws-sdk/client-s3');
         const multerS3Module = await import('multer-s3');
         const multerS3 = multerS3Module.default;
+        const multerModule = await import('multer');
+        const multerInstance = multerModule.default;
 
         const s3 = new S3Client({
             region: 'auto',
@@ -130,7 +128,8 @@ const initializeR2Uploader = async () => {
             }
         });
 
-        const storageR2 = multerS3({
+        // Storage for course thumbnails
+        const storageThumbnail = multerS3({
             s3,
             bucket: r2_bucket,
             contentType: multerS3.AUTO_CONTENT_TYPE,
@@ -140,17 +139,27 @@ const initializeR2Uploader = async () => {
             }
         });
 
-        // Swap in R2 uploader
-        const multerModule = await import('multer');
-        const multerInstance = multerModule.default;
-        r2Upload = multerInstance({ storage: storageR2, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
+        // Storage for user avatars
+        const storageAvatar = multerS3({
+            s3,
+            bucket: r2_bucket,
+            contentType: multerS3.AUTO_CONTENT_TYPE,
+            key: function (req, file, cb) {
+                const ext = path.extname(file.originalname).toLowerCase();
+                cb(null, `avatars/${file.fieldname}-${uuidv4()}${ext}`);
+            }
+        });
+
+        // Swap in R2 uploaders
+        r2Upload = multerInstance({ storage: storageThumbnail, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
+        r2AvatarUpload = multerInstance({ storage: storageAvatar, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
         // Update runtime status
         r2Status.ready = true;
         r2Status.bucketName = r2_bucket;
         r2Status.publicDomain = r2_publicDomain;
         r2Status.lastError = null;
-        console.log('✅ Cloudflare R2 uploader initialized and active');
+        console.log('✅ Cloudflare R2 uploaders initialized (thumbnails/ + avatars/)');
     } catch (e) {
         console.warn('⚠️ Could not initialize R2 uploader:', e?.message);
         r2Status.ready = false;

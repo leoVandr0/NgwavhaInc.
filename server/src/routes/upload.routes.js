@@ -1,5 +1,5 @@
 import express from 'express';
-import { upload, r2Upload, r2Config, r2Status } from '../middleware/upload.middleware.js';
+import { upload, r2Upload, r2AvatarUpload, r2Config, r2Status } from '../middleware/upload.middleware.js';
 import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -8,9 +8,9 @@ const router = express.Router();
 router.post('/course-thumbnail', protect, r2Upload.single('thumbnail'), async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'No file uploaded' 
+                message: 'No file uploaded'
             });
         }
 
@@ -53,7 +53,7 @@ router.post('/course-thumbnail', protect, r2Upload.single('thumbnail'), async (r
             detail = 'Allowed: images (jpg, jpeg, png, gif, webp), PDFs, videos (mp4, webm, mov)';
         }
 
-        res.status(status).json({ 
+        res.status(status).json({
             success: false,
             message: isProduction ? 'Upload failed' : message,
             error: {
@@ -69,7 +69,7 @@ router.post('/course-thumbnail', protect, r2Upload.single('thumbnail'), async (r
 router.post('/test', upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
                 message: 'No file uploaded'
             });
@@ -88,7 +88,7 @@ router.post('/test', upload.single('file'), (req, res) => {
         });
     } catch (error) {
         console.error('Test upload error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Test upload failed',
             error: error.message
@@ -97,29 +97,34 @@ router.post('/test', upload.single('file'), (req, res) => {
 });
 
 // Upload profile photo
-router.post('/profile-photo', protect, upload.single('avatar'), async (req, res) => {
+router.post('/profile-photo', protect, r2AvatarUpload.single('avatar'), async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'No file uploaded' 
+                message: 'No file uploaded'
             });
         }
 
-        const filePath = `/uploads/${req.file.filename}`;
+        // Build public URL: use R2 CDN when file was stored in R2 (req.file.key exists)
+        const isR2 = !!req.file.key;
+        const filePath = isR2 && r2Config?.publicDomain
+            ? `${r2Config.publicDomain}/${req.file.key}`
+            : `/uploads/${req.file.filename}`;
+        const filename = isR2 ? req.file.key : req.file.filename;
 
         res.json({
             success: true,
             message: 'Profile photo uploaded successfully',
             filePath,
-            filename: req.file.filename
+            filename
         });
     } catch (error) {
         console.error('Profile photo upload error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Failed to upload profile photo',
-            error: error.message 
+            error: error.message
         });
     }
 });

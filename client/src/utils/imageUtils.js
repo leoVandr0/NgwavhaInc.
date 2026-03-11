@@ -15,11 +15,15 @@ export const getAvatarUrl = (url) => {
     if (!url || url === 'default-avatar.png' || url.includes('default-avatar')) {
         return '/default-avatar.png';
     }
-    // If it already has /uploads/ or starts with http, return as is (via getImageUrl)
-    if (url.startsWith('/uploads/') || url.startsWith('http')) {
+    // Full R2 / external CDN URL — return as-is
+    if (url.startsWith('http')) {
+        return url;
+    }
+    // Local path already includes /uploads/
+    if (url.startsWith('/uploads/')) {
         return getImageUrl(url);
     }
-    // Otherwise, assume it's a raw filename in the uploads directory
+    // Raw local filename — prepend /uploads/
     return getImageUrl(`/uploads/${url}`);
 };
 
@@ -27,11 +31,14 @@ export const getCourseThumbnail = (url) => {
     if (!url || url === '/uploads/default-course.jpg' || url.includes('default-course')) {
         return '/default-course.jpg';
     }
-
-    // For local filenames, ensure /uploads/ is prepended
-    if (!url.startsWith('http') && !url.startsWith('/uploads/')) {
-        return getImageUrl(`/uploads/${url}`);
+    // Full R2 / external CDN URL — return as-is
+    if (url.startsWith('http')) {
+        return url;
     }
-
-    return getImageUrl(url) || '/default-course.jpg';
+    // Local path already includes /uploads/
+    if (url.startsWith('/uploads/')) {
+        return getImageUrl(url);
+    }
+    // Raw local filename — prepend /uploads/
+    return getImageUrl(`/uploads/${url}`) || '/default-course.jpg';
 };
