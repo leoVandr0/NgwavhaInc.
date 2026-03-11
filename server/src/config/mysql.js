@@ -67,6 +67,14 @@ export const connectMySQL = async () => {
   const maxRetries = 5;
   const retryDelay = 5000; // 5 seconds
 
+  console.log('🔍 Database Connection Debug:');
+  console.log('  DATABASE_URL exists:', !!process.env.DATABASE_URL);
+  console.log('  MYSQL_URL exists:', !!process.env.MYSQL_URL);
+  console.log('  MYSQLDATABASE:', process.env.MYSQLDATABASE);
+  console.log('  MYSQLHOST:', process.env.MYSQLHOST);
+  console.log('  MYSQLPORT:', process.env.MYSQLPORT);
+  console.log('  MYSQLUSER:', process.env.MYSQLUSER);
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // Test connection
