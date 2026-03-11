@@ -20,6 +20,7 @@ import referralRoutes from './routes/referral.routes.js';
 import setupRoutes from './routes/setup.routes.js';
 import dbTestRoutes from './routes/db-test.routes.js';
 import pingRoutes from './routes/ping.routes.js';
+import fixTablesRoutes from './routes/fix-tables.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
@@ -74,6 +75,7 @@ app.use('/api/referrals', referralRoutes);
 app.use('/api/setup', setupRoutes);
 app.use('/api/db', dbTestRoutes);
 app.use('/api/ping', pingRoutes);
+app.use('/api/fix', fixTablesRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
