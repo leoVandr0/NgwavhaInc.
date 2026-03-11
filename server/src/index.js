@@ -21,7 +21,21 @@ import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
 
-dotenv.config();
+// Only load .env file in development
+// In production (Railway), env vars are set directly
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
+
+// Log environment variables for debugging (redact sensitive info)
+console.log('🔧 Environment Check:');
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  PORT:', process.env.PORT);
+console.log('  DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('  R2_ENDPOINT:', process.env.R2_ENDPOINT);
+console.log('  R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME);
+console.log('  R2_ACCESS_KEY_ID exists:', !!process.env.R2_ACCESS_KEY_ID);
+console.log('  JWT_SECRET exists:', !!process.env.JWT_SECRET);
 
 const app = express();
 
