@@ -6,10 +6,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
-const envPath = path.join(__dirname, '..', '..', '.env');
-console.log('DEBUG: Loading .env from:', envPath);
-dotenv.config({ path: envPath });
+// Only load .env file in development - Railway sets env vars directly
+if (process.env.NODE_ENV !== 'production') {
+    const envPath = path.join(__dirname, '..', '..', '.env');
+    console.log('DEBUG: Loading .env from:', envPath);
+    dotenv.config({ path: envPath });
+}
 
 const dbConfig = {
   dialect: "mysql",
@@ -75,6 +77,10 @@ export const connectMySQL = async () => {
       await sequelize.query('SELECT 1');
       console.log("🔍 MySQL connection test passed.");
 
+      // Import models to register them with sequelize before syncing
+      console.log("📥 Loading models...");
+      await import('../models/index.js');
+      
       await sequelize.sync({ force: false });
       console.log("📦 MySQL models synchronized.");
       return sequelize;
