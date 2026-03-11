@@ -22,7 +22,7 @@ router.post('/register', validatePasswordMiddleware, registerUser);
 
 // Login with rate limiting (5 attempts per minute)
 router.post('/login', rateLimitMiddleware(5, 60000), loginUser);
-router.post('/avatar', protect, r2AvatarUpload.single('avatar'), uploadAvatar);
+router.post('/avatar', protect, r2AvatarUpload().single('avatar'), uploadAvatar);
 router.route('/profile')
     .get(protect, getUserProfile)
     .put(protect, updateUserProfile);

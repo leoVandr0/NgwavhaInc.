@@ -5,7 +5,7 @@ import { protect } from '../middleware/auth.middleware.js';
 const router = express.Router();
 
 // Simple local upload - works reliably (R2 will be used if configured)
-router.post('/course-thumbnail', protect, r2Upload.single('thumbnail'), async (req, res) => {
+router.post('/course-thumbnail', protect, r2Upload().single('thumbnail'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({
@@ -97,7 +97,7 @@ router.post('/test', upload.single('file'), (req, res) => {
 });
 
 // Upload profile photo
-router.post('/profile-photo', protect, r2AvatarUpload.single('avatar'), async (req, res) => {
+router.post('/profile-photo', protect, r2AvatarUpload().single('avatar'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({

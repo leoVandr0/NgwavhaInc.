@@ -17,7 +17,7 @@ import {
     completeChunkedUpload
 } from '../controllers/course.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
-import { upload, chunkUpload, uploadToR2, r2Upload } from '../middleware/upload.middleware.js';
+import { upload, chunkUpload, uploadToR2, r2Upload, r2AvatarUpload } from '../middleware/upload.middleware.js';
 import { uploadCoursePreview } from '../controllers/course.controller.js';
 
 const router = express.Router();
@@ -65,7 +65,7 @@ router.route('/:id/sections/:sectionId/lectures/:lectureId/video/chunked/complet
 
 // Preview upload for admin review (instructor uploads a 5-min preview video)
 router.route('/:id/preview')
-    .post(protect, authorize('instructor'), r2Upload.single('video'), uploadCoursePreview);
+    .post(protect, authorize('instructor'), r2Upload().single('video'), uploadCoursePreview);
 
 // Thumbnail upload route
 router.post('/thumbnail/upload', protect, authorize('instructor', 'admin'), upload.single('thumbnail'), async (req, res) => {

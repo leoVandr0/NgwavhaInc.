@@ -101,8 +101,12 @@ export const r2Status = {
 // R2 uploaders – fall back to local if R2 is not configured
 // r2Upload      → thumbnails/  prefix  (course thumbnails)
 // r2AvatarUpload → avatars/   prefix  (user profile photos)
-export let r2Upload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
-export let r2AvatarUpload = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+let r2UploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
+let r2AvatarUploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+
+// Export getters that will return the correct uploader based on initialization
+export const r2Upload = () => r2UploadInstance;
+export const r2AvatarUpload = () => r2AvatarUploadInstance;
 
 // Try to initialize Cloudflare R2 uploaders and swap in if configured
 const initializeR2Uploader = async () => {
@@ -151,8 +155,8 @@ const initializeR2Uploader = async () => {
         });
 
         // Swap in R2 uploaders
-        r2Upload = multerInstance({ storage: storageThumbnail, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
-        r2AvatarUpload = multerInstance({ storage: storageAvatar, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+        r2UploadInstance = multerInstance({ storage: storageThumbnail, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
+        r2AvatarUploadInstance = multerInstance({ storage: storageAvatar, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 
         // Update runtime status
         r2Status.ready = true;
@@ -166,4 +170,17 @@ const initializeR2Uploader = async () => {
         r2Status.lastError = e?.message;
     }
 };
+// Help function to get public URL for a file (used by manually calling controllers)
+export const uploadToR2 = async (file) => {
+    if (!file) return null;
+
+    // If file has a key, it's already in R2
+    if (file.key && r2Config.publicDomain) {
+        return `${r2Config.publicDomain}/${file.key}`;
+    }
+
+    // Fallback to local path
+    return `/uploads/${file.filename}`;
+};
+
 initializeR2Uploader();
