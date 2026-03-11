@@ -1,5 +1,5 @@
 ﻿// src/contexts/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -10,30 +10,63 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isTokenValid, setIsTokenValid] = useState(false);
   const navigate = useNavigate();
   const authStore = useAuthStore();
 
-  useEffect(() => {
+  // Function to verify and refresh token
+  const verifyAndRefreshToken = useCallback(async () => {
     const token = localStorage.getItem('token');
-    if (token) {
-      const verifyToken = async () => {
-        try {
-          const response = await api.get('/auth/profile');
-          setCurrentUser(response.data);
-          authStore.login(response.data, token); // Sync to store
-        } catch (error) {
-          console.error('Token verification failed:', error);
-          localStorage.removeItem('token');
-          authStore.logout(); // Sync to store
-        } finally {
-          setLoading(false);
-        }
-      };
-      verifyToken();
-    } else {
+    if (!token) {
       setLoading(false);
+      setIsTokenValid(false);
+      return false;
     }
-  }, []);
+
+    try {
+      // First try to get profile with current token
+      const response = await api.get('/auth/profile');
+      setCurrentUser(response.data);
+      authStore.login(response.data, token);
+      setIsTokenValid(true);
+      setLoading(false);
+      return true;
+    } catch (error) {
+      // If 401, try to refresh the token
+      if (error.response?.status === 401) {
+        try {
+          const refreshResponse = await api.post('/auth/refresh-token');
+          const { token: newToken, user } = refreshResponse.data;
+          
+          localStorage.setItem('token', newToken);
+          setCurrentUser(user);
+          authStore.login(user, newToken);
+          setIsTokenValid(true);
+          setLoading(false);
+          console.log('Token auto-refreshed on app load for:', user.role);
+          return true;
+        } catch (refreshError) {
+          console.error('Token refresh failed on load:', refreshError);
+          localStorage.removeItem('token');
+          authStore.logout();
+          setIsTokenValid(false);
+          setLoading(false);
+          return false;
+        }
+      } else {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('token');
+        authStore.logout();
+        setIsTokenValid(false);
+        setLoading(false);
+        return false;
+      }
+    }
+  }, [authStore]);
+
+  useEffect(() => {
+    verifyAndRefreshToken();
+  }, [verifyAndRefreshToken]);
 
   const login = async (email, password) => {
     try {
@@ -41,7 +74,8 @@ export const AuthProvider = ({ children }) => {
       const { token, ...userData } = response.data;
       localStorage.setItem('token', token);
       setCurrentUser(userData);
-      authStore.login(userData, token); // Sync to store
+      authStore.login(userData, token);
+      setIsTokenValid(true);
       message.success('Login successful!');
       return userData;
     } catch (error) {
@@ -53,7 +87,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setCurrentUser(null);
-    authStore.logout(); // Sync to store
+    setIsTokenValid(false);
+    authStore.logout();
     navigate('/login');
   };
 
@@ -62,14 +97,30 @@ export const AuthProvider = ({ children }) => {
     authStore.login(userData, localStorage.getItem('token'));
   };
 
+  // Function to manually refresh token
+  const refreshUserToken = async () => {
+    try {
+      const response = await api.post('/auth/refresh-token');
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setCurrentUser(user);
+      authStore.login(user, token);
+      return { success: true, user };
+    } catch (error) {
+      console.error('Manual token refresh failed:', error);
+      return { success: false, error };
+    }
+  };
+
   const value = {
     currentUser,
     login,
     logout,
     updateUser,
+    refreshUserToken,
     loading,
-    // Expose a simple boolean for components that check auth state
-    isAuthenticated: !!currentUser
+    isTokenValid,
+    isAuthenticated: !!currentUser && isTokenValid
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

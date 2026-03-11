@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
 import StudentLayout from './layouts/StudentLayout';
@@ -63,18 +63,35 @@ import AdminSendAlert from './pages/admin/AdminSendAlert';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, isAuthenticated } = useAuth();
+  const location = useLocation();
 
+  // Show loading spinner while checking auth
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    );
   }
 
-  if (!currentUser) {
-    return <Navigate to="/login" />;
+  // If not authenticated, redirect to login with return URL
+  if (!isAuthenticated || !currentUser) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  // Check role authorization
   if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
-    return <Navigate to="/unauthorized" />;
+    // Redirect to appropriate dashboard based on role
+    const roleRedirects = {
+      'admin': '/admin/dashboard',
+      'instructor': '/teacher/dashboard',
+      'teacher': '/teacher/dashboard',
+      'student': '/student/dashboard'
+    };
+    
+    const redirectPath = roleRedirects[currentUser.role] || '/';
+    return <Navigate to={redirectPath} replace />;
   }
 
   return children;

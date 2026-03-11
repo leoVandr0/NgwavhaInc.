@@ -354,6 +354,38 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+// @desc    Refresh JWT token
+// @route   POST /api/auth/refresh-token
+// @access  Private
+export const refreshToken = async (req, res) => {
+    try {
+        // User is already attached by protect middleware
+        const user = req.user;
+        
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        // Generate new token
+        const token = generateToken(user.id, user.role);
+        
+        console.log('🔄 Token refreshed for user:', user.id, 'Role:', user.role);
+
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('Token refresh error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 export const uploadAvatar = async (req, res) => {
     try {
         console.log('Avatar upload request:', {

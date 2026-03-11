@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Typography, message, List, Avatar, Badge } from 'antd';
 import { Share2, Users, Gift, Copy, CheckCircle } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../services/api';
 
 const { Title, Text, Paragraph } = Typography;

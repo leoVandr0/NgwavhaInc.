@@ -6,6 +6,7 @@ import {
     updateUserProfile,
     uploadAvatar,
     googleAuthCallback,
+    refreshToken,
 } from '../controllers/auth.controller.js';
 import passport from 'passport';
 import { protect } from '../middleware/auth.middleware.js';
@@ -22,6 +23,7 @@ router.post('/register', validatePasswordMiddleware, registerUser);
 
 // Login with rate limiting (5 attempts per minute)
 router.post('/login', rateLimitMiddleware(5, 60000), loginUser);
+router.post('/refresh-token', protect, refreshToken);
 router.post('/avatar', protect, r2AvatarUpload().single('avatar'), uploadAvatar);
 router.route('/profile')
     .get(protect, getUserProfile)
