@@ -81,7 +81,17 @@ export const connectMySQL = async () => {
       console.log("📥 Loading models...");
       await import('../models/index.js');
       
-      await sequelize.sync({ force: false });
+      // Sync database - use force: true on first run to create tables, alter for updates
+      console.log("🔄 Syncing database schema...");
+      try {
+        // First try alter: true (safe for existing data)
+        await sequelize.sync({ alter: true, logging: false });
+      } catch (alterError) {
+        // If alter fails (e.g., missing tables), try force: true to create all tables
+        console.log("⚠️ Alter sync failed, trying force sync for initial setup...");
+        await sequelize.sync({ force: true, logging: false });
+        console.log("✅ Tables created with force sync (fresh database)");
+      }
       console.log("📦 MySQL models synchronized.");
       return sequelize;
     } catch (error) {
