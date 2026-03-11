@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import CourseContent from '../models/nosql/CourseContent.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/mysql.js';
+import { uploadVideoToR2 } from '../middleware/upload.middleware.js';
 
 // @desc    Get all courses
 // @route   GET /api/courses
@@ -219,12 +220,41 @@ export const completeChunkedUpload = async (req, res) => {
             }
         }
 
-        lecture.videoUrl = `/uploads/${finalFileName}`;
+        // Upload assembled video to R2
+        console.log('🚀 Uploading video to R2:', finalFileName);
+        const r2Result = await uploadVideoToR2(finalPath, finalFileName);
+
+        if (r2Result.success) {
+            // Use R2 URL
+            lecture.videoUrl = r2Result.url;
+            console.log('✅ Video uploaded to R2:', r2Result.url);
+
+            // Optionally delete local file after successful R2 upload
+            try {
+                if (fs.existsSync(finalPath)) {
+                    fs.unlinkSync(finalPath);
+                    console.log('🗑️ Local file cleaned up:', finalFileName);
+                }
+            } catch (cleanupError) {
+                console.warn('⚠️ Could not delete local file:', cleanupError.message);
+            }
+        } else {
+            // Fallback to local storage
+            lecture.videoUrl = `/uploads/${finalFileName}`;
+            console.warn('⚠️ R2 upload failed, using local storage:', r2Result.error || 'No error details');
+        }
+
         lecture.type = 'video';
         await content.save();
 
-        res.json({ message: 'Upload completed', lecture });
+        res.json({
+            message: 'Upload completed',
+            lecture,
+            storage: r2Result.success ? 'r2' : 'local',
+            url: lecture.videoUrl
+        });
     } catch (error) {
+        console.error('❌ Chunked upload error:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -317,13 +347,41 @@ export const uploadLectureVideo = async (req, res) => {
             return res.status(404).json({ message: 'Lecture not found' });
         }
 
-        lecture.videoUrl = `/uploads/${req.file.filename}`;
-        lecture.type = 'video';
+        // Upload video to R2
+        const filePath = path.join(process.env.UPLOAD_PATH || 'uploads', req.file.filename);
+        console.log('🚀 Uploading lecture video to R2:', req.file.filename);
+        const r2Result = await uploadVideoToR2(filePath, req.file.filename);
 
+        if (r2Result.success) {
+            lecture.videoUrl = r2Result.url;
+            console.log('✅ Lecture video uploaded to R2:', r2Result.url);
+
+            // Clean up local file
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log('🗑️ Local file cleaned up:', req.file.filename);
+                }
+            } catch (cleanupError) {
+                console.warn('⚠️ Could not delete local file:', cleanupError.message);
+            }
+        } else {
+            // Fallback to local storage
+            lecture.videoUrl = `/uploads/${req.file.filename}`;
+            console.warn('⚠️ R2 upload failed, using local storage:', r2Result.error || 'No error details');
+        }
+
+        lecture.type = 'video';
         await content.save();
 
-        res.json({ message: 'Video uploaded', lecture });
+        res.json({
+            message: 'Video uploaded',
+            lecture,
+            storage: r2Result.success ? 'r2' : 'local',
+            url: lecture.videoUrl
+        });
     } catch (error) {
+        console.error('❌ Video upload error:', error);
         res.status(500).json({ message: error.message });
     }
 };

@@ -183,4 +183,57 @@ export const uploadToR2 = async (file) => {
     return `/uploads/${file.filename}`;
 };
 
+// Upload video file to R2 (for chunked uploads)
+export const uploadVideoToR2 = async (filePath, fileName) => {
+    try {
+        // Check if R2 is configured
+        const hasR2 = r2_endpoint && r2_accessKey && r2_secretKey && r2_bucket;
+        if (!hasR2) {
+            console.warn('⚠️ R2 not configured. Video will remain in local storage.');
+            return { success: false, localPath: filePath };
+        }
+
+        const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+        const { createReadStream } = await import('fs');
+        const { lookup } = await import('mime-types');
+
+        const s3 = new S3Client({
+            region: 'auto',
+            endpoint: r2_endpoint,
+            credentials: {
+                accessKeyId: r2_accessKey,
+                secretAccessKey: r2_secretKey
+            }
+        });
+
+        // Generate unique key for video
+        const ext = path.extname(fileName) || '.mp4';
+        const key = `videos/${uuidv4()}${ext}`;
+
+        // Read file and upload
+        const fileStream = createReadStream(filePath);
+        const contentType = lookup(filePath) || 'video/mp4';
+
+        const command = new PutObjectCommand({
+            Bucket: r2_bucket,
+            Key: key,
+            Body: fileStream,
+            ContentType: contentType,
+        });
+
+        await s3.send(command);
+
+        const publicUrl = r2_publicDomain
+            ? `${r2_publicDomain}/${key}`
+            : `${r2_endpoint}/${r2_bucket}/${key}`;
+
+        console.log('✅ Video uploaded to R2:', publicUrl);
+        return { success: true, url: publicUrl, key };
+
+    } catch (error) {
+        console.error('❌ Failed to upload video to R2:', error.message);
+        return { success: false, localPath: filePath, error: error.message };
+    }
+};
+
 initializeR2Uploader();
