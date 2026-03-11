@@ -13,6 +13,9 @@ buildCommand = "echo 'No build needed'"
 startCommand = "node server.js"
 watchPatterns = ["server/**"]
 
+[services.variables]
+NODE_ENV = "production"
+
 [[services]]
 name = "frontend"
 rootDirectory = "client"
@@ -26,3 +29,10 @@ rootDirectory = "ml-engine"
 buildCommand = "pip install -r requirements.txt"
 startCommand = "python api/main.py"
 watchPatterns = ["ml-engine/**"]
+
+# MySQL Plugin Configuration
+[[plugins]]
+source = "mysql"
+
+[plugins.config]
+databaseName = "railway"
