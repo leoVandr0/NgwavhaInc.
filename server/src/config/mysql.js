@@ -85,14 +85,9 @@ export const connectMySQL = async () => {
       await sequelize.query('SELECT 1');
       console.log("🔍 MySQL connection test passed.");
 
-      // Import models to register them with sequelize before syncing
-      console.log("📥 Loading models...");
-      await import('../models/index.js');
+      // Skip auto-sync - will be done manually via API endpoint
+      console.log("⚠️ Skipping auto-sync - use /api/fix/create-tables to create tables");
       
-      // Sync database - use alter: true to safely create/update tables
-      console.log("🔄 Syncing database schema...");
-      await sequelize.sync({ alter: true, logging: false });
-      console.log("📦 MySQL models synchronized.");
       return sequelize;
     } catch (error) {
       console.error(`❌ MySQL connection attempt ${attempt}/${maxRetries} failed:`, error.message);

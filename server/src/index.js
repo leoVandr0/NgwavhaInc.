@@ -21,6 +21,7 @@ import setupRoutes from './routes/setup.routes.js';
 import dbTestRoutes from './routes/db-test.routes.js';
 import pingRoutes from './routes/ping.routes.js';
 import fixTablesRoutes from './routes/fix-tables.routes.js';
+import simpleFixRoutes from './routes/simple-fix.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import path from 'path';
 import './models/index.js'; // Ensure models are registered
@@ -76,6 +77,7 @@ app.use('/api/setup', setupRoutes);
 app.use('/api/db', dbTestRoutes);
 app.use('/api/ping', pingRoutes);
 app.use('/api/fix', fixTablesRoutes);
+app.use('/api/simple', simpleFixRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
