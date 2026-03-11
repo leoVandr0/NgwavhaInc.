@@ -22,7 +22,8 @@ import {
     Star,
     CheckSquare,
     ShieldAlert,
-    BarChart3
+    BarChart3,
+    Megaphone
 } from 'lucide-react';
 import { Badge, Avatar } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
@@ -140,6 +141,12 @@ const ResponsiveSidebar = ({ isOpen, onToggle, isMobile, onMobileClose }) => {
                 {
                     category: 'SYSTEM',
                     items: [
+                        {
+                            path: '/admin/send-alert',
+                            icon: <Megaphone size={18} />,
+                            label: 'Send Alert',
+                            badge: null
+                        },
                         {
                             path: '/admin/settings',
                             icon: <Settings size={18} />,

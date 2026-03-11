@@ -6,6 +6,7 @@ class RealtimeService {
     constructor() {
         this.io = null;
         this.adminClients = new Set();
+        this.userClients = new Map(); // socketId -> { userId, role }
     }
 
     initialize(server) {
@@ -19,14 +20,31 @@ class RealtimeService {
         this.io.on('connection', (socket) => {
             console.log('Client connected to real-time service:', socket.id);
 
+            // Handle user authentication
+            socket.on('user-auth', (data) => {
+                if (data.userId && data.role) {
+                    this.userClients.set(socket.id, {
+                        userId: data.userId,
+                        role: data.role
+                    });
+                    socket.join(`user-${data.userId}`);
+                    socket.join(`role-${data.role}`);
+                    socket.join('all-users');
+                    console.log('User client authenticated:', socket.id, 'Role:', data.role);
+                }
+            });
+
             // Handle admin authentication
             socket.on('admin-auth', (data) => {
                 if (data.role === 'admin') {
                     this.adminClients.add(socket.id);
+                    this.userClients.set(socket.id, {
+                        userId: data.userId,
+                        role: 'admin'
+                    });
                     socket.join('admin-room');
+                    socket.join('all-users');
                     console.log('Admin client authenticated:', socket.id);
-
-                    // Send initial dashboard data
                     this.sendInitialData(socket);
                 }
             });
@@ -34,7 +52,9 @@ class RealtimeService {
             // Handle disconnection
             socket.on('disconnect', () => {
                 this.adminClients.delete(socket.id);
+                this.userClients.delete(socket.id);
                 socket.leave('admin-room');
+                socket.leave('all-users');
                 console.log('Client disconnected:', socket.id);
             });
 
@@ -42,11 +62,21 @@ class RealtimeService {
             socket.on('request-dashboard-update', async () => {
                 await this.sendDashboardUpdate(socket);
             });
+
+            // Handle alert acknowledgment
+            socket.on('alert:acknowledge', (data) => {
+                console.log('Alert acknowledged by user:', data.userId);
+            });
         });
 
         // Set up global broadcast function
         global.broadcastToAdmins = (event, data) => {
             this.broadcastToAdmins(event, data);
+        };
+
+        // Set up global broadcast to all users
+        global.broadcastToAll = (event, data, targetAudience = 'all') => {
+            this.broadcastToAll(event, data, targetAudience);
         };
 
         console.log('Real-time service initialized');
@@ -95,6 +125,47 @@ class RealtimeService {
             this.io.to('admin-room').emit(event, data);
             console.log(`Broadcasted to ${this.adminClients.size} admin clients:`, event);
         }
+    }
+
+    // Broadcast to all users or specific role
+    broadcastToAll(event, data, targetAudience = 'all') {
+        if (!this.io) return;
+
+        let targetRoom = 'all-users';
+        let clientCount = this.userClients.size;
+
+        if (targetAudience !== 'all') {
+            targetRoom = `role-${targetAudience}`;
+            // Count clients in target audience
+            clientCount = Array.from(this.userClients.values()).filter(
+                client => client.role === targetAudience
+            ).length;
+        }
+
+        this.io.to(targetRoom).emit(event, data);
+        console.log(`Broadcasted to ${clientCount} ${targetAudience} clients:`, event);
+        return clientCount;
+    }
+
+    // Send public alert to all users
+    async sendPublicAlert(alertData) {
+        const { title, message, priority, targetAudience, notificationId } = alertData;
+
+        const alertPayload = {
+            id: notificationId,
+            title,
+            message,
+            priority,
+            targetAudience,
+            type: 'broadcast',
+            timestamp: new Date().toISOString()
+        };
+
+        // Broadcast to target audience
+        const deliveryCount = this.broadcastToAll('public-alert', alertPayload, targetAudience);
+
+        console.log(`Public alert sent to ${deliveryCount} users:`, title);
+        return deliveryCount;
     }
 
     // Notify all admins when new user registers

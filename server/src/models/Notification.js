@@ -9,16 +9,31 @@ const Notification = sequelize.define('Notification', {
     },
     userId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true, // null for broadcast notifications
         references: {
             model: 'User',
             key: 'id'
         }
     },
     type: {
-        type: DataTypes.ENUM('course_update', 'assignment_reminder', 'new_message', 'system_update'),
+        type: DataTypes.ENUM('course_update', 'assignment_reminder', 'new_message', 'system_update', 'broadcast'),
         allowNull: false,
         defaultValue: 'system_update'
+    },
+    notificationType: {
+        type: DataTypes.ENUM('private', 'broadcast'),
+        allowNull: false,
+        defaultValue: 'private'
+    },
+    priority: {
+        type: DataTypes.ENUM('low', 'medium', 'high', 'urgent'),
+        allowNull: false,
+        defaultValue: 'medium'
+    },
+    targetAudience: {
+        type: DataTypes.ENUM('all', 'students', 'instructors', 'admins'),
+        allowNull: true,
+        defaultValue: null
     },
     title: {
         type: DataTypes.STRING,
@@ -36,6 +51,15 @@ const Notification = sequelize.define('Notification', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         allowNull: false
+    },
+    acknowledged: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    },
+    expiresAt: {
+        type: DataTypes.DATE,
+        allowNull: true
     },
     createdAt: {
         type: DataTypes.DATE,

@@ -114,6 +114,11 @@ export const WebSocketProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('teacher-declined', { detail: data }));
         });
 
+        newSocket.on('public-alert', (data) => {
+            console.log('Public alert received:', data);
+            window.dispatchEvent(new CustomEvent('public-alert', { detail: data }));
+        });
+
         newSocket.on('stats-update', (data) => {
             console.log('Stats update:', data);
             // Handle general stats updates

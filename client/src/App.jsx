@@ -57,6 +57,8 @@ import TestNotificationPage from './pages/settings/TestNotificationPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { debugBellIcon } from './debug/debug-bell';
+import PublicAlertBanner from './components/notifications/PublicAlertBanner';
+import AdminSendAlert from './pages/admin/AdminSendAlert';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -102,6 +104,7 @@ const App = () => {
         <AuthProvider>
           <AntApp>
             <ErrorBoundary>
+              <PublicAlertBanner />
               <CookieConsent />
               <Routes>
                 {/* Public Routes with Navbar and Footer */}
@@ -166,6 +169,7 @@ const App = () => {
                   <Route path="courses" element={<AdminCourses />} />
                   <Route path="course-previews" element={<AdminCoursePreviews />} />
                   <Route path="course-approvals" element={<AdminApprovals />} />
+                  <Route path="send-alert" element={<AdminSendAlert />} />
                   <Route path="moderation" element={<AdminModeration />} />
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="analytics" element={<AdminAnalytics />} />

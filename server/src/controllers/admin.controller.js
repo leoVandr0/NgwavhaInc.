@@ -551,3 +551,77 @@ export const rejectCoursePreview = async (req, res) => {
     res.status(500).json({ message: 'Failed to reject course preview' });
   }
 };
+
+// @desc    Broadcast public notification to all users
+// @route   POST /api/admin/notifications/broadcast
+// @access  Private (Admin only)
+export const broadcastNotification = async (req, res) => {
+  try {
+    const { title, message, priority = 'medium', targetAudience = 'all', expiresAt } = req.body;
+
+    // Validate required fields
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    // Validate priority
+    const validPriorities = ['low', 'medium', 'high', 'urgent'];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({ message: 'Invalid priority. Must be one of: low, medium, high, urgent' });
+    }
+
+    // Validate target audience
+    const validAudiences = ['all', 'students', 'instructors', 'admins'];
+    if (!validAudiences.includes(targetAudience)) {
+      return res.status(400).json({ message: 'Invalid target audience' });
+    }
+
+    // Create broadcast notification in database
+    const Notification = (await import('../models/Notification.js')).default;
+    const broadcastNotification = await Notification.create({
+      notificationType: 'broadcast',
+      type: 'broadcast',
+      title,
+      message,
+      priority,
+      targetAudience,
+      createdBy: req.user.id,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      userId: null // Broadcast notifications don't belong to a specific user
+    });
+
+    // Send real-time alert via Socket.IO
+    let deliveryCount = 0;
+    if (global.broadcastToAll) {
+      deliveryCount = await global.broadcastToAll('public-alert', {
+        id: broadcastNotification.id,
+        title,
+        message,
+        priority,
+        targetAudience,
+        type: 'broadcast',
+        timestamp: new Date().toISOString()
+      }, targetAudience);
+    }
+
+    console.log(`Broadcast notification sent: "${title}" to ${deliveryCount} users`);
+
+    res.json({
+      success: true,
+      message: 'Broadcast notification sent successfully',
+      notificationId: broadcastNotification.id,
+      deliveryCount,
+      data: {
+        id: broadcastNotification.id,
+        title,
+        message,
+        priority,
+        targetAudience,
+        createdAt: broadcastNotification.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error broadcasting notification:', error);
+    res.status(500).json({ message: 'Failed to broadcast notification', error: error.message });
+  }
+};

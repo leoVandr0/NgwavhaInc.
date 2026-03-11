@@ -20,7 +20,8 @@ import {
     flagReview,
     getPendingCoursePreviews,
     approveCoursePreview,
-    rejectCoursePreview
+    rejectCoursePreview,
+    broadcastNotification
 } from '../controllers/admin.controller.js';
 import { adminOnly, protect } from '../middleware/admin.middleware.js';
 
@@ -75,5 +76,8 @@ router.get('/instructors/pending', getPendingInstructors);
 
 // Approve an instructor by ID
 router.post('/instructors/:id/approve', approveInstructor);
+
+// Broadcast notification to all users
+router.post('/notifications/broadcast', broadcastNotification);
 
 export default router;
