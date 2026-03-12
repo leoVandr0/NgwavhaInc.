@@ -47,6 +47,7 @@ import uploadRoutes from './src/routes/upload.routes.js';
 import notificationRoutes from './src/routes/notification.routes.js';
 import studentRoutes from './src/routes/student.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
+import fixRoutes from './src/routes/fix.routes.js';
 import configurePassport from './src/config/passport.js';
 import realtimeService from './src/services/realtime.service.js';
 
@@ -113,7 +114,7 @@ app.use('/uploads', express.static(path.join(__dirname, uploadPath), {
     lastModified: true
 }));
 
-// API routes (must come before SPA fallback)
+ // API routes (must come before SPA fallback)
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -128,6 +129,8 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/student', studentRoutes);
+// Fix routes (table creation utility)
+app.use('/api/fix', fixRoutes);
 
 // Test route
 app.get('/api', (req, res) => {
@@ -240,6 +243,13 @@ connectMySQL().then(async (sequelize) => {
             await seedRailwayAdmin();
         } catch (err) {
             console.error('⚠ Railway admin seed failed:', err?.message);
+        }
+        // Auto-create database tables if missing
+        try {
+            await sequelize.sync({ force: false });
+            console.log('✅ Database tables synchronized');
+        } catch (err) {
+            console.error('❌ Table sync failed:', err?.message ?? err);
         }
 
         // Run notification preferences migration
