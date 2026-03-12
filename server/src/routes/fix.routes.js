@@ -3,8 +3,8 @@ import sequelize from '../config/mysql.js'
 
 const router = Router()
 
-// POST /api/fix/create-tables - Create all database tables
-router.post('/create-tables', async (req, res) => {
+// Helper to run sync
+const runSync = async (res) => {
   try {
     await sequelize.sync({ force: false })
     res.json({ success: true, message: 'All tables created/verified' })
@@ -12,10 +12,15 @@ router.post('/create-tables', async (req, res) => {
     console.error('Table creation error:', err)
     res.status(500).json({ success: false, error: err.message })
   }
+}
+
+// Accept multiple path variants for compatibility
+router.post(['/create-tables', '/createTables', '/create_tables'], async (req, res) => {
+  await runSync(res)
 })
 
 // Basic health check for the fix route
-router.get('/health', async (req, res) => {
+router.get(['/health', '/health/'], async (req, res) => {
   try {
     await sequelize.authenticate()
     res.json({ success: true, database: 'connected' })
