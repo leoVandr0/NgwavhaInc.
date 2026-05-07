@@ -12,7 +12,7 @@ const Referral = sequelize.define('Referral', {
         allowNull: false,
         field: 'referrer_id',
         references: {
-            model: 'Users',
+            model: 'User',
             key: 'id'
         }
     },
@@ -21,7 +21,7 @@ const Referral = sequelize.define('Referral', {
         allowNull: false,
         field: 'referred_id',
         references: {
-            model: 'Users',
+            model: 'User',
             key: 'id'
         }
     },

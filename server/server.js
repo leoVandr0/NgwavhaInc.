@@ -237,19 +237,19 @@ server.listen(PORT, () => {
 connectMySQL().then(async (sequelize) => {
     if (sequelize) {
         console.log('✅ MySQL connected successfully');
+        // Auto-create database tables if missing (must run before any seeding)
+        try {
+            await sequelize.sync({ force: false });
+            console.log('✅ Database tables synchronized');
+        } catch (err) {
+            console.error('❌ Table sync failed:', err?.message ?? err);
+        }
         // Auto-seed Railway admin account for production login (single, idempotent seed)
         try {
             const { seedRailwayAdmin } = await import('./src/utils/adminSeed.js');
             await seedRailwayAdmin();
         } catch (err) {
             console.error('⚠ Railway admin seed failed:', err?.message);
-        }
-        // Auto-create database tables if missing
-        try {
-            await sequelize.sync({ force: false });
-            console.log('✅ Database tables synchronized');
-        } catch (err) {
-            console.error('❌ Table sync failed:', err?.message ?? err);
         }
 
         // Run notification preferences migration

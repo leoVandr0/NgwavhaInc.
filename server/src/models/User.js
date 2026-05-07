@@ -189,7 +189,7 @@ const User = sequelize.define('User', {
         allowNull: true,
         field: 'referred_by',
         references: {
-            model: 'Users',
+            model: 'User',
             key: 'id'
         }
     }
