@@ -519,11 +519,6 @@ export const updateCourse = async (req, res) => {
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
         }
-        // Guard: only admin can update unless preview approved
-        if (req.user?.role !== 'admin' && course.previewStatus && course.previewStatus !== 'approved') {
-            return res.status(403).json({ message: 'Course preview is pending approval. Admin must approve before updating content.' });
-        }
-
         // Authorization check
         if (course.instructorId !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized to update this course' });
@@ -531,11 +526,17 @@ export const updateCourse = async (req, res) => {
 
         // Apply updates
         if (req.body.title) course.title = req.body.title;
+        if (req.body.subtitle !== undefined) course.subtitle = req.body.subtitle;
         if (req.body.description) course.description = req.body.description;
         if (req.body.price != null) course.price = req.body.price;
         if (req.body.categoryId) course.categoryId = req.body.categoryId;
         if (req.body.level) course.level = req.body.level;
         if (req.body.thumbnail) course.thumbnail = req.body.thumbnail;
+        if (req.body.learningObjectives !== undefined) course.learningObjectives = req.body.learningObjectives;
+        if (req.body.requirements !== undefined) course.requirements = req.body.requirements;
+        if (req.body.targetAudience !== undefined) course.targetAudience = req.body.targetAudience;
+        if (req.body.welcomeMessage !== undefined) course.welcomeMessage = req.body.welcomeMessage;
+        if (req.body.congratsMessage !== undefined) course.congratsMessage = req.body.congratsMessage;
         if (req.body.status) {
             course.status = req.body.status;
             if (req.body.status === 'published' && !course.publishedAt) {

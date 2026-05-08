@@ -97,7 +97,7 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: parseInt(process.env.SESSION_MAX_AGE_MS) || 24 * 60 * 60 * 1000
     }
 }));
 
@@ -151,74 +151,6 @@ app.get('/api/health', (req, res) => {
         }
     };
     res.json(health);
-});
-
-// TEMPORARY ADMIN SETUP FOR RAILWAY - REMOVE AFTER USE
-app.post('/create-railway-admin', async (req, res) => {
-    if (process.env.NODE_ENV !== 'production') {
-        return res.status(403).json({ error: 'This endpoint is for production only' });
-    }
-
-    try {
-        console.log('🔧 Creating Railway admin account...');
-
-        // Import required modules
-        // Use already imported bcrypt and uuid (if available) or dynamic import
-        const bcrypt = (await import('bcryptjs')).default;
-        const { v4: uuidv4 } = await import('uuid');
-
-        // Import User model properly
-        const { default: User } = await import('./src/models/User.js');
-
-        // Check if admin already exists
-        const existingAdmin = await User.findOne({ where: { email: 'admin@ngwavha.com' } });
-
-        if (existingAdmin) {
-            // Update existing admin - NO manual hashing
-            await existingAdmin.update({
-                password: 'admin123',
-                role: 'admin',
-                isVerified: true,
-                isApproved: true
-            });
-            console.log('✅ Updated existing Railway admin account');
-        } else {
-            // Create new admin - NO manual hashing
-            await User.create({
-                id: uuidv4(),
-                name: 'Admin User',
-                email: 'admin@ngwavha.com',
-                password: 'admin123',
-                role: 'admin',
-                isVerified: true,
-                isApproved: true
-            });
-            console.log('✅ Created new Railway admin account');
-        }
-
-        res.json({
-            success: true,
-            message: 'Railway admin account created successfully!',
-            login: {
-                email: 'admin@ngwavha.com',
-                password: 'admin123'
-            },
-            next_steps: [
-                '1. Go to your Railway app login page',
-                '2. Use these credentials to login as admin',
-                '3. Remove this endpoint from server.js for security',
-                '4. Change the default password after first login'
-            ]
-        });
-    } catch (error) {
-        console.error('❌ Error creating Railway admin:', error);
-        console.error('❌ Stack trace:', error.stack);
-        res.status(500).json({
-            error: 'Failed to create admin account',
-            details: error.message,
-            stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
-        });
-    }
 });
 
 // SPA fallback - for React Router (must come after API routes)
@@ -340,6 +272,16 @@ connectMySQL().then(async (sequelize) => {
             console.log('✅ Course schema fix completed');
         } catch (migrationError) {
             console.error('❌ Course schema fix failed:', migrationError.message);
+        }
+
+        // Run instructor workflow fields migration (learning objectives, requirements, etc.)
+        try {
+            console.log('🔄 Running instructor workflow fields migration...');
+            const { up } = await import('./src/migrations/add-instructor-workflow-fields.js');
+            await up();
+            console.log('✅ Instructor workflow fields migration completed');
+        } catch (migrationError) {
+            console.error('❌ Instructor workflow fields migration failed:', migrationError.message);
         }
 
         seedCategories().catch((error) => {

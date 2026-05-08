@@ -225,6 +225,40 @@ class RealtimeService {
         });
     }
 
+    // Notify enrolled students about an upcoming live session
+    async notifySessionInvite(students, session, joinUrl) {
+        const startFormatted = new Date(session.startTime).toLocaleString('en-US', {
+            weekday: 'short', month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+        });
+
+        for (const student of students) {
+            if (this.io) {
+                this.io.to(`user-${student.id}`).emit('live-session-invite', {
+                    title: session.title,
+                    courseName: session.course?.title,
+                    startTime: session.startTime,
+                    duration: session.duration,
+                    joinUrl,
+                    meetingId: session.meetingId
+                });
+            }
+
+            await notificationService.sendMultiChannelNotification(student, {
+                subject: `Live Class Scheduled: ${session.title}`,
+                emailBody: `
+                    <h2>Your instructor has scheduled a live class</h2>
+                    <p><strong>${session.title}</strong></p>
+                    <p>📅 ${startFormatted} &middot; ${session.duration} minutes</p>
+                    <p>Course: ${session.course?.title || ''}</p>
+                    <br>
+                    <a href="${joinUrl}" style="background:#FFA500;color:#000;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Join Live Class</a>
+                `,
+                shortMessage: `Live class "${session.title}" starts ${startFormatted}. Join: ${joinUrl}`
+            });
+        }
+    }
+
     // Get current admin client count
     getAdminClientCount() {
         return this.adminClients.size;

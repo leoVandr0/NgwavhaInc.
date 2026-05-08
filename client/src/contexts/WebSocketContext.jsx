@@ -119,6 +119,10 @@ export const WebSocketProvider = ({ children }) => {
             window.dispatchEvent(new CustomEvent('public-alert', { detail: data }));
         });
 
+        newSocket.on('live-session-invite', (data) => {
+            window.dispatchEvent(new CustomEvent('live-session-invite', { detail: data }));
+        });
+
         newSocket.on('stats-update', (data) => {
             console.log('Stats update:', data);
             // Handle general stats updates
@@ -135,11 +139,18 @@ export const WebSocketProvider = ({ children }) => {
         }
     };
 
+    const authenticate = (userId, role) => {
+        if (socket && connected && userId) {
+            socket.emit('user-auth', { userId, role });
+        }
+    };
+
     const value = {
         socket,
         connected,
         realTimeData,
-        emitEvent
+        emitEvent,
+        authenticate
     };
 
     return React.createElement(

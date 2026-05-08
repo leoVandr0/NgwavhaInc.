@@ -6,6 +6,10 @@ import { v4 as uuidv4 } from 'uuid';
 const uploadPath = process.env.UPLOAD_PATH || 'uploads';
 const chunkPath = process.env.UPLOAD_CHUNK_PATH || path.join(uploadPath, 'chunks');
 
+const MAX_FILE_SIZE = (parseInt(process.env.MAX_UPLOAD_SIZE_MB) || 200) * 1024 * 1024;
+const MAX_AVATAR_SIZE = (parseInt(process.env.MAX_AVATAR_SIZE_MB) || 10) * 1024 * 1024;
+const MAX_CHUNK_SIZE = (parseInt(process.env.MAX_CHUNK_SIZE_MB) || 10) * 1024 * 1024;
+
 // Ensure upload directories exist
 try {
     if (!fs.existsSync(uploadPath)) {
@@ -57,7 +61,7 @@ export const upload = multer({
     storage: localStorage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 200 * 1024 * 1024 // 200MB max file size
+        fileSize: MAX_FILE_SIZE
     }
 });
 
@@ -74,13 +78,13 @@ const chunkStorage = multer.diskStorage({
 
 export const chunkUpload = multer({
     storage: chunkStorage,
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB chunks
+    limits: { fileSize: MAX_CHUNK_SIZE }
 });
 
-// Map environment variables with multiple prefix support and fallback credentials
-const r2_endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT || 'https://d6ebc945bb7b5957a857265c8c2c5e79.r2.cloudflarestorage.com';
-const r2_accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || 'c99f543f65ec46528e8ec0d72c0af40c';
-const r2_secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || 'c94d53064562d7c8e98b8eb2de2e84e248553382d7ab7f889e7c8a4fb13b9f41';
+// Map environment variables with multiple prefix support
+const r2_endpoint = process.env.CLOUDFLARE_R2_ENDPOINT || process.env.R2_ENDPOINT;
+const r2_accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID;
+const r2_secretKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY;
 const r2_bucket = process.env.CLOUDFLARE_R2_BUCKET || process.env.R2_BUCKET_NAME || 'ngwavha';
 const r2_publicDomain = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || process.env.R2_PUBLIC_URL || 'https://pub-d6ebc945bb7b5957a857265c8c2c5e79.r2.dev';
 
@@ -109,8 +113,8 @@ export const r2Status = {
 // R2 uploaders – fall back to local if R2 is not configured
 // r2Upload      → thumbnails/  prefix  (course thumbnails)
 // r2AvatarUpload → avatars/   prefix  (user profile photos)
-let r2UploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
-let r2AvatarUploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+let r2UploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: MAX_FILE_SIZE } });
+let r2AvatarUploadInstance = multer({ storage: localStorage, fileFilter: fileFilter, limits: { fileSize: MAX_AVATAR_SIZE } });
 
 // Export getters that will return the correct uploader based on initialization
 export const r2Upload = () => r2UploadInstance;
@@ -163,8 +167,8 @@ const initializeR2Uploader = async () => {
         });
 
         // Swap in R2 uploaders
-        r2UploadInstance = multerInstance({ storage: storageThumbnail, fileFilter: fileFilter, limits: { fileSize: 200 * 1024 * 1024 } });
-        r2AvatarUploadInstance = multerInstance({ storage: storageAvatar, fileFilter: fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+        r2UploadInstance = multerInstance({ storage: storageThumbnail, fileFilter: fileFilter, limits: { fileSize: MAX_FILE_SIZE } });
+        r2AvatarUploadInstance = multerInstance({ storage: storageAvatar, fileFilter: fileFilter, limits: { fileSize: MAX_AVATAR_SIZE } });
 
         // Update runtime status
         r2Status.ready = true;

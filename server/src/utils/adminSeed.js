@@ -10,8 +10,12 @@ export async function seedRailwayAdmin() {
 
     const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD ||
       process.env.ADMIN_PASSWORD ||
-      process.env.railway_admin_password ||
-      'admin123';
+      process.env.railway_admin_password;
+
+    if (!adminPassword) {
+      console.warn('⚠️ No admin password env var set (RAILWAY_ADMIN_PASSWORD / ADMIN_PASSWORD). Skipping admin seed.');
+      return;
+    }
 
     let existing = await User.findOne({ where: { email: adminEmail } });
 

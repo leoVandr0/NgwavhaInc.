@@ -10,7 +10,9 @@ import {
     AlertCircle,
     ChevronRight,
     Search,
-    ExternalLink
+    ExternalLink,
+    Bell,
+    Link2
 } from 'lucide-react';
 import {
     App,
@@ -28,7 +30,8 @@ import {
     Spin,
     Divider,
     Space,
-    Table
+    Table,
+    Tooltip
 } from 'antd';
 import dayjs from 'dayjs';
 import api from '../../services/api';
@@ -112,6 +115,14 @@ const TeacherLiveSessions = () => {
         }
     });
 
+    const notifyMutation = useMutation(async (id) => {
+        const { data } = await api.post(`/live-sessions/${id}/notify`);
+        return data;
+    }, {
+        onSuccess: (data) => message.success(`${data.notified} student${data.notified !== 1 ? 's' : ''} notified!`),
+        onError: () => message.error('Failed to notify students')
+    });
+
     const handleSchedule = (values) => {
         scheduleMutation.mutate({
             ...values,
@@ -185,6 +196,27 @@ const TeacherLiveSessions = () => {
             align: 'right',
             render: (_, record) => (
                 <Space size="middle">
+                    <Tooltip title="Copy join link for students">
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<Link2 className="h-4 w-4" />}
+                            onClick={() => {
+                                const url = `${window.location.origin}/student/live-room/${record.meetingId}?title=${encodeURIComponent(record.title)}`;
+                                navigator.clipboard.writeText(url);
+                                message.success('Join link copied!');
+                            }}
+                        />
+                    </Tooltip>
+                    <Tooltip title="Notify enrolled students">
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<Bell className="h-4 w-4 text-primary-500" />}
+                            loading={notifyMutation.isLoading && notifyMutation.variables === record.id}
+                            onClick={() => notifyMutation.mutate(record.id)}
+                        />
+                    </Tooltip>
                     <Button
                         type="primary"
                         size="small"

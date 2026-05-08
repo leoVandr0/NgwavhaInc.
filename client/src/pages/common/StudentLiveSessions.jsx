@@ -1,4 +1,5 @@
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
+import { useEffect } from 'react';
 import {
     Video,
     Calendar,
@@ -18,7 +19,8 @@ import {
     Spin,
     Avatar,
     Space,
-    Tooltip
+    Tooltip,
+    notification
 } from 'antd';
 import dayjs from 'dayjs';
 import api from '../../services/api';
@@ -28,11 +30,25 @@ const { Title, Text } = Typography;
 
 const StudentLiveSessions = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const { data: sessions, isLoading } = useQuery('student-sessions', async () => {
         const { data } = await api.get('/live-sessions/student');
         return data;
     });
+
+    useEffect(() => {
+        const handler = (e) => {
+            notification.info({
+                message: 'New Live Class Scheduled',
+                description: `"${e.detail.title}" starts at ${dayjs(e.detail.startTime).format('MMM D, h:mm A')}`,
+                duration: 8
+            });
+            queryClient.invalidateQueries('student-sessions');
+        };
+        window.addEventListener('live-session-invite', handler);
+        return () => window.removeEventListener('live-session-invite', handler);
+    }, [queryClient]);
 
     const handleJoinSession = (session) => {
         navigate(`/student/live-room/${session.meetingId}?title=${encodeURIComponent(session.title)}`);
@@ -70,7 +86,10 @@ const StudentLiveSessions = () => {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sessions.map((session) => (
+                    {sessions.map((session) => {
+                        const canJoin = session.status === 'live' ||
+                            (session.status === 'scheduled' && dayjs(session.startTime).diff(dayjs(), 'minute') <= 15);
+                        return (
                         <Card
                             key={session.id}
                             className={`bg-dark-900 border-dark-800 rounded-2xl overflow-hidden hover:border-dark-700 transition-all ${session.status === 'live' ? 'ring-2 ring-primary-500/30' : ''}`}
@@ -118,15 +137,17 @@ const StudentLiveSessions = () => {
                                     block
                                     size="large"
                                     icon={<Play className="h-4 w-4" />}
-                                    disabled={session.status !== 'live'}
+                                    disabled={!canJoin}
                                     onClick={() => handleJoinSession(session)}
-                                    className={session.status === 'live' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                                    className={canJoin ? 'bg-orange-500 hover:bg-orange-600' : ''}
                                 >
-                                    {session.status === 'live' ? 'Join Live Class' : 'Wait for Start'}
+                                    {session.status === 'live' ? 'Join Live Class' :
+                                     canJoin ? 'Join Early (Starting Soon)' : 'Wait for Start'}
                                 </Button>
                             </div>
                         </Card>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 

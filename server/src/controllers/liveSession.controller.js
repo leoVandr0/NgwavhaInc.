@@ -1,5 +1,6 @@
 import { LiveSession, Course, User, Enrollment } from '../models/index.js';
 import CourseContent from '../models/nosql/CourseContent.js';
+import realtimeService from '../services/realtime.service.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 
@@ -124,6 +125,36 @@ export const updateSessionStatus = async (req, res) => {
         await session.save();
 
         res.json(session);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Notify enrolled students about a scheduled session
+// @route   POST /api/live-sessions/:id/notify
+// @access  Private/Instructor
+export const notifyStudents = async (req, res) => {
+    try {
+        const session = await LiveSession.findByPk(req.params.id, {
+            include: [{ model: Course, as: 'course', attributes: ['title'] }]
+        });
+        if (!session) return res.status(404).json({ message: 'Session not found' });
+        if (session.instructorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const enrollments = await Enrollment.findAll({
+            where: { courseId: session.courseId },
+            include: [{ model: User, as: 'student', attributes: ['id', 'name', 'email'] }]
+        });
+        const students = enrollments.map(e => e.student).filter(Boolean);
+
+        const clientUrl = process.env.CLIENT_URL;
+        const joinUrl = `${clientUrl}/student/live-room/${session.meetingId}?title=${encodeURIComponent(session.title)}`;
+
+        await realtimeService.notifySessionInvite(students, session, joinUrl);
+
+        res.json({ notified: students.length });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

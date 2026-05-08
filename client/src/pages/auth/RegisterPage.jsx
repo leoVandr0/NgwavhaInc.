@@ -142,7 +142,7 @@ const RegisterPage = () => {
                         <p className="text-dark-400 text-sm mb-6">
                             {formData.role === 'instructor'
                                 ? 'Share your expertise and earn while teaching thousands of students.'
-                                : 'Join thousands of learners from around the world.'
+                                : 'Join thousands of learners from around the Zimbabwe.'
                             }
                         </p>
 

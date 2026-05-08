@@ -255,8 +255,11 @@ export const loginUser = async (req, res) => {
         // If admin user exists without a password (legacy data or missing seed), seed password from env
         if (!user.password) {
             if (user.role === 'admin') {
-                const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || process.env.railway_admin_password || 'admin123';
-                // Remove manual hash; beforeUpdate hook handles it
+                const adminPassword = process.env.RAILWAY_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || process.env.railway_admin_password;
+                if (!adminPassword) {
+                    console.error('Admin has no password and ADMIN_PASSWORD env var is not set');
+                    return res.status(500).json({ message: 'Admin account not configured. Set ADMIN_PASSWORD environment variable.' });
+                }
                 await user.update({ password: adminPassword });
                 console.log('✅ Admin password seeded from env for login');
             } else {

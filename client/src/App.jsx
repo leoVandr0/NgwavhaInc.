@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { ConfigProvider, theme, App as AntApp } from 'antd';
@@ -56,10 +56,21 @@ import NotificationSettings from './pages/settings/NotificationSettings';
 import TestNotificationPage from './pages/settings/TestNotificationPage';
 import ReferralPage from './pages/referrals/ReferralPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { WebSocketProvider } from './contexts/WebSocketContext';
+import { WebSocketProvider, useWebSocket } from './contexts/WebSocketContext';
 import { debugBellIcon } from './debug/debug-bell';
 import PublicAlertBanner from './components/notifications/PublicAlertBanner';
 import AdminSendAlert from './pages/admin/AdminSendAlert';
+
+const SocketAuthenticator = () => {
+  const { currentUser } = useAuth();
+  const { authenticate } = useWebSocket();
+  useEffect(() => {
+    if (currentUser?.id) {
+      authenticate(currentUser.id, currentUser.role);
+    }
+  }, [currentUser?.id, currentUser?.role]);
+  return null;
+};
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -122,6 +133,7 @@ const App = () => {
         <AuthProvider>
           <AntApp>
             <ErrorBoundary>
+              <SocketAuthenticator />
               <PublicAlertBanner />
               <CookieConsent />
               <Routes>

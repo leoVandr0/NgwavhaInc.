@@ -14,7 +14,7 @@ class NotificationService {
             this.socket.disconnect();
         }
 
-        const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+        const serverUrl = import.meta.env.VITE_API_URL || window.location.origin;
         this.socket = io(serverUrl, {
             auth: {
                 token: localStorage.getItem('token'),

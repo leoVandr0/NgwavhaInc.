@@ -64,7 +64,17 @@ const TeacherCoursesPage = () => {
         description: '',
         level: 'beginner',
         categoryId: '',
-        thumbnail: ''
+        thumbnail: '',
+        price: 0
+    });
+    const [learnersData, setLearnersData] = useState({
+        learningObjectives: ['', '', '', ''],
+        requirements: [''],
+        targetAudience: ['']
+    });
+    const [messagesData, setMessagesData] = useState({
+        welcomeMessage: '',
+        congratsMessage: ''
     });
     const [thumbnailPreview, setThumbnailPreview] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
@@ -132,7 +142,23 @@ const TeacherCoursesPage = () => {
                     description: selectedCourse.description || '',
                     level: selectedCourse.level || 'beginner',
                     categoryId: selectedCourse.categoryId || '',
-                    thumbnail: selectedCourse.thumbnail || ''
+                    thumbnail: selectedCourse.thumbnail || '',
+                    price: selectedCourse.price || 0
+                });
+                setLearnersData({
+                    learningObjectives: selectedCourse.learningObjectives?.length
+                        ? selectedCourse.learningObjectives
+                        : ['', '', '', ''],
+                    requirements: selectedCourse.requirements?.length
+                        ? selectedCourse.requirements
+                        : [''],
+                    targetAudience: selectedCourse.targetAudience?.length
+                        ? selectedCourse.targetAudience
+                        : ['']
+                });
+                setMessagesData({
+                    welcomeMessage: selectedCourse.welcomeMessage || '',
+                    congratsMessage: selectedCourse.congratsMessage || ''
                 });
                 setThumbnailPreview(getCourseThumbnail(selectedCourse.thumbnail));
             }
@@ -194,6 +220,60 @@ const TeacherCoursesPage = () => {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const saveLearners = async () => {
+        setIsSaving(true);
+        try {
+            await api.put(`/courses/${selectedCourseId}`, {
+                learningObjectives: learnersData.learningObjectives.filter(o => o.trim()),
+                requirements: learnersData.requirements.filter(r => r.trim()),
+                targetAudience: learnersData.targetAudience.filter(t => t.trim())
+            });
+            message.success('Intended learners saved!');
+            const { data } = await api.get('/courses/my');
+            setCourses(data || []);
+        } catch (error) {
+            message.error(error.response?.data?.message || 'Failed to save intended learners.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const saveMessages = async () => {
+        setIsSaving(true);
+        try {
+            await api.put(`/courses/${selectedCourseId}`, {
+                welcomeMessage: messagesData.welcomeMessage,
+                congratsMessage: messagesData.congratsMessage
+            });
+            message.success('Course messages saved!');
+            const { data } = await api.get('/courses/my');
+            setCourses(data || []);
+        } catch (error) {
+            message.error(error.response?.data?.message || 'Failed to save course messages.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const updateListItem = (setter, key, index, value) => {
+        setter(prev => {
+            const arr = [...prev[key]];
+            arr[index] = value;
+            return { ...prev, [key]: arr };
+        });
+    };
+
+    const addListItem = (setter, key) => {
+        setter(prev => ({ ...prev, [key]: [...prev[key], ''] }));
+    };
+
+    const removeListItem = (setter, key, index) => {
+        setter(prev => {
+            const arr = prev[key].filter((_, i) => i !== index);
+            return { ...prev, [key]: arr.length === 0 ? [''] : arr };
+        });
     };
 
     // Course Builder Actions
@@ -509,6 +589,18 @@ const TeacherCoursesPage = () => {
                                 >
                                     Course Landing Page
                                 </button>
+                                <button
+                                    onClick={() => setActiveTab('learners')}
+                                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === 'learners' ? 'border-primary-500 text-primary-500' : 'border-transparent text-dark-400 hover:text-dark-200'}`}
+                                >
+                                    Intended Learners
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('messages')}
+                                    className={`px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === 'messages' ? 'border-primary-500 text-primary-500' : 'border-transparent text-dark-400 hover:text-dark-200'}`}
+                                >
+                                    Course Messages
+                                </button>
                             </div>
 
                             {activeTab === 'curriculum' ? (
@@ -695,7 +787,7 @@ const TeacherCoursesPage = () => {
                                         ))}
                                     </Collapse>
                                 </>
-                            ) : (
+                            ) : activeTab === 'landing' ? (
                                 <div className="bg-dark-900 border border-dark-800 p-8 rounded-2xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
                                     <div>
                                         <Title level={4} style={{ color: 'white', marginBottom: '8px' }}>Course Landing Page</Title>
@@ -769,6 +861,21 @@ const TeacherCoursesPage = () => {
                                             </div>
                                         </div>
 
+                                        {/* Price */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-dark-300 mb-1">Course Price (USD)</label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                step={0.01}
+                                                name="price"
+                                                value={landingData.price}
+                                                onChange={(e) => setLandingData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                                                placeholder="0.00 — leave at 0 for free"
+                                                prefix={<span className="text-dark-400">$</span>}
+                                            />
+                                        </div>
+
                                         {/* Thumbnail Section (Udemy Style) */}
                                         <div>
                                             <label className="block text-sm font-medium text-dark-300 mb-1">Course Image</label>
@@ -821,7 +928,191 @@ const TeacherCoursesPage = () => {
                                         </div>
                                     </div>
                                 </div>
-                            )}
+                            ) : activeTab === 'learners' ? (
+                                <div className="bg-dark-900 border border-dark-800 p-8 rounded-2xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                    <div>
+                                        <Title level={4} style={{ color: 'white', marginBottom: '8px' }}>Intended Learners</Title>
+                                        <Text className="text-dark-400 block">The following descriptions will be publicly visible on your course landing page and will have a direct impact on your course performance.</Text>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        {/* Learning Objectives */}
+                                        <div>
+                                            <label className="block text-sm font-bold text-white mb-1">What will students learn in your course?</label>
+                                            <Text className="text-dark-400 text-xs block mb-3">You must enter at least 4 learning objectives that learners can expect to achieve after completing your course.</Text>
+                                            <div className="space-y-2">
+                                                {learnersData.learningObjectives.map((obj, idx) => (
+                                                    <div key={idx} className="flex gap-2 items-center">
+                                                        <Input
+                                                            value={obj}
+                                                            maxLength={160}
+                                                            onChange={(e) => updateListItem(setLearnersData, 'learningObjectives', idx, e.target.value)}
+                                                            placeholder={`Learning objective ${idx + 1}`}
+                                                            suffix={<span className="text-dark-500 text-xs">{160 - obj.length}</span>}
+                                                        />
+                                                        {learnersData.learningObjectives.length > 4 && (
+                                                            <Button
+                                                                type="text"
+                                                                danger
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => removeListItem(setLearnersData, 'learningObjectives', idx)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {learnersData.learningObjectives.length < 12 && (
+                                                <Button
+                                                    type="dashed"
+                                                    icon={<Plus className="h-4 w-4" />}
+                                                    className="mt-3"
+                                                    onClick={() => addListItem(setLearnersData, 'learningObjectives')}
+                                                >
+                                                    Add more to your response
+                                                </Button>
+                                            )}
+                                        </div>
+
+                                        <Divider style={{ borderColor: '#333' }} />
+
+                                        {/* Requirements */}
+                                        <div>
+                                            <label className="block text-sm font-bold text-white mb-1">What are the requirements or prerequisites for taking your course?</label>
+                                            <Text className="text-dark-400 text-xs block mb-3">List the required skills, experience, tools or equipment learners should have prior to taking your course.</Text>
+                                            <div className="space-y-2">
+                                                {learnersData.requirements.map((req, idx) => (
+                                                    <div key={idx} className="flex gap-2 items-center">
+                                                        <Input
+                                                            value={req}
+                                                            maxLength={160}
+                                                            onChange={(e) => updateListItem(setLearnersData, 'requirements', idx, e.target.value)}
+                                                            placeholder="Example: No programming experience needed."
+                                                            suffix={<span className="text-dark-500 text-xs">{160 - req.length}</span>}
+                                                        />
+                                                        {learnersData.requirements.length > 1 && (
+                                                            <Button
+                                                                type="text"
+                                                                danger
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => removeListItem(setLearnersData, 'requirements', idx)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Button
+                                                type="dashed"
+                                                icon={<Plus className="h-4 w-4" />}
+                                                className="mt-3"
+                                                onClick={() => addListItem(setLearnersData, 'requirements')}
+                                            >
+                                                Add more to your response
+                                            </Button>
+                                        </div>
+
+                                        <Divider style={{ borderColor: '#333' }} />
+
+                                        {/* Target Audience */}
+                                        <div>
+                                            <label className="block text-sm font-bold text-white mb-1">Who is this course for?</label>
+                                            <Text className="text-dark-400 text-xs block mb-3">Write a clear description of the intended learners who will find your course content valuable.</Text>
+                                            <div className="space-y-2">
+                                                {learnersData.targetAudience.map((aud, idx) => (
+                                                    <div key={idx} className="flex gap-2 items-center">
+                                                        <Input
+                                                            value={aud}
+                                                            maxLength={160}
+                                                            onChange={(e) => updateListItem(setLearnersData, 'targetAudience', idx, e.target.value)}
+                                                            placeholder="Example: Beginner Python developers curious about data science"
+                                                            suffix={<span className="text-dark-500 text-xs">{160 - aud.length}</span>}
+                                                        />
+                                                        {learnersData.targetAudience.length > 1 && (
+                                                            <Button
+                                                                type="text"
+                                                                danger
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => removeListItem(setLearnersData, 'targetAudience', idx)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <Button
+                                                type="dashed"
+                                                icon={<Plus className="h-4 w-4" />}
+                                                className="mt-3"
+                                                onClick={() => addListItem(setLearnersData, 'targetAudience')}
+                                            >
+                                                Add more to your response
+                                            </Button>
+                                        </div>
+
+                                        <Divider style={{ borderColor: '#333' }} />
+
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="primary"
+                                                size="large"
+                                                className="px-10"
+                                                loading={isSaving}
+                                                onClick={saveLearners}
+                                                disabled={learnersData.learningObjectives.filter(o => o.trim()).length < 4}
+                                            >
+                                                Save
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : activeTab === 'messages' ? (
+                                <div className="bg-dark-900 border border-dark-800 p-8 rounded-2xl space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                                    <div>
+                                        <Title level={4} style={{ color: 'white', marginBottom: '8px' }}>Course Messages</Title>
+                                        <Text className="text-dark-400 block">Write messages to your students (optional) that will be sent automatically when they join or complete your course.</Text>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-white mb-1">Welcome Message</label>
+                                            <Text className="text-dark-400 text-xs block mb-2">Send students a welcome message to kick off their learning experience. Express your enthusiasm and include any actions you want them to take to begin.</Text>
+                                            <Input.TextArea
+                                                rows={5}
+                                                value={messagesData.welcomeMessage}
+                                                onChange={(e) => setMessagesData(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                                                placeholder="e.g., Welcome! I'm thrilled to have you in the course. Enjoy learning!"
+                                                maxLength={2000}
+                                                showCount
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-white mb-1">Congratulations Message</label>
+                                            <Text className="text-dark-400 text-xs block mb-2">Congratulate students on completing your course and point them to their next steps.</Text>
+                                            <Input.TextArea
+                                                rows={5}
+                                                value={messagesData.congratsMessage}
+                                                onChange={(e) => setMessagesData(prev => ({ ...prev, congratsMessage: e.target.value }))}
+                                                placeholder="e.g., Congratulations on completing the course! Your next step might be..."
+                                                maxLength={2000}
+                                                showCount
+                                            />
+                                        </div>
+
+                                        <Divider style={{ borderColor: '#333' }} />
+
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="primary"
+                                                size="large"
+                                                className="px-10"
+                                                loading={isSaving}
+                                                onClick={saveMessages}
+                                            >
+                                                Save
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
                         </div>
                     )}
                 </div>

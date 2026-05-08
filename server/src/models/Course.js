@@ -130,6 +130,33 @@ const Course = sequelize.define('Course', {
         type: DataTypes.STRING, // Reference to MongoDB document
         allowNull: true,
         field: 'mongo_content_id'
+    },
+    learningObjectives: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        field: 'learning_objectives',
+        defaultValue: []
+    },
+    requirements: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: []
+    },
+    targetAudience: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        field: 'target_audience',
+        defaultValue: []
+    },
+    welcomeMessage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'welcome_message'
+    },
+    congratsMessage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'congrats_message'
     }
 }, {
     hooks: {

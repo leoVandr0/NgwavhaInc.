@@ -5,13 +5,13 @@ import { emailTemplates, sendEmail } from '../config/email.js';
 // Initialize Paynow with your integration details
 // These should be stored in environment variables
 const paynow = new Paynow(
-    process.env.PAYNOW_INTEGRATION_ID || 'INTEGRATION_ID',
-    process.env.PAYNOW_INTEGRATION_KEY || 'INTEGRATION_KEY'
+    process.env.PAYNOW_INTEGRATION_ID,
+    process.env.PAYNOW_INTEGRATION_KEY
 );
 
 // Set result and return URLs
-paynow.resultUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/api/payments/paynow/webhook`;
-paynow.returnUrl = `${process.env.CLIENT_URL || 'http://localhost:3000'}/payment/success`;
+paynow.resultUrl = `${process.env.CLIENT_URL}/api/payments/paynow/webhook`;
+paynow.returnUrl = `${process.env.CLIENT_URL}/payment/success`;
 
 // @desc    Initiate PayNow Payment
 // @route   POST /api/payments/paynow/initiate

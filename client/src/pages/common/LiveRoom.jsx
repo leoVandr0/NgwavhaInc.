@@ -23,6 +23,7 @@ import {
 } from 'antd';
 
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;

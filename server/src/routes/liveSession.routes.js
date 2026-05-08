@@ -4,7 +4,8 @@ import {
     getInstructorSessions,
     getStudentSessions,
     updateSessionStatus,
-    deleteSession
+    deleteSession,
+    notifyStudents
 } from '../controllers/liveSession.controller.js';
 import { protect, authorize } from '../middleware/auth.middleware.js';
 
@@ -22,5 +23,6 @@ router.route('/:id')
     .delete(protect, authorize('instructor', 'admin'), deleteSession);
 
 router.patch('/:id/status', protect, authorize('instructor', 'admin'), updateSessionStatus);
+router.post('/:id/notify', protect, authorize('instructor', 'admin'), notifyStudents);
 
 export default router;
