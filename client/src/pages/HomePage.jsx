@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Play, Star, Users, Award, TrendingUp, BookOpen, Video, CheckCircle, Clock, Globe } from 'lucide-react';
+import ReactPlayer from 'react-player/youtube';
 import logo from '../assets/logo.jpg';
 import { Carousel, Spin } from 'antd';
 import { useQuery } from 'react-query';
@@ -194,9 +195,20 @@ const HomePage = () => {
                         </div>
 
                         <div className="relative">
-                            <div className="relative rounded-lg border-4 border-dark-800 bg-dark-900 shadow-2xl p-2">
-                                <div className="aspect-video bg-dark-800 flex items-center justify-center rounded">
-                                    <Play className="h-16 w-16 text-white/50" />
+                            <div className="relative rounded-lg border-4 border-dark-800 bg-dark-900 shadow-2xl p-2 overflow-hidden">
+                                <div className="aspect-video rounded overflow-hidden">
+                                    <ReactPlayer
+                                        url="https://www.youtube.com/watch?v=viHILXVY_eU"
+                                        width="100%"
+                                        height="100%"
+                                        light={true}
+                                        controls={true}
+                                        playIcon={
+                                            <div className="flex items-center justify-center w-20 h-20 bg-primary-500 rounded-full shadow-2xl">
+                                                <Play className="h-8 w-8 text-white ml-1" />
+                                            </div>
+                                        }
+                                    />
                                 </div>
                             </div>
                         </div>
