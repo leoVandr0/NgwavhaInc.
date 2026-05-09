@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Star, Users, BookOpen, Award, MapPin, Globe, Play, ChevronRight, Filter, Search } from 'lucide-react';
 import { Input, Select, Button, Card, Rate, Avatar, Typography, Row, Col, Tag } from 'antd';
 import api from '../../services/api';
+import { getAvatarUrl } from '../../utils/imageUtils';
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -58,9 +59,9 @@ const InstructorsPage = () => {
                     {/* Instructor Profile */}
                     <div className="flex-shrink-0">
                         <div className="relative">
-                            <Avatar 
-                                size={120} 
-                                src={instructor.avatar} 
+                            <Avatar
+                                size={120}
+                                src={getAvatarUrl(instructor.avatar)}
                                 className="border-4 border-dark-800 group-hover:border-primary-500/50 transition-all duration-300"
                             >
                                 {instructor.name?.charAt(0)}

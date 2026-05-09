@@ -306,6 +306,16 @@ connectMySQL().then(async (sequelize) => {
             console.error('❌ Notification columns migration failed:', migrationError.message);
         }
 
+        // Run transaction paynow columns migration
+        try {
+            console.log('🔄 Running transaction paynow columns migration...');
+            const { up: upTxn } = await import('./src/migrations/add-transaction-paynow-columns.js');
+            await upTxn();
+            console.log('✅ Transaction paynow columns migration completed');
+        } catch (migrationError) {
+            console.error('❌ Transaction paynow columns migration failed:', migrationError.message);
+        }
+
         seedCategories().catch((error) => {
             console.error('❌ Category seeding failed:', error.message);
         });

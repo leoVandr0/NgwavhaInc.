@@ -289,12 +289,12 @@ export const getPaymentStatus = async (req, res) => {
         const { reference } = req.params;
 
         const transaction = await Transaction.findOne({
-            where: { 
+            where: {
                 paynowReference: reference,
-                userId: req.user.id 
+                userId: req.user.id
             },
             include: [
-                { model: Course, attributes: ['title', 'slug'] }
+                { model: Course, as: 'course', attributes: ['title', 'slug'] }
             ]
         });
 
@@ -306,7 +306,7 @@ export const getPaymentStatus = async (req, res) => {
             status: transaction.status,
             amount: transaction.amount,
             paidAt: transaction.paidAt,
-            course: transaction.Course
+            course: transaction.course
         });
     } catch (error) {
         console.error('Payment status error:', error);

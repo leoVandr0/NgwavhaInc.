@@ -17,7 +17,7 @@ import { uploadVideoToR2 } from '../middleware/upload.middleware.js';
 // @access  Public
 export const getCourses = async (req, res) => {
     try {
-        const pageSize = 12;
+        const pageSize = parseInt(req.query.pageSize) || 12;
         const page = Number(req.query.pageNumber) || 1;
 
         const keyword = req.query.keyword
@@ -36,12 +36,18 @@ export const getCourses = async (req, res) => {
 
         const where = { ...keyword };
 
-        // In dev mode or for user testing, maybe show all courses. 
+        // In dev mode or for user testing, maybe show all courses.
         // For production, we'd filter by status: 'published'
-        // where.status = 'published'; 
+        // where.status = 'published';
 
         if (req.query.category) {
             where['$category.slug$'] = req.query.category;
+        }
+
+        // Sort order: popular = by enrollment count, default = newest first
+        let order = [['createdAt', 'DESC']];
+        if (req.query.sort === 'popular') {
+            order = [['enrollmentsCount', 'DESC'], ['createdAt', 'DESC']];
         }
 
         const count = await Course.count({ where, include });
@@ -51,7 +57,7 @@ export const getCourses = async (req, res) => {
             include,
             limit: pageSize,
             offset: pageSize * (page - 1),
-            order: [['createdAt', 'DESC']],
+            order,
         });
 
         // Add ratings and enrollment counts to each course with defensive guards

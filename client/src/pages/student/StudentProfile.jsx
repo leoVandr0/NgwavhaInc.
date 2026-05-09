@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
     BookOpen,
@@ -13,12 +13,15 @@ import {
     Target,
     Zap
 } from 'lucide-react';
-import { Card, Row, Col, Statistic, Progress, Avatar, Button, Badge, Timeline } from 'antd';
+import { Card, Row, Col, Statistic, Progress, Avatar, Button, Badge, Timeline, message } from 'antd';
 import useStudentData from '../../hooks/useStudentData';
 import activityService from '../../services/activityService';
+import api from '../../services/api';
+import { getAvatarUrl } from '../../utils/imageUtils';
 
 const StudentProfile = () => {
-    const { currentUser } = useAuth();
+    const { currentUser, updateUser } = useAuth();
+    const fileInputRef = useRef(null);
     const {
         loading,
         error,
@@ -46,6 +49,24 @@ const StudentProfile = () => {
         activityService.trackCourseView(course.id, course.title);
         // Navigate to course (you'll need to implement routing)
         console.log('Navigate to course:', course.id);
+    };
+
+    const handleAvatarUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('photo', file);
+        try {
+            const { data } = await api.post('/upload/profile-photo', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            await api.put('/auth/profile', { avatar: data.filename });
+            updateUser({ ...currentUser, avatar: data.filename });
+            message.success('Avatar updated!');
+        } catch {
+            message.error('Failed to upload avatar');
+        }
+        e.target.value = '';
     };
 
     // Handle refresh data
@@ -344,13 +365,29 @@ const StudentProfile = () => {
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8">
                         {/* Profile Section */}
                         <div className="flex items-center gap-6">
-                            <Avatar
-                                size={80}
-                                src={currentUser?.avatar}
-                                className="bg-primary-500"
-                            >
-                                <User className="w-8 h-8" />
-                            </Avatar>
+                            <div className="relative group" style={{ width: 80, height: 80 }}>
+                                <Avatar
+                                    size={80}
+                                    src={getAvatarUrl(currentUser?.avatar)}
+                                    className="bg-primary-500 cursor-pointer"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <User className="w-8 h-8" />
+                                </Avatar>
+                                <div
+                                    className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                    onClick={() => fileInputRef.current?.click()}
+                                >
+                                    <span className="text-white text-xs font-medium">Edit</span>
+                                </div>
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarUpload}
+                                    style={{ display: 'none' }}
+                                />
+                            </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-white mb-1">
                                     {currentUser?.name || "Student Name"}

@@ -58,40 +58,31 @@ const HomePage = () => {
         }
     );
 
-    // Fetch bestseller courses
+    // Fetch bestseller courses (sorted by enrollment count)
     const { data: bestsellerCoursesData, isLoading: bestsellerLoading } = useQuery(
         'bestseller-courses',
         async () => {
             const { data } = await api.get('/courses', {
-                params: { pageNumber: 1, pageSize: 8 }
+                params: { pageNumber: 1, pageSize: 8, sort: 'popular' }
             });
-            // Add bestseller flag to some courses for demo
             return data.courses.map((course, index) => ({
                 ...course,
                 isBestseller: index < 3,
                 isHot: index === 0 || index === 1,
-                isNew: index >= 6,
-                hasCertificate: index % 2 === 0,
-                originalPrice: index % 3 === 0 ? parseFloat(course.price) * 1.5 : null,
-                duration: `${Math.floor(Math.random() * 20 + 5)} hours`,
-                lastUpdated: `${Math.floor(Math.random() * 11 + 1)}/${new Date().getFullYear()}`
             }));
         }
     );
 
-    // Fetch new courses
+    // Fetch new courses (sorted by newest, page 1)
     const { data: newCoursesData, isLoading: newCoursesLoading } = useQuery(
         'new-courses',
         async () => {
             const { data } = await api.get('/courses', {
-                params: { pageNumber: 2, pageSize: 8 }
+                params: { pageNumber: 1, pageSize: 8, sort: 'new' }
             });
-            return data.courses.map((course, index) => ({
+            return data.courses.map((course) => ({
                 ...course,
                 isNew: true,
-                hasCertificate: index % 2 === 0,
-                duration: `${Math.floor(Math.random() * 15 + 3)} hours`,
-                lastUpdated: `${Math.floor(Math.random() * 3 + 1)}/${new Date().getFullYear()}`
             }));
         }
     );
@@ -125,21 +116,25 @@ const HomePage = () => {
                     <div className="flex justify-center py-20">
                         <Spin size="large" />
                     </div>
+                ) : !courses?.length ? (
+                    <div className="text-center py-16 text-dark-400">
+                        No courses available yet.
+                    </div>
                 ) : (
                     <Carousel
                         dots={false}
-                        slidesToShow={courses?.length < 4 ? courses?.length : 4}
+                        slidesToShow={Math.min(courses.length, 4)}
                         responsive={[
                             {
                                 breakpoint: 1280,
                                 settings: {
-                                    slidesToShow: 3,
+                                    slidesToShow: Math.min(courses.length, 3),
                                 }
                             },
                             {
                                 breakpoint: 1024,
                                 settings: {
-                                    slidesToShow: 2,
+                                    slidesToShow: Math.min(courses.length, 2),
                                 }
                             },
                             {
@@ -150,12 +145,12 @@ const HomePage = () => {
                             }
                         ]}
                         className="course-carousel"
-                        infinite={courses?.length > 4}
+                        infinite={courses.length > 4}
                         speed={500}
                         slidesToScroll={1}
                         swipeToSlide={true}
                     >
-                        {courses?.map((course, index) => (
+                        {courses.map((course, index) => (
                             <div key={course.id} className="px-2">
                                 <CourseCard course={course} index={index} />
                             </div>

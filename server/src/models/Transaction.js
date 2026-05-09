@@ -7,6 +7,16 @@ const Transaction = sequelize.define('Transaction', {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
+    userId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'user_id'
+    },
+    courseId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'course_id'
+    },
     stripePaymentIntentId: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -21,7 +31,7 @@ const Transaction = sequelize.define('Transaction', {
         defaultValue: 'usd'
     },
     status: {
-        type: DataTypes.ENUM('pending', 'succeeded', 'failed', 'refunded'),
+        type: DataTypes.ENUM('pending', 'succeeded', 'failed', 'refunded', 'cancelled'),
         defaultValue: 'pending'
     },
     paymentMethod: {
@@ -33,6 +43,25 @@ const Transaction = sequelize.define('Transaction', {
         type: DataTypes.STRING,
         allowNull: true,
         field: 'receipt_url'
+    },
+    paynowReference: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: 'paynow_reference'
+    },
+    paynowPollUrl: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'paynow_poll_url'
+    },
+    paidAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        field: 'paid_at'
+    },
+    metadata: {
+        type: DataTypes.JSON,
+        allowNull: true
     }
 });
 

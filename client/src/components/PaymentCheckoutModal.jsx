@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Button, Radio, message, Steps, Typography } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
-import { CreditCard, Smartphone, Mail, Phone, User, Calendar, Lock } from 'lucide-react';
+import { Modal, Form, Input, Select, Button, Radio, message, Steps, Typography, Alert } from 'antd';
+import { LoadingOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { CreditCard, Smartphone, Mail, Phone, User } from 'lucide-react';
 import api from '../services/api';
 
 const { Title, Text } = Typography;
@@ -144,7 +144,7 @@ const PaymentCheckoutModal = ({
             }}
           >
             <CreditCard size={24} style={{ marginBottom: '8px' }} />
-            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Card/Online</div>
+            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Card (Visa/Mastercard)</div>
           </Radio.Button>
           <Radio.Button
             value="mobile"
@@ -197,77 +197,21 @@ const PaymentCheckoutModal = ({
       </Form.Item>
 
       {paymentMethod === 'web' && (
-        <div style={{ marginTop: '24px', padding: '20px', background: '#111', borderRadius: '12px', border: '1px solid #333' }}>
-          <Title level={5} style={{ color: '#FFA500', marginBottom: '16px', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Card Information
-          </Title>
-
-          <Form.Item
-            label={<span style={{ color: '#aaa' }}>Card Number</span>}
-            name="cardNumber"
-            rules={[
-              { required: true, message: 'Please enter card number' },
-              { pattern: /^[0-9\s]{13,19}$/, message: 'Invalid card number' }
-            ]}
-            className="custom-form-item"
-          >
-            <Input
-              prefix={<CreditCard size={16} style={{ color: '#FFA500' }} />}
-              placeholder="0000 0000 0000 0000"
-              style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
-              maxLength={19}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label={<span style={{ color: '#aaa' }}>Card Holder Name</span>}
-            name="cardHolder"
-            rules={[{ required: true, message: 'Please enter card holder name' }]}
-            className="custom-form-item"
-          >
-            <Input
-              prefix={<User size={16} style={{ color: '#FFA500' }} />}
-              placeholder="NAME ON CARD"
-              style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
-            />
-          </Form.Item>
-
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <Form.Item
-              label={<span style={{ color: '#aaa' }}>Expiry Date</span>}
-              name="expiry"
-              style={{ flex: 1 }}
-              rules={[
-                { required: true, message: 'Required' },
-                { pattern: /^(0[1-9]|1[0-2])\/?([0-9]{2})$/, message: 'MM/YY' }
-              ]}
-              className="custom-form-item"
-            >
-              <Input
-                prefix={<Calendar size={16} style={{ color: '#FFA500' }} />}
-                placeholder="MM/YY"
-                style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
-                maxLength={5}
-              />
-            </Form.Item>
-            <Form.Item
-              label={<span style={{ color: '#aaa' }}>CVV</span>}
-              name="cvv"
-              style={{ flex: 1 }}
-              rules={[
-                { required: true, message: 'Required' },
-                { pattern: /^[0-9]{3,4}$/, message: 'Enter 3-4 digits' }
-              ]}
-              className="custom-form-item"
-            >
-              <Input
-                prefix={<Lock size={16} style={{ color: '#FFA500' }} />}
-                placeholder="123"
-                style={{ background: '#1a1a1a', border: '1px solid #333', color: '#fff' }}
-                maxLength={4}
-              />
-            </Form.Item>
-          </div>
+        <div style={{ marginTop: '16px' }}>
+          <Alert
+            icon={<SafetyCertificateOutlined style={{ color: '#52c41a' }} />}
+            message={
+              <span style={{ color: '#fff', fontWeight: 600 }}>Secure card payment via PayNow</span>
+            }
+            description={
+              <span style={{ color: '#aaa' }}>
+                After clicking Pay, you will be redirected to PayNow's secure checkout page where you can enter your <strong style={{ color: '#FFA500' }}>Visa or Mastercard</strong> details. Your card information is handled entirely by PayNow and is never stored on our servers.
+              </span>
+            }
+            type="success"
+            showIcon
+            style={{ background: 'rgba(82, 196, 26, 0.08)', border: '1px solid rgba(82, 196, 26, 0.3)', borderRadius: '12px' }}
+          />
         </div>
       )}
 
@@ -304,7 +248,7 @@ const PaymentCheckoutModal = ({
                 <LoadingOutlined /> Processing...
               </>
             ) : (
-              `Pay $${course.price} with ${paymentMethod === 'web' ? 'Card/Online' : 'EcoCash'}`
+              `Pay $${course.price} with ${paymentMethod === 'web' ? 'Visa/Mastercard via PayNow' : 'EcoCash'}`
             )}
           </Button>
         </Form.Item>
