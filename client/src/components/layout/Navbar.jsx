@@ -12,10 +12,6 @@ const Navbar = () => {
     const { cart, wishlist, fetchCart, fetchWishlist } = useCartStore();
     const navigate = useNavigate();
 
-    // Debug logging
-    console.log('Navbar Debug - Current User:', currentUser);
-    console.log('Navbar Debug - Is Authenticated:', isAuthenticated);
-
     useEffect(() => {
         if (isAuthenticated) {
             fetchCart();

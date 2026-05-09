@@ -14,7 +14,7 @@ import {
     Lock
 } from 'lucide-react';
 
-const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: externalPhoneNumbers, onPhoneNumbersChange }) => {
+const NotificationPreferences = ({ preferences, onChange, onPrefsChange, onSkip, phoneNumbers: externalPhoneNumbers, onPhoneNumbersChange }) => {
     const [showDetails, setShowDetails] = useState(false);
     const [phoneNumbers, setPhoneNumbers] = useState(externalPhoneNumbers || {
         whatsapp: '+263 ',
@@ -211,7 +211,7 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
             setPhoneErrors(prev => ({ ...prev, [key]: '' }));
         }
 
-        onChange(newPrefs);
+        (onPrefsChange || onChange)(newPrefs);
         setSaveStatus('Settings updated successfully!');
         setTimeout(() => setSaveStatus(''), 3000);
     };
@@ -221,7 +221,7 @@ const NotificationPreferences = ({ preferences, onChange, onSkip, phoneNumbers: 
             ...preferences,
             [key]: !preferences[key]
         };
-        onChange(newPrefs);
+        (onPrefsChange || onChange)(newPrefs);
     };
 
     const getColorClasses = (color, enabled) => {

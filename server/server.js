@@ -153,10 +153,12 @@ app.get('/api/health', (req, res) => {
     res.json(health);
 });
 
-// SPA fallback - for React Router (must come after API routes)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
+// SPA fallback — only in production where the React build exists in server/public/
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(publicPath, 'index.html'));
+    });
+}
 
 // Attach Express app to same HTTP server that Socket.IO uses (required for real-time)
 server.listen(PORT, () => {
@@ -282,6 +284,26 @@ connectMySQL().then(async (sequelize) => {
             console.log('✅ Instructor workflow fields migration completed');
         } catch (migrationError) {
             console.error('❌ Instructor workflow fields migration failed:', migrationError.message);
+        }
+
+        // Run referral fields migration (referral_code, referral_points, referred_by)
+        try {
+            console.log('🔄 Running referral fields migration...');
+            const { up } = await import('./src/migrations/add-referral-fields.js');
+            await up();
+            console.log('✅ Referral fields migration completed');
+        } catch (migrationError) {
+            console.error('❌ Referral fields migration failed:', migrationError.message);
+        }
+
+        // Run notification columns migration (notification_type, priority, target_audience, etc.)
+        try {
+            console.log('🔄 Running notification columns migration...');
+            const { up } = await import('./src/migrations/add-notification-columns.js');
+            await up();
+            console.log('✅ Notification columns migration completed');
+        } catch (migrationError) {
+            console.error('❌ Notification columns migration failed:', migrationError.message);
         }
 
         seedCategories().catch((error) => {

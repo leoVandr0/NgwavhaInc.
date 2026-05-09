@@ -345,11 +345,14 @@ const RegisterPage = () => {
 
                             <div className="pt-2">
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                    }}
                                     disabled={loading}
-                                    className="w-full flex justify-center py-3 px-4 border border-transparent text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 disabled:opacity-50 transition-colors"
+                                    className="w-full flex justify-center py-3 px-4 border border-transparent text-base font-bold text-dark-950 bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-900 focus:ring-primary-500 disabled:opacity-50 transition-colors hidden"
                                 >
-                                    {loading ? 'Creating account...' : 'Sign Up'}
+                                    Continue
                                 </button>
                             </div>
                         </form>

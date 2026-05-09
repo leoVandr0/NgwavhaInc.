@@ -41,7 +41,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const AdminAnalytics = () => {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [timeRange, setTimeRange] = useState('30d');
 
@@ -84,7 +84,7 @@ const AdminAnalytics = () => {
 
     const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6'];
 
-    if (loading && !data) {
+    if (loading || !data) {
         return (
             <div className="flex justify-center items-center h-96">
                 <Spin size="large" />

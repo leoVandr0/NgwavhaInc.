@@ -105,12 +105,6 @@ const MultiStepRegister = ({
                     formData,
                     setFormData,
                     loading: false,
-                    onSubmit: (e) => {
-                        e.preventDefault();
-                        if (isStepValid()) {
-                            handleNext();
-                        }
-                    },
                     submitButtonText: 'Continue',
                     showNotificationStep: false
                 });
@@ -120,6 +114,7 @@ const MultiStepRegister = ({
                     <NotificationPreferences
                         preferences={notificationPrefs}
                         onChange={handleNotificationSubmit}
+                        onPrefsChange={(prefs) => setNotificationPrefs(prefs)}
                         onSkip={handleNext}
                         phoneNumbers={phoneNumbers}
                         onPhoneNumbersChange={handlePhoneNumbersUpdate}
@@ -178,6 +173,22 @@ const MultiStepRegister = ({
                                         <span className="px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded text-xs">In-App</span>
                                     )}
                                 </div>
+                                {(notificationPrefs.whatsapp || notificationPrefs.sms) && (
+                                    <div className="mt-3 space-y-1 text-xs border-t border-dark-700 pt-3">
+                                        {notificationPrefs.whatsapp && phoneNumbers.whatsapp && phoneNumbers.whatsapp !== '+263 ' && (
+                                            <div className="flex justify-between">
+                                                <span className="text-dark-400">WhatsApp:</span>
+                                                <span className="text-white">{phoneNumbers.whatsapp}</span>
+                                            </div>
+                                        )}
+                                        {notificationPrefs.sms && phoneNumbers.sms && phoneNumbers.sms !== '+263 ' && (
+                                            <div className="flex justify-between">
+                                                <span className="text-dark-400">SMS:</span>
+                                                <span className="text-white">{phoneNumbers.sms}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 

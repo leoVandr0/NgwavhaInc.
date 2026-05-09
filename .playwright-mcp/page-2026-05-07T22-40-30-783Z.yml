@@ -1,0 +1,403 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e185]:
+    - complementary [ref=e186]:
+      - generic [ref=e187]:
+        - link "Ngwavha Ngwavha Admin Panel" [ref=e188] [cursor=pointer]:
+          - /url: /
+          - img "Ngwavha" [ref=e189]
+          - generic [ref=e190]:
+            - generic [ref=e191]: Ngwavha
+            - generic [ref=e192]: Admin Panel
+        - button [ref=e193] [cursor=pointer]:
+          - img [ref=e194]
+      - generic [ref=e196]:
+        - img [ref=e197]
+        - generic [ref=e199]: Administrator Access
+      - navigation [ref=e200]:
+        - generic [ref=e201]:
+          - paragraph [ref=e202]: OVERVIEW
+          - list [ref=e203]:
+            - listitem [ref=e204]:
+              - link "Dashboard" [ref=e205] [cursor=pointer]:
+                - /url: /admin/dashboard
+                - generic [ref=e206]:
+                  - img [ref=e208]
+                  - generic [ref=e213]: Dashboard
+            - listitem [ref=e214]:
+              - link "Analytics" [ref=e215] [cursor=pointer]:
+                - /url: /admin/analytics
+                - generic [ref=e216]:
+                  - img [ref=e218]
+                  - generic [ref=e220]: Analytics
+            - listitem [ref=e221]:
+              - link "Reports" [ref=e222] [cursor=pointer]:
+                - /url: /admin/reports
+                - generic [ref=e223]:
+                  - img [ref=e225]
+                  - generic [ref=e227]: Reports
+        - generic [ref=e228]:
+          - paragraph [ref=e229]: MANAGEMENT
+          - list [ref=e230]:
+            - listitem [ref=e231]:
+              - link "Users" [ref=e232] [cursor=pointer]:
+                - /url: /admin/users
+                - generic [ref=e233]:
+                  - img [ref=e235]
+                  - generic [ref=e240]: Users
+            - listitem [ref=e241]:
+              - link "Students" [ref=e242] [cursor=pointer]:
+                - /url: /admin/students
+                - generic [ref=e243]:
+                  - img [ref=e245]
+                  - generic [ref=e250]: Students
+            - listitem [ref=e251]:
+              - link "Teachers 5 Pending" [ref=e252] [cursor=pointer]:
+                - /url: /admin/teachers
+                - generic [ref=e253]:
+                  - img [ref=e255]
+                  - generic [ref=e258]: Teachers
+                - generic [ref=e259]: 5 Pending
+            - listitem [ref=e260]:
+              - link "Admins" [ref=e261] [cursor=pointer]:
+                - /url: /admin/admins
+                - generic [ref=e262]:
+                  - img [ref=e264]
+                  - generic [ref=e266]: Admins
+        - generic [ref=e267]:
+          - paragraph [ref=e268]: COURSES
+          - list [ref=e269]:
+            - listitem [ref=e270]:
+              - link "Courses" [ref=e271] [cursor=pointer]:
+                - /url: /admin/courses
+                - generic [ref=e272]:
+                  - img [ref=e274]
+                  - generic [ref=e277]: Courses
+            - listitem [ref=e278]:
+              - link "Course Previews Review" [ref=e279] [cursor=pointer]:
+                - /url: /admin/course-previews
+                - generic [ref=e280]:
+                  - img [ref=e282]
+                  - generic [ref=e285]: Course Previews
+                - generic [ref=e286]: Review
+            - listitem [ref=e287]:
+              - link "Other Approvals" [ref=e288] [cursor=pointer]:
+                - /url: /admin/approvals
+                - generic [ref=e289]:
+                  - img [ref=e291]
+                  - generic [ref=e294]: Other Approvals
+            - listitem [ref=e295]:
+              - link "Moderation" [ref=e296] [cursor=pointer]:
+                - /url: /admin/moderation
+                - generic [ref=e297]:
+                  - img [ref=e299]
+                  - generic [ref=e301]: Moderation
+            - listitem [ref=e302]:
+              - link "Reviews" [ref=e303] [cursor=pointer]:
+                - /url: /admin/reviews
+                - generic [ref=e304]:
+                  - img [ref=e306]
+                  - generic [ref=e308]: Reviews
+        - generic [ref=e309]:
+          - paragraph [ref=e310]: BUSINESS
+          - list [ref=e311]:
+            - listitem [ref=e312]:
+              - link "Finance" [ref=e313] [cursor=pointer]:
+                - /url: /admin/finance
+                - generic [ref=e314]:
+                  - img [ref=e316]
+                  - generic [ref=e318]: Finance
+        - generic [ref=e319]:
+          - paragraph [ref=e320]: SYSTEM
+          - list [ref=e321]:
+            - listitem [ref=e322]:
+              - link "Send Alert" [ref=e323] [cursor=pointer]:
+                - /url: /admin/send-alert
+                - generic [ref=e324]:
+                  - img [ref=e326]
+                  - generic [ref=e329]: Send Alert
+            - listitem [ref=e330]:
+              - link "Settings" [ref=e331] [cursor=pointer]:
+                - /url: /admin/settings
+                - generic [ref=e332]:
+                  - img [ref=e334]
+                  - generic [ref=e337]: Settings
+      - generic [ref=e338]:
+        - generic [ref=e339]:
+          - generic [ref=e341]: R
+          - generic [ref=e342]:
+            - paragraph [ref=e343]: Railway Admin
+            - paragraph [ref=e344]: Super Admin
+        - button "Logout" [ref=e345] [cursor=pointer]:
+          - img [ref=e346]
+          - generic [ref=e349]: Logout
+    - generic [ref=e350]:
+      - banner [ref=e351]:
+        - generic [ref=e352]:
+          - button "Toggle menu" [ref=e353] [cursor=pointer]:
+            - img [ref=e354]
+          - heading "Admin Dashboard" [level=1] [ref=e355]
+        - generic [ref=e356]:
+          - button "Notifications" [ref=e358] [cursor=pointer]:
+            - img [ref=e359]
+          - generic [ref=e362]:
+            - generic [ref=e363]:
+              - paragraph [ref=e364]: Railway Admin
+              - paragraph [ref=e365]: admin@ngwavha.com
+            - generic [ref=e366]: R
+      - main [ref=e367]:
+        - generic [ref=e369]:
+          - generic [ref=e371]:
+            - generic [ref=e372]:
+              - heading "Admin Dashboard" [level=1] [ref=e373]
+              - paragraph [ref=e374]: Real-time platform overview and management
+            - generic [ref=e375]:
+              - generic [ref=e376]:
+                - img [ref=e377]
+                - generic [ref=e384]: Disconnected
+              - button "Refresh" [ref=e385] [cursor=pointer]:
+                - img [ref=e387]
+                - generic [ref=e392]: Refresh
+          - generic [ref=e396]:
+            - generic [ref=e397]:
+              - img [ref=e398]
+              - generic [ref=e401]: Critical Platform Alerts
+              - superscript [ref=e403]:
+                - generic [ref=e405]: "6"
+            - generic [ref=e406]:
+              - generic [ref=e407] [cursor=pointer]:
+                - img [ref=e409]
+                - generic [ref=e412]:
+                  - paragraph [ref=e413]: 3 Courses
+                  - paragraph [ref=e414]: Awaiting approval
+              - generic [ref=e415] [cursor=pointer]:
+                - img [ref=e417]
+                - generic [ref=e420]:
+                  - paragraph [ref=e421]: 2 Teachers
+                  - paragraph [ref=e422]: Pending verification
+              - generic [ref=e423] [cursor=pointer]:
+                - img [ref=e425]
+                - generic [ref=e427]:
+                  - paragraph [ref=e428]: 1 Payment
+                  - paragraph [ref=e429]: Issue reported
+          - generic [ref=e430]:
+            - generic [ref=e433]:
+              - generic [ref=e434]:
+                - generic [ref=e435]: Total Students
+                - img [ref=e436]
+              - generic [ref=e441]: "0"
+              - generic [ref=e442]:
+                - img [ref=e443]
+                - generic [ref=e446]: +17% from last month
+            - generic [ref=e449]:
+              - generic [ref=e450]:
+                - generic [ref=e451]: Total Teachers
+                - img [ref=e452]
+              - generic [ref=e455]: "0"
+              - generic [ref=e456]:
+                - img [ref=e457]
+                - generic [ref=e460]: +14% from last month
+            - generic [ref=e463]:
+              - generic [ref=e464]:
+                - generic [ref=e465]: Total Courses
+                - img [ref=e466]
+              - generic [ref=e469]: "0"
+              - generic [ref=e470]:
+                - img [ref=e471]
+                - generic [ref=e474]: +17% from last month
+          - generic [ref=e475]:
+            - generic [ref=e479]:
+              - generic [ref=e482]:
+                - img [ref=e483]
+                - text: Online Users
+              - generic [ref=e486]:
+                - img [ref=e488]
+                - generic [ref=e491]: "0"
+            - generic [ref=e495]:
+              - generic [ref=e498]:
+                - img [ref=e499]
+                - text: Active Sessions
+              - generic [ref=e501]:
+                - img [ref=e503]
+                - generic [ref=e505]: "0"
+            - generic [ref=e509]:
+              - generic [ref=e512]:
+                - img [ref=e513]
+                - text: Pending Teachers
+              - generic [ref=e516]:
+                - img [ref=e518]
+                - generic [ref=e520]: "0"
+            - generic [ref=e524]:
+              - generic [ref=e527]:
+                - img [ref=e528]
+                - text: Monthly Revenue
+              - generic [ref=e530]:
+                - generic [ref=e531]: $
+                - generic [ref=e532]: "0"
+          - generic [ref=e533]:
+            - generic [ref=e536]:
+              - generic [ref=e537]:
+                - generic [ref=e538]: Total Users
+                - img [ref=e539]
+              - generic [ref=e544]: "1"
+              - generic [ref=e545]:
+                - img [ref=e546]
+                - generic [ref=e549]: +12.5% from last month
+            - generic [ref=e552]:
+              - generic [ref=e553]:
+                - generic [ref=e554]: Active Teachers
+                - img [ref=e555]
+              - generic [ref=e558]: "0"
+              - generic [ref=e559]:
+                - img [ref=e560]
+                - generic [ref=e563]: +8.3% from last month
+            - generic [ref=e566]:
+              - generic [ref=e567]:
+                - generic [ref=e568]: Total Courses
+                - img [ref=e569]
+              - generic [ref=e572]: "0"
+              - generic [ref=e573]:
+                - img [ref=e574]
+                - generic [ref=e577]: +15.7% from last month
+          - generic [ref=e578]:
+            - generic [ref=e580]:
+              - generic [ref=e582]:
+                - img [ref=e583]
+                - text: Recent Activity
+              - button "View All" [ref=e586] [cursor=pointer]:
+                - generic [ref=e587]: View All
+            - table [ref=e598]:
+              - rowgroup [ref=e599]:
+                - row "User Action Time Status" [ref=e600]:
+                  - columnheader "User" [ref=e601]
+                  - columnheader "Action" [ref=e602]
+                  - columnheader "Time" [ref=e603]
+                  - columnheader "Status" [ref=e604]
+              - rowgroup [ref=e605]:
+                - row "System login 2026-05-07T22:40:28.940Z SUCCESS" [ref=e606]:
+                  - cell "System" [ref=e607]
+                  - cell "login" [ref=e608]
+                  - cell "2026-05-07T22:40:28.940Z" [ref=e609]
+                  - cell "SUCCESS" [ref=e610]:
+                    - generic [ref=e611]: SUCCESS
+                - row "System login 2026-03-11T12:31:12.071Z SUCCESS" [ref=e612]:
+                  - cell "System" [ref=e613]
+                  - cell "login" [ref=e614]
+                  - cell "2026-03-11T12:31:12.071Z" [ref=e615]
+                  - cell "SUCCESS" [ref=e616]:
+                    - generic [ref=e617]: SUCCESS
+                - row "System login 2026-03-11T12:26:21.879Z SUCCESS" [ref=e618]:
+                  - cell "System" [ref=e619]
+                  - cell "login" [ref=e620]
+                  - cell "2026-03-11T12:26:21.879Z" [ref=e621]
+                  - cell "SUCCESS" [ref=e622]:
+                    - generic [ref=e623]: SUCCESS
+                - row "System login 2026-03-11T11:27:11.360Z SUCCESS" [ref=e624]:
+                  - cell "System" [ref=e625]
+                  - cell "login" [ref=e626]
+                  - cell "2026-03-11T11:27:11.360Z" [ref=e627]
+                  - cell "SUCCESS" [ref=e628]:
+                    - generic [ref=e629]: SUCCESS
+                - row "System login 2026-03-11T10:34:25.359Z SUCCESS" [ref=e630]:
+                  - cell "System" [ref=e631]
+                  - cell "login" [ref=e632]
+                  - cell "2026-03-11T10:34:25.359Z" [ref=e633]
+                  - cell "SUCCESS" [ref=e634]:
+                    - generic [ref=e635]: SUCCESS
+                - row "System login 2026-03-11T10:33:27.651Z SUCCESS" [ref=e636]:
+                  - cell "System" [ref=e637]
+                  - cell "login" [ref=e638]
+                  - cell "2026-03-11T10:33:27.651Z" [ref=e639]
+                  - cell "SUCCESS" [ref=e640]:
+                    - generic [ref=e641]: SUCCESS
+                - row "System login 2026-03-10T15:57:39.938Z SUCCESS" [ref=e642]:
+                  - cell "System" [ref=e643]
+                  - cell "login" [ref=e644]
+                  - cell "2026-03-10T15:57:39.938Z" [ref=e645]
+                  - cell "SUCCESS" [ref=e646]:
+                    - generic [ref=e647]: SUCCESS
+                - row "System login 2026-03-08T12:31:48.496Z SUCCESS" [ref=e648]:
+                  - cell "System" [ref=e649]
+                  - cell "login" [ref=e650]
+                  - cell "2026-03-08T12:31:48.496Z" [ref=e651]
+                  - cell "SUCCESS" [ref=e652]:
+                    - generic [ref=e653]: SUCCESS
+                - row "System login 2026-03-06T17:54:30.301Z SUCCESS" [ref=e654]:
+                  - cell "System" [ref=e655]
+                  - cell "login" [ref=e656]
+                  - cell "2026-03-06T17:54:30.301Z" [ref=e657]
+                  - cell "SUCCESS" [ref=e658]:
+                    - generic [ref=e659]: SUCCESS
+                - row "System login 2026-03-06T17:49:09.146Z SUCCESS" [ref=e660]:
+                  - cell "System" [ref=e661]
+                  - cell "login" [ref=e662]
+                  - cell "2026-03-06T17:49:09.146Z" [ref=e663]
+                  - cell "SUCCESS" [ref=e664]:
+                    - generic [ref=e665]: SUCCESS
+                - row "System login 2026-03-06T17:16:16.802Z SUCCESS" [ref=e666]:
+                  - cell "System" [ref=e667]
+                  - cell "login" [ref=e668]
+                  - cell "2026-03-06T17:16:16.802Z" [ref=e669]
+                  - cell "SUCCESS" [ref=e670]:
+                    - generic [ref=e671]: SUCCESS
+                - row "System login 2026-03-06T12:27:03.002Z SUCCESS" [ref=e672]:
+                  - cell "System" [ref=e673]
+                  - cell "login" [ref=e674]
+                  - cell "2026-03-06T12:27:03.002Z" [ref=e675]
+                  - cell "SUCCESS" [ref=e676]:
+                    - generic [ref=e677]: SUCCESS
+                - row "System login 2026-03-06T12:25:20.102Z SUCCESS" [ref=e678]:
+                  - cell "System" [ref=e679]
+                  - cell "login" [ref=e680]
+                  - cell "2026-03-06T12:25:20.102Z" [ref=e681]
+                  - cell "SUCCESS" [ref=e682]:
+                    - generic [ref=e683]: SUCCESS
+                - row "System login 2026-03-06T12:12:36.193Z SUCCESS" [ref=e684]:
+                  - cell "System" [ref=e685]
+                  - cell "login" [ref=e686]
+                  - cell "2026-03-06T12:12:36.193Z" [ref=e687]
+                  - cell "SUCCESS" [ref=e688]:
+                    - generic [ref=e689]: SUCCESS
+                - row "System login 2026-03-06T12:09:53.189Z SUCCESS" [ref=e690]:
+                  - cell "System" [ref=e691]
+                  - cell "login" [ref=e692]
+                  - cell "2026-03-06T12:09:53.189Z" [ref=e693]
+                  - cell "SUCCESS" [ref=e694]:
+                    - generic [ref=e695]: SUCCESS
+                - row "System login 2026-03-06T11:36:10.124Z SUCCESS" [ref=e696]:
+                  - cell "System" [ref=e697]
+                  - cell "login" [ref=e698]
+                  - cell "2026-03-06T11:36:10.124Z" [ref=e699]
+                  - cell "SUCCESS" [ref=e700]:
+                    - generic [ref=e701]: SUCCESS
+                - row "System login 2026-03-06T11:33:40.914Z SUCCESS" [ref=e702]:
+                  - cell "System" [ref=e703]
+                  - cell "login" [ref=e704]
+                  - cell "2026-03-06T11:33:40.914Z" [ref=e705]
+                  - cell "SUCCESS" [ref=e706]:
+                    - generic [ref=e707]: SUCCESS
+                - row "System login 2026-03-06T10:36:36.598Z SUCCESS" [ref=e708]:
+                  - cell "System" [ref=e709]
+                  - cell "login" [ref=e710]
+                  - cell "2026-03-06T10:36:36.598Z" [ref=e711]
+                  - cell "SUCCESS" [ref=e712]:
+                    - generic [ref=e713]: SUCCESS
+                - row "System login 2026-03-06T10:26:24.598Z SUCCESS" [ref=e714]:
+                  - cell "System" [ref=e715]
+                  - cell "login" [ref=e716]
+                  - cell "2026-03-06T10:26:24.598Z" [ref=e717]
+                  - cell "SUCCESS" [ref=e718]:
+                    - generic [ref=e719]: SUCCESS
+                - row "System login 2026-03-06T10:22:36.780Z SUCCESS" [ref=e720]:
+                  - cell "System" [ref=e721]
+                  - cell "login" [ref=e722]
+                  - cell "2026-03-06T10:22:36.780Z" [ref=e723]
+                  - cell "SUCCESS" [ref=e724]:
+                    - generic [ref=e725]: SUCCESS
+  - generic [ref=e727]:
+    - img "check-circle" [ref=e728]:
+      - img [ref=e729]
+    - generic [ref=e731]: Login successful!
+  - generic [ref=e733]:
+    - img "check-circle" [ref=e734]:
+      - img [ref=e735]
+    - generic [ref=e737]: Welcome back to Ngwavha!

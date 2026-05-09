@@ -12,7 +12,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isTokenValid, setIsTokenValid] = useState(false);
   const navigate = useNavigate();
-  const authStore = useAuthStore();
+  const storeLogin = useAuthStore(state => state.login);
+  const storeLogout = useAuthStore(state => state.logout);
 
   // Function to verify and refresh token
   const verifyAndRefreshToken = useCallback(async () => {
@@ -27,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       // First try to get profile with current token
       const response = await api.get('/auth/profile');
       setCurrentUser(response.data);
-      authStore.login(response.data, token);
+      storeLogin(response.data, token);
       setIsTokenValid(true);
       setLoading(false);
       return true;
@@ -37,10 +38,10 @@ export const AuthProvider = ({ children }) => {
         try {
           const refreshResponse = await api.post('/auth/refresh-token');
           const { token: newToken, user } = refreshResponse.data;
-          
+
           localStorage.setItem('token', newToken);
           setCurrentUser(user);
-          authStore.login(user, newToken);
+          storeLogin(user, newToken);
           setIsTokenValid(true);
           setLoading(false);
           console.log('Token auto-refreshed on app load for:', user.role);
@@ -48,7 +49,7 @@ export const AuthProvider = ({ children }) => {
         } catch (refreshError) {
           console.error('Token refresh failed on load:', refreshError);
           localStorage.removeItem('token');
-          authStore.logout();
+          storeLogout();
           setIsTokenValid(false);
           setLoading(false);
           return false;
@@ -56,13 +57,13 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.error('Token verification failed:', error);
         localStorage.removeItem('token');
-        authStore.logout();
+        storeLogout();
         setIsTokenValid(false);
         setLoading(false);
         return false;
       }
     }
-  }, [authStore]);
+  }, [storeLogin, storeLogout]);
 
   useEffect(() => {
     verifyAndRefreshToken();
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }) => {
       const { token, ...userData } = response.data;
       localStorage.setItem('token', token);
       setCurrentUser(userData);
-      authStore.login(userData, token);
+      storeLogin(userData, token);
       setIsTokenValid(true);
       message.success('Login successful!');
       return userData;
@@ -88,13 +89,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setCurrentUser(null);
     setIsTokenValid(false);
-    authStore.logout();
+    storeLogout();
     navigate('/login');
   };
 
   const updateUser = (userData) => {
     setCurrentUser(userData);
-    authStore.login(userData, localStorage.getItem('token'));
+    storeLogin(userData, localStorage.getItem('token'));
   };
 
   // Function to manually refresh token
@@ -104,7 +105,7 @@ export const AuthProvider = ({ children }) => {
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       setCurrentUser(user);
-      authStore.login(user, token);
+      storeLogin(user, token);
       return { success: true, user };
     } catch (error) {
       console.error('Manual token refresh failed:', error);
