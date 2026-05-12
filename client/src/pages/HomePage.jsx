@@ -201,13 +201,19 @@ const HomePage = () => {
                                         url="https://www.youtube.com/watch?v=viHILXVY_eU"
                                         width="100%"
                                         height="100%"
-                                        light={true}
+                                        playing={true}
                                         controls={true}
-                                        playIcon={
-                                            <div className="flex items-center justify-center w-20 h-20 bg-primary-500 rounded-full shadow-2xl">
-                                                <Play className="h-8 w-8 text-white ml-1" />
-                                            </div>
-                                        }
+                                        muted={true}
+                                        loop={false}
+                                        config={{
+                                            youtube: {
+                                                playerVars: {
+                                                    autoplay: 1,
+                                                    modestbranding: 1,
+                                                    rel: 0
+                                                }
+                                            }
+                                        }}
                                     />
                                 </div>
                             </div>
