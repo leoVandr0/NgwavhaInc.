@@ -141,8 +141,12 @@ const TeacherLiveSessions = () => {
         });
     };
 
-    const handleStartSession = (session) => {
-        statusMutation.mutate({ id: session.id, status: 'live' });
+    const handleStartSession = async (session) => {
+        try {
+            await statusMutation.mutateAsync({ id: session.id, status: 'live' });
+        } catch (e) {
+            // If status update fails, still let the instructor in
+        }
         navigate(`/teacher/live-room/${session.meetingId}?title=${encodeURIComponent(session.title)}&sessionId=${session.id}`);
     };
 
