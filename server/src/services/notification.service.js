@@ -1,9 +1,11 @@
 import sgMail from '@sendgrid/mail';
+import axios from 'axios';
 
 class NotificationService {
     constructor() {
         this.isSendGridConfigured = false;
         this.isTwilioConfigured = false;
+        this.isWhatsAppConfigured = false;
         this.twilioClient = null;
 
         // Initialize SendGrid
@@ -18,26 +20,35 @@ class NotificationService {
             console.warn('⚠️ SendGrid API key missing. Email notifications will be disabled.');
         }
 
-        // Initialize Twilio (optional – only loaded when credentials are present)
+        // Initialize Twilio (SMS only)
         const twilioSid = process.env.TWILIO_ACCOUNT_SID;
         const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
         this.twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-        this.twilioWhatsApp = process.env.TWILIO_WHATSAPP_NUMBER;
 
         if (twilioSid && twilioAuthToken) {
-            // Dynamic import so the server doesn't crash if twilio isn't installed
             import('twilio').then(({ default: twilio }) => {
                 this.twilioClient = twilio(twilioSid, twilioAuthToken);
                 this.isTwilioConfigured = true;
-                console.log('✅ Twilio initialized for SMS/WhatsApp notifications');
+                console.log('✅ Twilio initialized for SMS notifications');
             }).catch((err) => {
-                console.warn('⚠️ Twilio package not found. SMS/WhatsApp disabled.', err.message);
+                console.warn('⚠️ Twilio package not found. SMS disabled.', err.message);
             });
         } else {
-            console.warn('⚠️ Twilio credentials missing. SMS/WhatsApp notifications will be disabled.');
+            console.warn('⚠️ Twilio credentials missing. SMS notifications will be disabled.');
+        }
+
+        // Initialize Meta WhatsApp Cloud API
+        this.whatsappAccessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+        this.whatsappPhoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+        this.whatsappApiVersion = process.env.WHATSAPP_API_VERSION || 'v19.0';
+
+        if (this.whatsappAccessToken && this.whatsappPhoneNumberId) {
+            this.isWhatsAppConfigured = true;
+            console.log('✅ Meta WhatsApp Cloud API initialized');
+        } else {
+            console.warn('⚠️ Meta WhatsApp credentials missing. WhatsApp notifications will be disabled.');
         }
     }
-
 
     /**
      * Send an Email via SendGrid
@@ -49,13 +60,12 @@ class NotificationService {
         }
 
         try {
-            const msg = {
+            await sgMail.send({
                 to,
                 from: this.fromEmail,
                 subject,
                 html: htmlContent,
-            };
-            await sgMail.send(msg);
+            });
             console.log(`📧 Email sent to ${to}: ${subject}`);
             return true;
         } catch (error) {
@@ -69,16 +79,12 @@ class NotificationService {
      */
     async sendSMS(to, body) {
         if (!this.isTwilioConfigured || !this.twilioPhone) {
-            console.log(`[SMS Skipped] To: ${to} | Reason: Twilio Not Configured or Missing Phone Number`);
+            console.log(`[SMS Skipped] To: ${to} | Reason: Twilio Not Configured`);
             return false;
         }
 
         try {
-            await this.twilioClient.messages.create({
-                body,
-                from: this.twilioPhone,
-                to
-            });
+            await this.twilioClient.messages.create({ body, from: this.twilioPhone, to });
             console.log(`📱 SMS sent to ${to}`);
             return true;
         } catch (error) {
@@ -88,54 +94,90 @@ class NotificationService {
     }
 
     /**
-     * Send a WhatsApp Message via Twilio
+     * Send a WhatsApp message via Meta Cloud API
      */
     async sendWhatsApp(to, body) {
-        if (!this.isTwilioConfigured || !this.twilioWhatsApp) {
-            console.log(`[WhatsApp Skipped] To: ${to} | Reason: Twilio Not Configured or Missing WhatsApp Number`);
+        if (!this.isWhatsAppConfigured) {
+            console.log(`[WhatsApp Skipped] To: ${to} | Reason: Meta WhatsApp Not Configured`);
             return false;
         }
 
-        try {
-            // Twilio requires 'whatsapp:' prefix for the 'to' and 'from' numbers
-            const formattedTo = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`;
-            const formattedFrom = this.twilioWhatsApp.startsWith('whatsapp:') ? this.twilioWhatsApp : `whatsapp:${this.twilioWhatsApp}`;
+        // Normalize to E.164 — strip spaces/dashes, ensure leading +
+        const normalizedTo = to.replace(/[\s\-\(\)]/g, '').replace(/^00/, '+');
 
-            await this.twilioClient.messages.create({
-                body,
-                from: formattedFrom,
-                to: formattedTo
-            });
-            console.log(`💬 WhatsApp sent to ${formattedTo}`);
+        try {
+            await axios.post(
+                `https://graph.facebook.com/${this.whatsappApiVersion}/${this.whatsappPhoneNumberId}/messages`,
+                {
+                    messaging_product: 'whatsapp',
+                    to: normalizedTo,
+                    type: 'text',
+                    text: { body },
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.whatsappAccessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            console.log(`💬 WhatsApp sent to ${normalizedTo}`);
             return true;
         } catch (error) {
-            console.error('❌ Failed to send WhatsApp:', error.message);
+            const detail = error.response?.data?.error?.message || error.message;
+            console.error(`❌ Failed to send WhatsApp to ${normalizedTo}:`, detail);
             return false;
         }
     }
 
     /**
-     * Helper to send notification to all available channels for a user
+     * Send notification across all available channels for a user.
+     * Uses whatsappNumber for WhatsApp and phoneNumber for SMS (separate fields).
      */
     async sendMultiChannelNotification(user, { subject, emailBody, shortMessage }) {
         const promises = [];
 
-        // 1. Email (always try if they have an email)
         if (user.email) {
             promises.push(this.sendEmail(user.email, subject, emailBody || shortMessage));
         }
 
-        // 2. Mobile Channels
-        // Note: For WhatsApp, the user's phone must be registered/verified in the Twilio Sandbox if you're in testing mode
+        if (user.whatsappNumber) {
+            promises.push(this.sendWhatsApp(user.whatsappNumber, shortMessage));
+        }
+
         if (user.phoneNumber) {
-            // Optional: User preferences can be used here. For now, try WhatsApp first as an example, or both
-            promises.push(this.sendWhatsApp(user.phoneNumber, shortMessage));
             promises.push(this.sendSMS(user.phoneNumber, shortMessage));
         }
 
         await Promise.allSettled(promises);
     }
+
+    /**
+     * Notify every admin user via email + WhatsApp.
+     * Falls back to ADMIN_EMAIL env var if no admin users are found in DB.
+     */
+    async notifyAdmins({ subject, emailBody, shortMessage }) {
+        try {
+            // Lazy import to avoid circular deps at module load time
+            const { default: User } = await import('../models/User.js');
+            const admins = await User.findAll({ where: { role: 'admin' } });
+
+            if (admins.length === 0) {
+                // Fall back to env var admin email
+                const fallbackEmail = process.env.ADMIN_EMAIL || process.env.RAILWAY_ADMIN_EMAIL;
+                if (fallbackEmail) {
+                    await this.sendEmail(fallbackEmail, subject, emailBody || shortMessage);
+                }
+                return;
+            }
+
+            await Promise.allSettled(
+                admins.map(admin => this.sendMultiChannelNotification(admin, { subject, emailBody, shortMessage }))
+            );
+        } catch (err) {
+            console.error('❌ notifyAdmins error:', err.message);
+        }
+    }
 }
 
-// Singleton export
 export default new NotificationService();

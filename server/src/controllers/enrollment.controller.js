@@ -1,6 +1,7 @@
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
+import notificationService from '../services/notification.service.js';
 import Category from '../models/Category.js';
 import Review from '../models/Review.js';
 import LiveSession from '../models/LiveSession.js';
@@ -94,7 +95,18 @@ export const updateProgress = async (req, res) => {
             if (enrollment.progress >= 100 && !enrollment.isCompleted) {
                 enrollment.isCompleted = true;
                 enrollment.completedAt = new Date();
-                // Trigger certificate generation logic here (omitted for brevity)
+
+                const [completedUser, completedCourse] = await Promise.all([
+                    User.findByPk(req.user.id),
+                    Course.findByPk(req.params.courseId)
+                ]);
+                if (completedUser && completedCourse) {
+                    await notificationService.sendMultiChannelNotification(completedUser, {
+                        subject: `Course Completed: ${completedCourse.title}`,
+                        emailBody: `<h1>Congratulations!</h1><p>You completed <strong>${completedCourse.title}</strong>. Your certificate is ready on your dashboard.</p>`,
+                        shortMessage: `🏆 Congratulations! You've completed "${completedCourse.title}". Your certificate is ready at ngwavha.co.zw`
+                    });
+                }
             }
 
             enrollment.lastAccessedAt = new Date();

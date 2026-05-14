@@ -1,4 +1,4 @@
-# SkillForge - Feature Implementation Checklist
+# Ngwavha - Feature Implementation Checklist
 
 This document tracks all implemented features and their status.
 

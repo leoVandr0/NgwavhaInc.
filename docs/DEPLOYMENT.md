@@ -1,6 +1,6 @@
 # Deployment Guide - Railway
 
-This guide will help you deploy the SkillForge application to Railway.
+This guide will help you deploy the Ngwavha application to Railway.
 
 ## Prerequisites
 

@@ -1,6 +1,7 @@
 import stripe from '../config/stripe.js';
 import { User, Course, Enrollment, Transaction } from '../models/index.js';
 import { emailTemplates, sendEmail } from '../config/email.js';
+import notificationService from '../services/notification.service.js';
 
 // @desc    Create Stripe Payment Intent
 // @route   POST /api/payments/create-intent
@@ -96,14 +97,19 @@ export const handleStripeWebhook = async (req, res) => {
                 await course.save();
             }
 
-            // 4. Send Confirmation Email
+            // 4. Send Confirmation Notifications (email + WhatsApp + SMS)
             const user = await User.findByPk(userId);
             if (user) {
                 const template = emailTemplates.enrollmentConfirmation(user.name, courseName);
-                await sendEmail({
-                    to: user.email,
-                    ...template
-                });
+                await sendEmail({ to: user.email, ...template });
+                await notificationService.sendWhatsApp(
+                    user.whatsappNumber,
+                    `🎉 You're enrolled in "${courseName}"! Start learning now at ngwavha.co.zw`
+                );
+                await notificationService.sendSMS(
+                    user.phoneNumber,
+                    `You're enrolled in "${courseName}"! Start learning at ngwavha.co.zw`
+                );
             }
 
             console.log(`✅ Enrollment created for user ${userId} in course ${courseId}`);

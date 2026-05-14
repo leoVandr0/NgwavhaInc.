@@ -9,6 +9,7 @@ import CartItem from './CartItem.js';
 import WishlistItem from './WishlistItem.js';
 import Assignment from './Assignment.js';
 import Referral from './Referral.js';
+import Complaint from './Complaint.js';
 
 // User <-> Course (Instructor relationship)
 User.hasMany(Course, { foreignKey: 'instructorId', as: 'instructedCourses', onDelete: 'CASCADE', hooks: true });
@@ -86,6 +87,14 @@ Referral.belongsTo(User, { foreignKey: 'referrerId', as: 'referrer' });
 User.hasMany(Referral, { foreignKey: 'referredId', as: 'referralsReceived', onDelete: 'CASCADE', hooks: true });
 Referral.belongsTo(User, { foreignKey: 'referredId', as: 'referred' });
 
+// User <-> Complaint
+User.hasMany(Complaint, { foreignKey: 'userId', as: 'complaints', onDelete: 'CASCADE', hooks: true });
+Complaint.belongsTo(User, { foreignKey: 'userId', as: 'submittedBy' });
+
+// Course <-> Complaint
+Course.hasMany(Complaint, { foreignKey: 'relatedCourseId', as: 'complaints', onDelete: 'SET NULL', hooks: true });
+Complaint.belongsTo(Course, { foreignKey: 'relatedCourseId', as: 'relatedCourse' });
+
 export {
     User,
     Course,
@@ -97,5 +106,6 @@ export {
     CartItem,
     WishlistItem,
     Assignment,
-    Referral
+    Referral,
+    Complaint
 };

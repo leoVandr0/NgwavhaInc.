@@ -45,6 +45,7 @@ import adminRoutes from './src/routes/admin.routes.js';
 import analyticsRoutes from './src/routes/analytics.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import notificationRoutes from './src/routes/notification.routes.js';
+import complaintRoutes from './src/routes/complaint.routes.js';
 import studentRoutes from './src/routes/student.routes.js';
 import paymentRoutes from './src/routes/payment.routes.js';
 import { seedCategories } from './src/controllers/category.controller.js';
@@ -130,6 +131,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/complaints', complaintRoutes);
 app.use('/api/student', studentRoutes);
 // Fix routes (table creation utility)
 app.use('/api/fix', fixRoutes);

@@ -1,6 +1,6 @@
-# SkillForge Setup Guide
+# Ngwavha Setup Guide
 
-Complete guide to set up and run the SkillForge application locally.
+Complete guide to set up and run the Ngwavha application locally.
 
 ---
 
@@ -126,8 +126,8 @@ STRIPE_WEBHOOK_SECRET=whsec_your_secret
 
 # Email (Get from https://sendgrid.com)
 SENDGRID_API_KEY=SG.your_api_key
-EMAIL_FROM=noreply@skillforge.com
-EMAIL_FROM_NAME=SkillForge
+EMAIL_FROM=noreply@ngwavha.co.zw
+EMAIL_FROM_NAME=Ngwavha
 
 # ML Engine
 ML_ENGINE_URL=http://localhost:8000
@@ -149,7 +149,7 @@ You should see:
 ```
 ✅ MySQL connected successfully
 ✅ MongoDB connected successfully
-🚀 SkillForge API Server running on port 5000
+🚀 Ngwavha API Server running on port 5000
 ```
 
 ---
@@ -299,7 +299,7 @@ const seedDatabase = async () => {
   const hashedPassword = await bcrypt.hash('admin123', 10);
   await User.create({
     name: 'Admin User',
-    email: 'admin@skillforge.com',
+    email: 'admin@ngwavha.co.zw',
     password: hashedPassword,
     role: 'admin'
   });

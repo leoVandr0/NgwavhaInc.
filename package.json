@@ -4,8 +4,8 @@
   "description": "A comprehensive Udemy-like learning management system",
   "private": true,
   "workspaces": [
-    "skillforge-client",
-    "skillforge-server"
+    "ngwavha-client",
+    "ngwavha-server"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:ml\"",
@@ -35,6 +35,6 @@
     "courses",
     "education"
   ],
-  "author": "SkillForge Team",
+  "author": "Ngwavha Team",
   "license": "MIT"
 }

@@ -11,6 +11,7 @@ import CourseContent from '../models/nosql/CourseContent.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/mysql.js';
 import { uploadVideoToR2 } from '../middleware/upload.middleware.js';
+import notificationService from '../services/notification.service.js';
 
 // @desc    Get all courses
 // @route   GET /api/courses
@@ -796,6 +797,19 @@ export const uploadCoursePreview = async (req, res) => {
                 message: `Instructor ${req.user.name} uploaded a preview for "${course.title}".`
             });
         }
+
+        // WhatsApp + email alert to all admins
+        notificationService.notifyAdmins({
+            subject: `Course Preview Pending Approval: "${course.title}"`,
+            emailBody: `
+                <h2>New Course Preview Awaiting Approval</h2>
+                <p><strong>Course:</strong> ${course.title}</p>
+                <p><strong>Instructor:</strong> ${req.user.name}</p>
+                <p>A new preview video has been uploaded and requires your review before the course can go live.</p>
+                <p><a href="${process.env.CLIENT_URL || 'https://ngwavha.co.zw'}/admin/courses/previews">Review in admin panel</a></p>
+            `,
+            shortMessage: `📹 Course preview pending approval: "${course.title}" by ${req.user.name}. Review at ngwavha.co.zw/admin`
+        }).catch(err => console.error('Admin notify (preview upload) error:', err.message));
 
         res.json({ success: true, courseId: course.id, preview: { path: videoPath, duration, status: 'pending' } });
     } catch (error) {

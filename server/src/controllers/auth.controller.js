@@ -6,6 +6,7 @@ import Referral from '../models/Referral.js';
 import logger from '../utils/dbLogger.js';
 import PasswordPolicy from '../utils/passwordPolicy.js';
 import { v4 as uuidv4 } from 'uuid';
+import notificationService from '../services/notification.service.js';
 
 // Helper to generate token (includes role in payload)
 const generateToken = (userId, role) => {
@@ -148,19 +149,34 @@ export const registerUser = async (req, res) => {
         }
 
         // Notify admins if this is an instructor registration
-        if (isInstructor && global.broadcastToAdmins) {
-            global.broadcastToAdmins('instructor-application', {
-                type: 'instructor_application',
-                instructor: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    createdAt: user.createdAt
-                },
-                message: `New instructor application: ${user.name}`,
-                timestamp: new Date().toISOString()
-            });
+        if (isInstructor) {
+            if (global.broadcastToAdmins) {
+                global.broadcastToAdmins('instructor-application', {
+                    type: 'instructor_application',
+                    instructor: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        createdAt: user.createdAt
+                    },
+                    message: `New instructor application: ${user.name}`,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            // WhatsApp + email alert to all admins
+            notificationService.notifyAdmins({
+                subject: `New Instructor Application: ${user.name}`,
+                emailBody: `
+                    <h2>New Instructor Account Pending Approval</h2>
+                    <p><strong>Name:</strong> ${user.name}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p>This account is awaiting your review and approval.</p>
+                    <p><a href="${process.env.CLIENT_URL || 'https://ngwavha.co.zw'}/admin/teachers">Review in admin panel</a></p>
+                `,
+                shortMessage: `📋 New instructor application from ${user.name} (${user.email}) is awaiting your approval at ngwavha.co.zw/admin`
+            }).catch(err => console.error('Admin notify (instructor reg) error:', err.message));
         }
 
         // Generate token

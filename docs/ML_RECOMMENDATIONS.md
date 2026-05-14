@@ -2,7 +2,7 @@
 
 ## Overview
 
-The SkillForge ML recommendation engine uses a **hybrid approach** combining multiple techniques to provide personalized course recommendations:
+The Ngwavha ML recommendation engine uses a **hybrid approach** combining multiple techniques to provide personalized course recommendations:
 
 1. **Content-Based Filtering** - Recommends courses similar to what users have enrolled in
 2. **Collaborative Filtering** - Finds patterns in user behavior

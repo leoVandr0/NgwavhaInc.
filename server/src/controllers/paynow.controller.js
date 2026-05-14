@@ -1,6 +1,7 @@
 import { Paynow } from 'paynow';
 import { User, Course, Enrollment, Transaction } from '../models/index.js';
 import { emailTemplates, sendEmail } from '../config/email.js';
+import notificationService from '../services/notification.service.js';
 
 // Initialize Paynow with your integration details
 // These should be stored in environment variables
@@ -180,19 +181,24 @@ export const pollPayNowTransaction = async (req, res) => {
                         await course.save();
                     }
 
-                    // Send confirmation email
+                    // Send confirmation notifications (email + WhatsApp + SMS)
                     const user = await User.findByPk(transaction.userId);
                     if (user) {
                         const courseDetails = await Course.findByPk(transaction.courseId);
                         const template = emailTemplates.enrollmentConfirmation(user.name, courseDetails.title);
-                        await sendEmail({
-                            to: user.email,
-                            ...template
-                        });
+                        await sendEmail({ to: user.email, ...template });
+                        await notificationService.sendWhatsApp(
+                            user.whatsappNumber,
+                            `🎉 Payment confirmed! You're enrolled in "${courseDetails.title}". Start learning at ngwavha.co.zw`
+                        );
+                        await notificationService.sendSMS(
+                            user.phoneNumber,
+                            `Payment confirmed! You're enrolled in "${courseDetails.title}". Start at ngwavha.co.zw`
+                        );
                     }
                 }
             }
-            
+
             await transaction.save();
         }
 
@@ -255,15 +261,20 @@ export const handlePayNowWebhook = async (req, res) => {
                     await course.save();
                 }
 
-                // Send confirmation email
+                // Send confirmation notifications (email + WhatsApp + SMS)
                 const user = await User.findByPk(transaction.userId);
                 if (user) {
                     const courseDetails = await Course.findByPk(transaction.courseId);
                     const template = emailTemplates.enrollmentConfirmation(user.name, courseDetails.title);
-                    await sendEmail({
-                        to: user.email,
-                        ...template
-                    });
+                    await sendEmail({ to: user.email, ...template });
+                    await notificationService.sendWhatsApp(
+                        user.whatsappNumber,
+                        `🎉 Payment confirmed! You're enrolled in "${courseDetails.title}". Start learning at ngwavha.co.zw`
+                    );
+                    await notificationService.sendSMS(
+                        user.phoneNumber,
+                        `Payment confirmed! You're enrolled in "${courseDetails.title}". Start at ngwavha.co.zw`
+                    );
                 }
             }
         } else if (status === 'cancelled') {
