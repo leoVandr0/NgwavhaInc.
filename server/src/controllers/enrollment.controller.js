@@ -188,7 +188,7 @@ export const getEnrolledCourseContent = async (req, res) => {
     }
 };
 
-// @desc    Enroll in a course
+// @desc    Enroll in a course (free courses only — paid courses enroll via payment webhook)
 // @route   POST /api/enrollments/enroll/:courseId
 // @access  Private
 export const enrollInCourse = async (req, res) => {
@@ -196,6 +196,10 @@ export const enrollInCourse = async (req, res) => {
         const course = await Course.findByPk(req.params.courseId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found' });
+        }
+
+        if (parseFloat(course.price) > 0) {
+            return res.status(400).json({ message: 'This is a paid course. Please complete payment to enroll.' });
         }
 
         const existingEnrollment = await Enrollment.findOne({

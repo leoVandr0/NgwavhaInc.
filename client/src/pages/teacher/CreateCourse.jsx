@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
-import { App } from 'antd';
+import { App, Modal } from 'antd';
 import { Upload, X } from 'lucide-react';
 import api from '../../services/api';
 
 const CreateCourse = () => {
     const navigate = useNavigate();
     const { message } = App.useApp();
+    const priceInputRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
@@ -92,10 +93,8 @@ const CreateCourse = () => {
 
     // Preview change was implemented; ensure we only have one handler
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const doSubmit = async (resolvedPrice) => {
         setLoading(true);
-
         try {
             let thumbnailPath = '/uploads/default-course.jpg';
 
@@ -138,7 +137,7 @@ const CreateCourse = () => {
             const { data } = await api.post('/courses', {
                 title: formData.title,
                 description: formData.description,
-                price: parseFloat(formData.price),
+                price: resolvedPrice,
                 level: formData.level,
                 categoryId: formData.categoryId || 1,
                 thumbnail: thumbnailPath
@@ -169,6 +168,26 @@ const CreateCourse = () => {
             message.error(errorMsg);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const priceVal = formData.price.toString().trim();
+
+        if (priceVal === '' || priceVal === '0') {
+            Modal.confirm({
+                title: 'Free Course?',
+                content: 'You haven\'t entered a price. Do you want to offer this course for free? All students will be able to enroll at no cost.',
+                okText: 'Yes, make it free',
+                cancelText: 'Add a price',
+                onOk: () => doSubmit(0),
+                onCancel: () => {
+                    setTimeout(() => priceInputRef.current?.focus(), 100);
+                }
+            });
+        } else {
+            doSubmit(parseFloat(priceVal) || 0);
         }
     };
 
@@ -223,16 +242,18 @@ const CreateCourse = () => {
                                     Price ($)
                                 </label>
                                 <input
+                                    ref={priceInputRef}
                                     type="number"
                                     name="price"
                                     id="price"
-                                    required
                                     min="0"
                                     step="0.01"
                                     value={formData.price}
                                     onChange={handleChange}
+                                    placeholder="Leave blank for free"
                                     className="mt-1 block w-full bg-dark-800 border-dark-700 rounded-none shadow-sm focus:border-primary-500 focus:ring-primary-500 text-white sm:text-sm py-3 px-4"
                                 />
+                                <p className="mt-1 text-xs text-dark-400">Leave blank to offer this course for free</p>
                             </div>
 
                             {/* Level */}

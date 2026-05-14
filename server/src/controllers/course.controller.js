@@ -474,10 +474,13 @@ export const createCourse = async (req, res) => {
             });
         }
 
+        // Treat empty/missing price as free (0)
+        const resolvedPrice = (price === undefined || price === null || price === '') ? 0 : parseFloat(price) || 0;
+
         const course = await Course.create({
             title,
             description,
-            price,
+            price: resolvedPrice,
             categoryId,
             level,
             instructorId: req.user.id,

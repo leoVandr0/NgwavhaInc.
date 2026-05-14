@@ -115,13 +115,18 @@ const CourseDetailsPage = () => {
         }
     );
 
+    const isFree = parseFloat(course?.price) === 0;
+
     const handleEnroll = () => {
         if (!isAuthenticated) {
             navigate('/login', { state: { from: `/course/${slug}` } });
             return;
         }
-        // Show payment modal instead of direct enrollment
-        setShowPaymentModal(true);
+        if (isFree) {
+            enrollMutation.mutate();
+        } else {
+            setShowPaymentModal(true);
+        }
     };
 
     const handlePaymentSuccess = () => {
@@ -241,8 +246,12 @@ const CourseDetailsPage = () => {
                                 </div>
                                 <div className="p-6">
                                     <div className="mb-6">
-                                        <div className="text-3xl font-bold text-white mb-2">${course.price}</div>
-                                        {course.estimatedPrice && (
+                                        {isFree ? (
+                                            <div className="text-3xl font-bold text-green-400 mb-2">FREE</div>
+                                        ) : (
+                                            <div className="text-3xl font-bold text-white mb-2">${course.price}</div>
+                                        )}
+                                        {!isFree && course.estimatedPrice && (
                                             <div className="text-dark-400 line-through">${course.estimatedPrice}</div>
                                         )}
                                     </div>
@@ -259,7 +268,7 @@ const CourseDetailsPage = () => {
                                             onClick={handleEnroll}
                                             disabled={enrollMutation.isLoading}
                                         >
-                                            {enrollMutation.isLoading ? 'Enrolling...' : 'Enroll Now'}
+                                            {enrollMutation.isLoading ? 'Enrolling...' : isFree ? 'Enroll for Free' : 'Enroll Now'}
                                         </button>
                                     )}
                                     {!enrollmentData?.isEnrolled && (
