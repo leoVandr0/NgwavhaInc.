@@ -63,16 +63,27 @@ api.interceptors.response.use(
                 // Try to refresh the token
                 const refreshResponse = await api.post('/auth/refresh-token');
                 const { token, user } = refreshResponse.data;
-                
+
+                // Guard: reject refresh if the server returned a different user
+                const storedToken = localStorage.getItem('token');
+                if (storedToken && user?.id) {
+                    try {
+                        const storedPayload = JSON.parse(atob(storedToken.split('.')[1]));
+                        if (storedPayload.id && String(user.id) !== String(storedPayload.id)) {
+                            console.error('Token refresh identity mismatch — forcing logout');
+                            localStorage.removeItem('token');
+                            window.location.href = '/login?session=expired';
+                            return Promise.reject(new Error('Identity mismatch on token refresh'));
+                        }
+                    } catch (_) { /* ignore decode errors */ }
+                }
+
                 // Store new token
                 localStorage.setItem('token', token);
-                
-                // Update user data in store if needed
-                console.log('Token refreshed successfully for user:', user.role);
-                
+
                 // Notify subscribers
                 onTokenRefreshed(token);
-                
+
                 // Retry original request with new token
                 originalRequest.headers.Authorization = `Bearer ${token}`;
                 return api(originalRequest);

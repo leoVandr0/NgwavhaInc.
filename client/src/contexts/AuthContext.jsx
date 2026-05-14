@@ -24,6 +24,12 @@ export const AuthProvider = ({ children }) => {
       return false;
     }
 
+    // Decode stored token to know who we expect (without verifying signature)
+    const decodePayload = (t) => {
+      try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+    };
+    const storedPayload = decodePayload(token);
+
     try {
       // First try to get profile with current token
       const response = await api.get('/auth/profile');
@@ -39,12 +45,21 @@ export const AuthProvider = ({ children }) => {
           const refreshResponse = await api.post('/auth/refresh-token');
           const { token: newToken, user } = refreshResponse.data;
 
+          // Guard: ensure the refreshed user is the same person we started with
+          if (storedPayload && user?.id && String(user.id) !== String(storedPayload.id)) {
+            console.error('Token refresh returned a different user — logging out for safety');
+            localStorage.removeItem('token');
+            storeLogout();
+            setIsTokenValid(false);
+            setLoading(false);
+            return false;
+          }
+
           localStorage.setItem('token', newToken);
           setCurrentUser(user);
           storeLogin(user, newToken);
           setIsTokenValid(true);
           setLoading(false);
-          console.log('Token auto-refreshed on app load for:', user.role);
           return true;
         } catch (refreshError) {
           console.error('Token refresh failed on load:', refreshError);
@@ -101,8 +116,20 @@ export const AuthProvider = ({ children }) => {
   // Function to manually refresh token
   const refreshUserToken = async () => {
     try {
+      const existingToken = localStorage.getItem('token');
+      const decodePayload = (t) => {
+        try { return JSON.parse(atob(t.split('.')[1])); } catch { return null; }
+      };
+      const storedPayload = existingToken ? decodePayload(existingToken) : null;
+
       const response = await api.post('/auth/refresh-token');
       const { token, user } = response.data;
+
+      if (storedPayload && user?.id && String(user.id) !== String(storedPayload.id)) {
+        console.error('Manual token refresh returned a different user — rejecting');
+        return { success: false, error: new Error('Identity mismatch') };
+      }
+
       localStorage.setItem('token', token);
       setCurrentUser(user);
       storeLogin(user, token);

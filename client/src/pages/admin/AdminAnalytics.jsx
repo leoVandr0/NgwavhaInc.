@@ -8,7 +8,10 @@ import {
     Select,
     DatePicker,
     Space,
-    Spin
+    Spin,
+    Avatar,
+    Button,
+    Alert
 } from 'antd';
 import {
     LineChart,
@@ -33,7 +36,9 @@ import {
     DollarSign,
     ArrowUpRight,
     ArrowDownRight,
-    Calendar
+    Calendar,
+    User,
+    RefreshCw
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -43,6 +48,7 @@ const { RangePicker } = DatePicker;
 const AdminAnalytics = () => {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     const [timeRange, setTimeRange] = useState('30d');
 
     useEffect(() => {
@@ -51,6 +57,7 @@ const AdminAnalytics = () => {
 
     const fetchAnalytics = async () => {
         setLoading(true);
+        setError(null);
         try {
             const response = await api.get('/admin/dashboard');
             // Mocking trend data for the charts since the backend might not have it yet
@@ -77,6 +84,7 @@ const AdminAnalytics = () => {
             });
         } catch (error) {
             console.error('Error fetching analytics:', error);
+            setError('Failed to load analytics data. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -84,13 +92,24 @@ const AdminAnalytics = () => {
 
     const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6'];
 
-    if (loading || !data) {
+    if (loading) {
         return (
             <div className="flex justify-center items-center h-96">
                 <Spin size="large" />
             </div>
         );
     }
+
+    if (error) {
+        return (
+            <div className="flex flex-col justify-center items-center h-96 gap-4">
+                <Alert type="error" message={error} showIcon />
+                <Button icon={<RefreshCw size={14} />} onClick={fetchAnalytics}>Retry</Button>
+            </div>
+        );
+    }
+
+    if (!data) return null;
 
     return (
         <div className="space-y-6">

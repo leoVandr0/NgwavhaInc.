@@ -4,6 +4,32 @@ import realtimeService from '../services/realtime.service.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 
+async function ensureDailyRoom(meetingId) {
+    if (!process.env.DAILY_API_KEY) return;
+    const base = 'https://api.daily.co/v1';
+    const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.DAILY_API_KEY}`
+    };
+    const check = await fetch(`${base}/rooms/${meetingId}`, { headers });
+    if (check.ok) return;
+    await fetch(`${base}/rooms`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            name: meetingId,
+            privacy: 'public',
+            properties: {
+                enable_chat: true,
+                enable_knocking: false,
+                start_video_off: true,
+                start_audio_off: true,
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8
+            }
+        })
+    });
+}
+
 // @desc    Schedule a live session
 // @route   POST /api/live-sessions
 // @access  Private/Instructor
@@ -143,6 +169,12 @@ export const updateSessionStatus = async (req, res) => {
 
         if (session.instructorId !== req.user.id && req.user.role !== 'admin') {
             return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        if (status === 'live') {
+            await ensureDailyRoom(session.meetingId).catch(e =>
+                console.warn('ensureDailyRoom failed:', e.message)
+            );
         }
 
         session.status = status;
