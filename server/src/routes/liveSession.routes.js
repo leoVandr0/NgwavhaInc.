@@ -3,6 +3,7 @@ import {
     scheduleSession,
     getInstructorSessions,
     getStudentSessions,
+    getSessionByMeetingId,
     updateSessionStatus,
     deleteSession,
     notifyStudents
@@ -18,6 +19,7 @@ router.route('/instructor')
     .get(protect, authorize('instructor', 'admin'), getInstructorSessions);
 
 router.get('/student', protect, getStudentSessions);
+router.get('/join/:meetingId', protect, getSessionByMeetingId);
 
 router.route('/:id')
     .delete(protect, authorize('instructor', 'admin'), deleteSession);

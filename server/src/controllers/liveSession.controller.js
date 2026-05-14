@@ -126,7 +126,7 @@ export const getInstructorSessions = async (req, res) => {
     }
 };
 
-// @desc    Get student sessions (from enrolled courses)
+// @desc    Get student sessions (enrolled courses + any currently live sessions)
 // @route   GET /api/live-sessions/student
 // @access  Private/Student
 export const getStudentSessions = async (req, res) => {
@@ -137,11 +137,19 @@ export const getStudentSessions = async (req, res) => {
 
         const courseIds = enrollments.map(e => e.courseId);
 
+        // Always include sessions from enrolled courses, plus any session that is
+        // currently live (so students can join via direct link or discover live rooms)
+        const whereClause = courseIds.length > 0
+            ? {
+                [Op.or]: [
+                    { courseId: { [Op.in]: courseIds }, status: { [Op.ne]: 'ended' } },
+                    { status: 'live' }
+                ]
+            }
+            : { status: 'live' };
+
         const sessions = await LiveSession.findAll({
-            where: {
-                courseId: { [Op.in]: courseIds },
-                status: { [Op.ne]: 'ended' }
-            },
+            where: whereClause,
             include: [
                 { model: Course, as: 'course', attributes: ['title'] },
                 { model: User, as: 'instructor', attributes: ['name', 'avatar'] }
@@ -149,7 +157,28 @@ export const getStudentSessions = async (req, res) => {
             order: [['startTime', 'ASC']]
         });
 
-        res.json(sessions);
+        // Deduplicate in case a session appears in both conditions
+        const unique = [...new Map(sessions.map(s => [s.id, s])).values()];
+        res.json(unique);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get a single session by meetingId (for direct-link joining)
+// @route   GET /api/live-sessions/join/:meetingId
+// @access  Private
+export const getSessionByMeetingId = async (req, res) => {
+    try {
+        const session = await LiveSession.findOne({
+            where: { meetingId: req.params.meetingId },
+            include: [
+                { model: Course, as: 'course', attributes: ['title'] },
+                { model: User, as: 'instructor', attributes: ['name', 'avatar'] }
+            ]
+        });
+        if (!session) return res.status(404).json({ message: 'Session not found' });
+        res.json(session);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
