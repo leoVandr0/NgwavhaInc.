@@ -20,10 +20,34 @@ export const scheduleSession = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to schedule for this course' });
         }
 
-        const meetingId = `Ngwavha-${uuidv4().substring(0, 8)}`;
-
-        // If lectureId is provided, check if a session already exists for it and update/delete it?
-        // For simplicity, we just allow multiple sessions but the frontend will prefer the latest.
+        // Create a Daily.co room for the session
+        let meetingId = `ngwavha-${uuidv4().substring(0, 8)}`;
+        if (process.env.DAILY_API_KEY) {
+            try {
+                const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${process.env.DAILY_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        name: meetingId,
+                        privacy: 'public',
+                        properties: {
+                            enable_chat: true,
+                            enable_knocking: false,
+                            start_video_off: true,
+                            start_audio_off: true,
+                            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8
+                        }
+                    })
+                });
+                const room = await dailyRes.json();
+                if (room.name) meetingId = room.name;
+            } catch (dailyErr) {
+                console.warn('Daily.co room creation failed, using generated ID:', dailyErr.message);
+            }
+        }
 
         const session = await LiveSession.create({
             title,

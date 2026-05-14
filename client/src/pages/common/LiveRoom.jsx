@@ -1,111 +1,64 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import {
-    Video,
-    Mic,
-    MessageSquare,
-    Users,
-    LogOut,
-    Maximize2,
-    Settings,
-    Shield
-} from 'lucide-react';
-import {
-    App,
-    Button,
-    Typography,
-    Spin,
-    Layout,
-    Divider,
-    Avatar,
-    Tooltip,
-    Modal
-} from 'antd';
-
+import { Video, LogOut, Shield, RefreshCw } from 'lucide-react';
+import { App, Button, Typography, Spin, Layout, Divider, Tooltip } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 
 const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
+
+const LOAD_TIMEOUT_MS = 15000;
 
 const LiveRoom = ({ userRole = 'student' }) => {
     const { meetingId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { message, modal } = App.useApp();
-    const [isLoading, setIsLoading] = useState(true);
+    const { modal } = App.useApp();
     const { currentUser: authUser } = useAuth();
-    const jitsiContainerRef = useRef(null);
-    const apiRef = useRef(null);
+
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const timeoutRef = useRef(null);
 
     const queryParams = new URLSearchParams(location.search);
     const sessionTitle = queryParams.get('title') || 'Live Lesson';
 
-    useEffect(() => {
-        // Load Jitsi script dynamicallly
-        const script = document.createElement('script');
-        script.src = 'https://8x8.vc/vpaas-magic-cookie-83344b97a26f49e494a73229b9be5736/external_api.js';
-        // Note: For production you might want to use meet.jit.si/external_api.js or a self-hosted version
-        script.src = 'https://meet.jit.si/external_api.js';
-        script.async = true;
-        script.onload = () => initJitsi();
-        document.body.appendChild(script);
+    const dailyDomain = import.meta.env.VITE_DAILY_DOMAIN || 'ngwavha';
+    const roomUrl = `https://${dailyDomain}.daily.co/${meetingId}`;
 
-        return () => {
-            if (apiRef.current) apiRef.current.dispose();
-            document.body.removeChild(script);
-        };
+    useEffect(() => {
+        // Safety timeout — if iframe hasn't loaded in 15s, show an error instead of hanging
+        timeoutRef.current = setTimeout(() => {
+            if (isLoading) {
+                setIsLoading(false);
+                setError('The live room is taking too long to load. Please check your internet connection and try again.');
+            }
+        }, LOAD_TIMEOUT_MS);
+
+        return () => clearTimeout(timeoutRef.current);
     }, []);
 
-    const initJitsi = () => {
-        const domain = 'meet.jit.si';
-        const options = {
-            roomName: meetingId,
-            width: '100%',
-            height: '100%',
-            parentNode: jitsiContainerRef.current,
-            userInfo: {
-                displayName: authUser?.name || 'User',
-                email: authUser?.email,
-                avatarUrl: authUser?.avatar ? `/uploads/${authUser.avatar}` : null
-            },
-            configOverwrite: {
-                prejoinPageEnabled: false,
-                disableDeepLinking: true,
-                startWithAudioMuted: true,
-                startWithVideoMuted: true,
-                desktopSharingFrameRate: {
-                    min: 5,
-                    max: 15
-                },
-                enableWelcomePage: false,
-                enableClosePage: false
-            },
-            interfaceConfigOverwrite: {
-                SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                DEFAULT_REMOTE_DISPLAY_NAME: 'Student',
-                TOOLBAR_BUTTONS: [
-                    'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                    'fodeviceselection', 'hangup', 'profile', 'chat', 'raisehand',
-                    'videoquality', 'filmstrip', 'tileview', 'videobackgroundblur',
-                    'help', 'mute-everyone', 'security'
-                ],
-            }
-        };
+    const handleIframeLoad = () => {
+        clearTimeout(timeoutRef.current);
+        setIsLoading(false);
+        setError(null);
+    };
 
-        const api = new window.JitsiMeetExternalAPI(domain, options);
-        apiRef.current = api;
+    const handleIframeError = () => {
+        clearTimeout(timeoutRef.current);
+        setIsLoading(false);
+        setError('Failed to load the live room. Please check your connection and try again.');
+    };
 
-        api.addEventListeners({
-            readyToClose: () => {
-                navigate(userRole === 'instructor' ? '/teacher/live' : '/student/live');
-            },
-            videoConferenceJoined: () => {
-                setIsLoading(false);
-                message.success('Connected to live room');
-            }
-        });
+    const handleRetry = () => {
+        setIsLoading(true);
+        setError(null);
+        // Re-trigger timeout
+        timeoutRef.current = setTimeout(() => {
+            setIsLoading(false);
+            setError('Still unable to connect. Please try again later.');
+        }, LOAD_TIMEOUT_MS);
     };
 
     const handleLeave = () => {
@@ -117,31 +70,19 @@ const LiveRoom = ({ userRole = 'student' }) => {
                 okType: 'danger',
                 cancelText: 'Just Leave',
                 onOk: async () => {
-                    if (apiRef.current) {
-                        // There's no direct "end meeting for all" command in Jitsi iframe api easily exposed, 
-                        // but we can update our DB status and then hangup.
-                        // Realistically, the instructor leaving usually ends it if they are the only moderator.
-                        try {
-                            // We need the session ID, which we don't have in params. 
-                            // We might need to fetch session by meetingId or pass it in query.
-                            const sessionId = queryParams.get('sessionId');
-                            if (sessionId) {
-                                await api.patch(`/live-sessions/${sessionId}/status`, { status: 'ended' });
-                            }
-                        } catch (e) {
-                            console.error('Failed to update status', e);
+                    try {
+                        const sessionId = queryParams.get('sessionId');
+                        if (sessionId) {
+                            await api.patch(`/live-sessions/${sessionId}/status`, { status: 'ended' });
                         }
-                        apiRef.current.executeCommand('hangup');
+                    } catch (e) {
+                        console.error('Failed to update session status', e);
                     }
                     navigate('/teacher/live');
                 },
-                onCancel: () => {
-                    if (apiRef.current) apiRef.current.executeCommand('hangup');
-                    navigate('/teacher/live');
-                }
+                onCancel: () => navigate('/teacher/live')
             });
         } else {
-            if (apiRef.current) apiRef.current.executeCommand('hangup');
             navigate('/student/live');
         }
     };
@@ -157,7 +98,7 @@ const LiveRoom = ({ userRole = 'student' }) => {
                         <h1 className="text-white font-bold text-lg m-0 leading-none">{sessionTitle}</h1>
                         <div className="flex items-center gap-2 mt-1">
                             <Text className="text-dark-500 text-xs flex items-center gap-1">
-                                <Shield className="h-3 w-3" /> Secure E2E Encrypted Room
+                                <Shield className="h-3 w-3" /> Secure Encrypted Room
                             </Text>
                             <Divider type="vertical" className="border-dark-700" />
                             <Text className="text-emerald-500 text-xs font-mono">• Live</Text>
@@ -165,34 +106,62 @@ const LiveRoom = ({ userRole = 'student' }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <Tooltip title="Leave session">
-                        <Button
-                            danger
-                            ghost
-                            icon={<LogOut className="h-4 w-4" />}
-                            onClick={handleLeave}
-                        >
-                            Leave
-                        </Button>
-                    </Tooltip>
-                </div>
+                <Tooltip title="Leave session">
+                    <Button
+                        danger
+                        ghost
+                        icon={<LogOut className="h-4 w-4" />}
+                        onClick={handleLeave}
+                    >
+                        Leave
+                    </Button>
+                </Tooltip>
             </Header>
 
             <Content className="relative flex-1 bg-dark-950">
-                {isLoading && (
+                {/* Loading overlay */}
+                {isLoading && !error && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-950 z-50">
                         <Spin size="large" />
-                        <Text className="text-dark-400 mt-4">Initializing transmission room...</Text>
+                        <Text className="text-dark-400 mt-4">Connecting to live room...</Text>
                     </div>
                 )}
-                <div ref={jitsiContainerRef} className="w-full h-full" />
+
+                {/* Error state */}
+                {error && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-dark-950 z-50 gap-4">
+                        <div className="text-center max-w-md px-6">
+                            <div className="text-red-400 text-5xl mb-4">⚠️</div>
+                            <Text className="text-white text-lg font-semibold block mb-2">Connection Failed</Text>
+                            <Text className="text-dark-400 block mb-6">{error}</Text>
+                            <Button
+                                type="primary"
+                                icon={<RefreshCw className="h-4 w-4" />}
+                                onClick={handleRetry}
+                                size="large"
+                            >
+                                Try Again
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Daily.co iframe */}
+                {!error && (
+                    <iframe
+                        key={isLoading ? 'loading' : 'loaded'}
+                        src={roomUrl}
+                        allow="camera; microphone; fullscreen; speaker; display-capture; autoplay"
+                        style={{ width: '100%', height: '100%', border: 0, display: isLoading ? 'none' : 'block' }}
+                        onLoad={handleIframeLoad}
+                        onError={handleIframeError}
+                        title={sessionTitle}
+                    />
+                )}
             </Content>
 
-            <style inset>{`
-                .ant-layout-header {
-                    line-height: normal !important;
-                }
+            <style>{`
+                .ant-layout-header { line-height: normal !important; }
             `}</style>
         </Layout>
     );
