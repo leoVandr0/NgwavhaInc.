@@ -1,34 +1,9 @@
 import { LiveSession, Course, User, Enrollment } from '../models/index.js';
 import CourseContent from '../models/nosql/CourseContent.js';
 import realtimeService from '../services/realtime.service.js';
+import { closeSfuRoom } from '../services/sfu.service.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
-
-async function ensureDailyRoom(meetingId) {
-    if (!process.env.DAILY_API_KEY) return;
-    const base = 'https://api.daily.co/v1';
-    const headers = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.DAILY_API_KEY}`
-    };
-    const check = await fetch(`${base}/rooms/${meetingId}`, { headers });
-    if (check.ok) return;
-    await fetch(`${base}/rooms`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-            name: meetingId,
-            privacy: 'public',
-            properties: {
-                enable_chat: true,
-                enable_knocking: false,
-                start_video_off: true,
-                start_audio_off: true,
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8
-            }
-        })
-    });
-}
 
 // @desc    Schedule a live session
 // @route   POST /api/live-sessions
@@ -46,34 +21,9 @@ export const scheduleSession = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to schedule for this course' });
         }
 
-        // Create a Daily.co room for the session
-        let meetingId = `ngwavha-${uuidv4().substring(0, 8)}`;
-        if (process.env.DAILY_API_KEY) {
-            try {
-                const dailyRes = await fetch('https://api.daily.co/v1/rooms', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${process.env.DAILY_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        name: meetingId,
-                        privacy: 'public',
-                        properties: {
-                            enable_chat: true,
-                            enable_knocking: false,
-                            start_video_off: true,
-                            start_audio_off: true,
-                            exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8
-                        }
-                    })
-                });
-                const room = await dailyRes.json();
-                if (room.name) meetingId = room.name;
-            } catch (dailyErr) {
-                console.warn('Daily.co room creation failed, using generated ID:', dailyErr.message);
-            }
-        }
+        // Generate the WebRTC room id. The mediasoup Router for this id is created
+        // lazily by the SFU on the first join — no pre-provisioning needed.
+        const meetingId = `ngwavha-${uuidv4().substring(0, 8)}`;
 
         const session = await LiveSession.create({
             title,
@@ -200,14 +150,19 @@ export const updateSessionStatus = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        if (status === 'live') {
-            await ensureDailyRoom(session.meetingId).catch(e =>
-                console.warn('ensureDailyRoom failed:', e.message)
-            );
-        }
-
         session.status = status;
         await session.save();
+
+        // If the session has just been ended (from live or scheduled), tell the
+        // SFU to tear down the mediasoup room. Best-effort — the in-room
+        // "end session" button already does this for the live path; this
+        // covers the case where the instructor ends from the dashboard or the
+        // status is flipped some other way. Safe to call when the room never
+        // existed (the SFU returns { closed: false }).
+        if (status === 'ended') {
+            // Fire-and-forget — don't block the response on the cross-host call.
+            closeSfuRoom(session.meetingId).catch(() => { /* already logged */ });
+        }
 
         res.json(session);
     } catch (error) {
@@ -260,7 +215,14 @@ export const deleteSession = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
+        const { meetingId } = session;
         await session.destroy();
+
+        // Tear down the live room if it happens to be running. Fire-and-forget;
+        // a dangling mediasoup Router for a deleted session would otherwise sit
+        // there until everyone leaves on their own.
+        closeSfuRoom(meetingId).catch(() => { /* already logged */ });
+
         res.json({ message: 'Session deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
