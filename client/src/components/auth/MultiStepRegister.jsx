@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, User, Bell, Shield } from 'lucide-react';
 import NotificationPreferences from './NotificationPreferences';
+import { validatePassword } from '../../utils/passwordUtils';
 
 const MultiStepRegister = ({ 
     children, 
@@ -85,9 +86,15 @@ const MultiStepRegister = ({
 
     const isStepValid = () => {
         switch (currentStep) {
-            case 1:
-                return formData.name && formData.email && formData.password && 
-                       formData.password === formData.confirmPassword;
+            case 1: {
+                // Gate Continue on the full password policy so users can't reach
+                // later steps with a password the final submit would reject.
+                // The inline strength meter + checklist on step 1 already tells
+                // them *why* it's invalid — this just stops the late surprise.
+                if (!formData.name || !formData.email) return false;
+                if (!formData.password || formData.password !== formData.confirmPassword) return false;
+                return validatePassword(formData.password).isValid;
+            }
             case 2:
                 return true; // Notification preferences are always valid
             case 3:

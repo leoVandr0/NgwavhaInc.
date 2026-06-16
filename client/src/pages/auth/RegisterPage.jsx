@@ -70,14 +70,21 @@ const RegisterPage = () => {
 
         const submissionData = dataWithNotifications || formData;
 
+        // Mismatch and password-policy failures are field-level errors and are
+        // already surfaced inline on step 1 (the strength checklist + the
+        // "Passwords do not match" indicator). Step 1's Continue button is
+        // gated on the same checks so reaching here with an invalid password
+        // shouldn't happen — but if it does, re-flag the field inline rather
+        // than firing a toast the user has to chase back to step 1.
         if (submissionData.password !== submissionData.confirmPassword) {
-            message.error('Passwords do not match');
+            setTouchedFields((t) => ({ ...t, confirmPassword: true }));
             return;
         }
 
         const validation = validatePassword(submissionData.password);
         if (!validation.isValid) {
-            message.error(validation.errors[0]);
+            setPasswordErrors(validation.errors);
+            setTouchedFields((t) => ({ ...t, password: true }));
             return;
         }
 

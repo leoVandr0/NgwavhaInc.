@@ -7,7 +7,7 @@
  */
 export const checkPasswordStrength = (password) => {
     const requirements = {
-        minLength: password.length >= 8,
+        minLength: password.length >= 12,
         maxLength: password.length <= 128,
         hasUppercase: /[A-Z]/.test(password),
         hasLowercase: /[a-z]/.test(password),
@@ -48,8 +48,8 @@ export const checkPasswordStrength = (password) => {
         feedback.push('Avoid common passwords and patterns');
     }
     
-    if (password.length < 8) {
-        feedback.push('Password must be at least 8 characters');
+    if (password.length < 12) {
+        feedback.push('Password must be at least 12 characters');
     }
 
     // Cap score at 100
@@ -72,6 +72,12 @@ export const checkPasswordStrength = (password) => {
 
 /**
  * Check if password contains common patterns
+ *
+ * Match policy is intentionally narrow: we reject the base word on its own
+ * and the obvious "decorated" forms (digits/specials before or after the
+ * base, like "Password123!" or "!Welcome1"). We do NOT reject any password
+ * that simply *contains* the base as a substring — that produced false
+ * positives like "Welcomingly#42xY" being called common.
  */
 const isCommonPassword = (password) => {
     const commonPatterns = [
@@ -79,32 +85,43 @@ const isCommonPassword = (password) => {
         'password123', 'admin123', 'welcome', 'monkey', 'letmein', 'sunshine',
         'princess', 'dragon', 'baseball', 'football', 'superman', 'trustno1'
     ];
-    
+
     const lowerPassword = password.toLowerCase();
-    
-    // Check for common patterns
-    if (commonPatterns.some(pattern => lowerPassword.includes(pattern))) {
-        return true;
+
+    // Exact match against the dictionary.
+    if (commonPatterns.includes(lowerPassword)) return true;
+
+    // Match base + trailing digits/specials (e.g. "password123", "qwerty!")
+    // and leading digits/specials + base (e.g. "123password", "!qwerty").
+    // Escape characters that have regex meaning so future additions to the
+    // dictionary don't accidentally introduce a pattern.
+    const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const SPECIALS = '!@#$%^&*';
+    for (const base of commonPatterns) {
+        const b = escape(base);
+        const trailing = new RegExp(`^${b}[0-9${SPECIALS}]*$`);
+        const leading = new RegExp(`^[0-9${SPECIALS}]*${b}$`);
+        if (trailing.test(lowerPassword) || leading.test(lowerPassword)) return true;
     }
-    
-    // Check for sequential patterns
+
+    // Check for sequential patterns (4+ consecutive chars from a known run).
     const sequentialPatterns = [
         'abcdefghijklmnopqrstuvwxyz',
         'zyxwvutsrqponmlkjihgfedcba',
         '0123456789',
         '9876543210'
     ];
-    
+
     for (let pattern of sequentialPatterns) {
         for (let i = 0; i < pattern.length - 3; i++) {
             const sub = pattern.substring(i, i + 4);
             if (lowerPassword.includes(sub)) return true;
         }
     }
-    
+
     // Check for repeated characters
     if (/(.)\1{3,}/.test(password)) return true; // 4+ repeated chars
-    
+
     return false;
 };
 
@@ -134,8 +151,8 @@ export const validatePassword = (password) => {
     if (!password || password.length === 0) {
         errors.push('Password is required');
     } else {
-        if (password.length < 8) {
-            errors.push('Password must be at least 8 characters long');
+        if (password.length < 12) {
+            errors.push('Password must be at least 12 characters long');
         }
         if (password.length > 128) {
             errors.push('Password must not exceed 128 characters');
@@ -170,7 +187,7 @@ export const validatePassword = (password) => {
  * Get password requirements list for UI display
  */
 export const getPasswordRequirements = () => [
-    { label: 'At least 8 characters', key: 'minLength' },
+    { label: 'At least 12 characters', key: 'minLength' },
     { label: 'At least one uppercase letter (A-Z)', key: 'hasUppercase' },
     { label: 'At least one lowercase letter (a-z)', key: 'hasLowercase' },
     { label: 'At least one number (0-9)', key: 'hasNumber' },
